@@ -323,6 +323,15 @@ class OAuthExample
 
             // Khởi tạo client tạm thời
             $tempClient = \Puleeno\NhanhVn\Client\NhanhVnClient::getInstance($tempConfig);
+            
+            echo '<div class="section">';
+            echo '<h3>🔍 Debug Client Created:</h3>';
+            echo '<ul>';
+            echo '<li><strong>Client Class:</strong> ' . get_class($tempClient) . '</li>';
+            echo '<li><strong>Is Configured:</strong> ' . ($tempClient->isConfigured() ? 'Yes' : 'No') . '</li>';
+            echo '<li><strong>OAuth Module Available:</strong> ' . (method_exists($tempClient, 'oauth') ? 'Yes' : 'No') . '</li>';
+            echo '</ul>';
+            echo '</div>';
 
             // Sử dụng OAuth service của SDK
             $result = $tempClient->oauth()->exchangeAccessCode($accessCode);
