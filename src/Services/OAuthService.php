@@ -15,10 +15,12 @@ use GuzzleHttp\Exception\RequestException;
 class OAuthService
 {
     private ClientConfig $config;
+    private LoggerInterface $logger;
 
-    public function __construct(ClientConfig $config)
+    public function __construct(ClientConfig $config, LoggerInterface $logger)
     {
         $this->config = $config;
+        $this->logger = $logger;
     }
 
         /**

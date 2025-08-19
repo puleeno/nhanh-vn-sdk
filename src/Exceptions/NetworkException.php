@@ -5,9 +5,9 @@ namespace Puleeno\NhanhVn\Exceptions;
 use Exception;
 
 /**
- * Configuration Exception - Xử lý lỗi configuration
+ * Network Exception - Xử lý lỗi network/connection
  */
-class ConfigurationException extends Exception
+class NetworkException extends Exception
 {
     public function __construct(string $message = "", int $code = 0, ?Exception $previous = null)
     {

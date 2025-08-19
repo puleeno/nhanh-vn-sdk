@@ -2,44 +2,14 @@
 
 namespace Puleeno\NhanhVn\Exceptions;
 
+use Exception;
+
 /**
- * Exception được throw khi có lỗi từ API
+ * API Exception - Xử lý lỗi từ Nhanh.vn API
  */
-class ApiException extends \Exception
+class ApiException extends Exception
 {
-    private int $httpStatusCode;
-    private string $responseBody;
-    private string $errorCode;
-    private array $errorData;
-
-    public function __construct(
-        string $message = "",
-        int $code = 0,
-        \Throwable $previous = null,
-        int $httpStatusCode = 0,
-        string $responseBody = "",
-        string $errorCode = "",
-        array $errorData = []
-    ) {
-        parent::__construct($message, $code, $previous);
-        $this->httpStatusCode = $httpStatusCode;
-        $this->responseBody = $responseBody;
-        $this->errorCode = $errorCode;
-        $this->errorData = $errorData;
-    }
-
-    /**
-     * Lấy HTTP status code
-     */
-    public function getHttpStatusCode(): int
-    {
-        return $this->httpStatusCode;
-    }
-
-    /**
-     * Lấy response body
-     */
-    public function getResponseBody(): string
+    public function __construct(string $message = "", int $code = 0, ?Exception $previous = null)
     {
         return $this->responseBody;
     }

@@ -65,7 +65,7 @@ class NhanhVnClient
 
         // Initialize modules
         $this->products = new ProductModule($productManager, $httpService, $this->logger);
-        $this->oauth = new OAuthModule($oauthService);
+        $this->oauth = new OAuthModule($oauthService, $this->logger);
     }
 
     /**

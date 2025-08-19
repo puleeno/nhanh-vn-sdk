@@ -58,32 +58,31 @@ class ProductModule
 
             $response = $this->httpService->callApi('/product/search', $searchData);
 
-            // Parse response
+                        // Parse response
             if (!isset($response['data']) || !isset($response['data']['products'])) {
                 $this->logger->warning("ProductModule::search() - Response không có products data");
+                // Giải phóng memory
+                unset($response, $searchData);
                 return new Collection([]);
             }
 
-            $products = $response['data']['products'];
-            $this->logger->info("ProductModule::search() - Found " . count($products) . " products from API");
+            $this->logger->info("ProductModule::search() - Found " . count($response['data']['products']) . " products from API");
 
-            // Chuyển đổi thành Product entities
-            $productEntities = [];
-            foreach ($products as $productData) {
-                try {
-                    $product = $this->productManager->createProduct($productData);
-                    $productEntities[] = $product;
-                } catch (Exception $e) {
-                    $this->logger->error("ProductModule::search() - Error creating product entity", ['error' => $e->getMessage()]);
-                    // Skip invalid product data
-                }
-            }
+            // Sử dụng helper method để tạo entities với memory management
+            $productEntities = $this->createEntitiesFromApiResponse($response, 'createProduct', 'products');
 
             $this->logger->info("ProductModule::search() - Created " . count($productEntities) . " product entities");
+
+            // Giải phóng memory trước khi return
+            unset($response, $searchData);
+
             return new Collection($productEntities);
 
         } catch (Exception $e) {
             $this->logger->error("ProductModule::search() error", ['error' => $e->getMessage()]);
+            // Giải phóng memory trong trường hợp lỗi
+            if (isset($response)) unset($response);
+            if (isset($searchData)) unset($searchData);
             throw $e;
         }
     }
@@ -294,19 +293,43 @@ class ProductModule
         return $this->productManager->getAllProductStatistics();
     }
 
-    /**
+        /**
      * Lấy danh mục sản phẩm
      */
     public function getCategories(): array
     {
-        $cachedCategories = $this->productManager->getCachedProductCategories();
+        try {
+            $this->logger->info("ProductModule::getCategories() - Calling Nhanh.vn API");
 
-        if ($cachedCategories !== null) {
-            return $this->productManager->createProductCategories($cachedCategories);
+            // Gọi API Nhanh.vn để lấy categories
+            $response = $this->httpService->callApi('/product/category', []);
+
+            if (!isset($response['data']) || !is_array($response['data'])) {
+                $this->logger->warning("ProductModule::getCategories() - Response không có categories data");
+                // Giải phóng memory
+                unset($response);
+                return [];
+            }
+
+            $this->logger->info("ProductModule::getCategories() - Found " . count($response['data']) . " categories from API");
+
+            // Sử dụng helper method để tạo entities với memory management
+            $categoryEntities = $this->createEntitiesFromApiResponse($response, 'createProductCategory');
+
+            $this->logger->info("ProductModule::getCategories() - Created " . count($categoryEntities) . " category entities");
+
+            return $categoryEntities;
+
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::getCategories() error", ['error' => $e->getMessage()]);
+            // Fallback to cached data if available
+            $cachedCategories = $this->productManager->getCachedProductCategories();
+            if ($cachedCategories !== null) {
+                $this->logger->info("ProductModule::getCategories() - Using cached categories");
+                return $this->createEntitiesWithMemoryManagement($cachedCategories, 'createProductCategories');
+            }
+            return [];
         }
-
-        // TODO: Implement API call to get categories
-        return [];
     }
 
     /**
@@ -315,13 +338,7 @@ class ProductModule
     public function getBrands(): array
     {
         $cachedBrands = $this->productManager->getCachedProductBrands();
-
-        if ($cachedBrands !== null) {
-            return $this->productManager->createProductBrands($cachedBrands);
-        }
-
-        // TODO: Implement API call to get brands
-        return [];
+        return $this->createEntitiesWithMemoryManagement($cachedBrands, 'createProductBrands');
     }
 
     /**
@@ -330,13 +347,7 @@ class ProductModule
     public function getTypes(): array
     {
         $cachedTypes = $this->productManager->getCachedProductTypes();
-
-        if ($cachedTypes !== null) {
-            return $this->productManager->createProductTypes($cachedTypes);
-        }
-
-        // TODO: Implement API call to get types
-        return [];
+        return $this->createEntitiesWithMemoryManagement($cachedTypes, 'createProductTypes');
     }
 
     /**
@@ -345,13 +356,7 @@ class ProductModule
     public function getSuppliers(): array
     {
         $cachedSuppliers = $this->productManager->getCachedProductSuppliers();
-
-        if ($cachedSuppliers !== null) {
-            return $this->productManager->createProductSuppliers($cachedSuppliers);
-        }
-
-        // TODO: Implement API call to get suppliers
-        return [];
+        return $this->createEntitiesWithMemoryManagement($cachedSuppliers, 'createProductSuppliers');
     }
 
     /**
@@ -564,5 +569,57 @@ class ProductModule
     public function getManager(): ProductManager
     {
         return $this->productManager;
+    }
+
+    /**
+     * Helper method để giải phóng memory cho cached data
+     */
+    private function createEntitiesWithMemoryManagement(array $cachedData, string $methodName): array
+    {
+        if ($cachedData === null) {
+            return [];
+        }
+
+        try {
+            $result = $this->productManager->$methodName($cachedData);
+            // Giải phóng memory ngay lập tức
+            unset($cachedData);
+            return $result;
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::$methodName() - Error creating entities", ['error' => $e->getMessage()]);
+            unset($cachedData);
+            return [];
+        }
+    }
+
+    /**
+     * Helper method để giải phóng memory cho API response data
+     */
+    private function createEntitiesFromApiResponse(array $responseData, string $methodName, string $dataKey = 'data'): array
+    {
+        if (!isset($responseData[$dataKey]) || !is_array($responseData[$dataKey])) {
+            unset($responseData);
+            return [];
+        }
+
+        $data = $responseData[$dataKey];
+        $entities = [];
+
+        foreach ($data as $itemData) {
+            try {
+                $entity = $this->productManager->$methodName($itemData);
+                $entities[] = $entity;
+                // Giải phóng memory ngay sau khi tạo entity
+                unset($itemData);
+            } catch (Exception $e) {
+                $this->logger->error("ProductModule::$methodName() - Error creating entity", ['error' => $e->getMessage()]);
+                // Skip invalid data
+            }
+        }
+
+        // Giải phóng memory
+        unset($responseData, $data);
+
+        return $entities;
     }
 }

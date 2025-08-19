@@ -56,6 +56,11 @@ class ProductCategory extends AbstractEntity
         return $this->getAttribute('content');
     }
 
+    public function getDescription(): ?string
+    {
+        return $this->getAttribute('description') ?: $this->getAttribute('content');
+    }
+
     public function getStatus(): ?int
     {
         return $this->getAttribute('status');
@@ -95,6 +100,50 @@ class ProductCategory extends AbstractEntity
     public function getChildrenCount(): int
     {
         return count($this->getChildren());
+    }
+
+    public function getProductCount(): ?int
+    {
+        return $this->getAttribute('productCount') ?: $this->getAttribute('product_count') ?: 0;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->getAttribute('slug') ?: $this->getAttribute('url') ?: $this->generateSlug();
+    }
+
+    public function getMetaTitle(): ?string
+    {
+        return $this->getAttribute('metaTitle') ?: $this->getAttribute('meta_title') ?: $this->getName();
+    }
+
+    public function getMetaDescription(): ?string
+    {
+        return $this->getAttribute('metaDescription') ?: $this->getAttribute('meta_description') ?: $this->getDescription();
+    }
+
+    public function getMetaKeywords(): ?string
+    {
+        return $this->getAttribute('metaKeywords') ?: $this->getAttribute('meta_keywords') ?: '';
+    }
+
+    /**
+     * Tạo slug từ tên category
+     */
+    private function generateSlug(): string
+    {
+        $name = $this->getName() ?: '';
+        if (empty($name)) {
+            return '';
+        }
+
+        // Chuyển về lowercase và thay thế dấu cách bằng dấu gạch ngang
+        $slug = strtolower(trim($name));
+        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
+        $slug = preg_replace('/[\s-]+/', '-', $slug);
+        $slug = trim($slug, '-');
+
+        return $slug;
     }
 
     public function getLevel(): int

@@ -51,6 +51,11 @@
                     <a href="get_products_with_logger.php" class="btn btn-success">Lấy Sản Phẩm + Logger</a>
                 </div>
                 <div class="example-item">
+                    <h3>📂 Lấy Danh Mục</h3>
+                    <p>Demo lấy danh mục sản phẩm từ Nhanh.vn API</p>
+                    <a href="get_categories.php" class="btn btn-warning">Lấy Danh Mục</a>
+                </div>
+                <div class="example-item">
                     <h3>🔄 OAuth Callback</h3>
                     <p>Test OAuth callback URL</p>
                     <a href="callback.php" class="btn btn-info">Test Callback</a>

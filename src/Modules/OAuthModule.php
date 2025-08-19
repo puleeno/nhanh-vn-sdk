@@ -3,6 +3,7 @@
 namespace Puleeno\NhanhVn\Modules;
 
 use Puleeno\NhanhVn\Services\OAuthService;
+use Puleeno\NhanhVn\Contracts\LoggerInterface;
 
 /**
  * OAuth Module
@@ -10,10 +11,12 @@ use Puleeno\NhanhVn\Services\OAuthService;
 class OAuthModule
 {
     private OAuthService $oauthService;
+    private LoggerInterface $logger;
 
-    public function __construct(OAuthService $oauthService)
+    public function __construct(OAuthService $oauthService, LoggerInterface $logger)
     {
         $this->oauthService = $oauthService;
+        $this->logger = $logger;
     }
 
     /**
