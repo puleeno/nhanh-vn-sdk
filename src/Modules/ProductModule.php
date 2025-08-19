@@ -69,7 +69,7 @@ class ProductModule
             $this->logger->info("ProductModule::search() - Found " . count($response['data']['products']) . " products from API");
 
             // Sử dụng helper method để tạo entities với memory management
-            $productEntities = $this->createEntitiesFromApiResponse($response, 'createProduct', 'products');
+            $productEntities = $this->createEntitiesFromApiResponse($response['data'], 'createProduct', 'products');
 
             $this->logger->info("ProductModule::search() - Created " . count($productEntities) . " product entities");
 
@@ -304,12 +304,22 @@ class ProductModule
             // Gọi API Nhanh.vn để lấy categories
             $response = $this->httpService->callApi('/product/category', []);
 
+            // DEBUG: Log full response để kiểm tra structure
+            $this->logger->info("ProductModule::getCategories() - Full API Response", ['response' => $response]);
+
             if (!isset($response['data']) || !is_array($response['data'])) {
-                $this->logger->warning("ProductModule::getCategories() - Response không có categories data");
+                $this->logger->warning("ProductModule::getCategories() - Response không có categories data", [
+                    'response_keys' => array_keys($response ?? []),
+                    'has_data' => isset($response['data']),
+                    'data_type' => gettype($response['data'] ?? null)
+                ]);
                 // Giải phóng memory
                 unset($response);
+
                 return [];
             }
+
+
 
             $this->logger->info("ProductModule::getCategories() - Found " . count($response['data']) . " categories from API");
 
@@ -603,6 +613,7 @@ class ProductModule
         }
 
         $data = $responseData[$dataKey];
+
         $entities = [];
 
         foreach ($data as $itemData) {

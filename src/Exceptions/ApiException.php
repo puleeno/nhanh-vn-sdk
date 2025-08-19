@@ -9,7 +9,39 @@ use Exception;
  */
 class ApiException extends Exception
 {
-    public function __construct(string $message = "", int $code = 0, ?Exception $previous = null)
+    private int $httpStatusCode;
+    private string $responseBody;
+    private string $errorCode;
+    private array $errorData;
+
+    public function __construct(
+        string $message = "",
+        int $code = 0,
+        ?Exception $previous = null,
+        int $httpStatusCode = 0,
+        string $responseBody = "",
+        string $errorCode = "",
+        array $errorData = []
+    ) {
+        parent::__construct($message, $code, $previous);
+        $this->httpStatusCode = $httpStatusCode;
+        $this->responseBody = $responseBody;
+        $this->errorCode = $errorCode;
+        $this->errorData = $errorData;
+    }
+
+    /**
+     * Lấy HTTP status code
+     */
+    public function getHttpStatusCode(): int
+    {
+        return $this->httpStatusCode;
+    }
+
+    /**
+     * Lấy response body
+     */
+    public function getResponseBody(): string
     {
         return $this->responseBody;
     }

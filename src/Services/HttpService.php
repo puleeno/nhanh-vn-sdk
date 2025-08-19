@@ -8,6 +8,7 @@ use Puleeno\NhanhVn\Config\ClientConfig;
 use Puleeno\NhanhVn\Contracts\LoggerInterface;
 use Puleeno\NhanhVn\Exceptions\ApiException;
 use Puleeno\NhanhVn\Exceptions\NetworkException;
+use Exception;
 
 /**
  * HTTP Service để gọi API Nhanh.vn
@@ -42,7 +43,7 @@ class HttpService
                 'accessToken' => $this->config->getAccessToken(),
             ];
 
-            if (empty($data)) {
+            if (!empty($data)) {
                 $requestData['data'] = json_encode($data);
             }
 
@@ -63,16 +64,36 @@ class HttpService
 
             // Kiểm tra response
             if ($responseData === null) {
-                throw new ApiException("Không thể parse JSON response: " . $responseBody);
+                throw new ApiException(
+                    "Không thể parse JSON response",
+                    0,
+                    null,
+                    $response->getStatusCode(),
+                    $responseBody
+                );
             }
 
             if (!isset($responseData['code'])) {
-                throw new ApiException("Response không có field 'code': " . $responseBody);
+                throw new ApiException(
+                    "Response không có field 'code'",
+                    0,
+                    null,
+                    $response->getStatusCode(),
+                    $responseBody
+                );
             }
 
             if ($responseData['code'] !== 1) {
                 $messages = isset($responseData['messages']) ? implode(', ', $responseData['messages']) : 'Unknown error';
-                throw new ApiException("API Error: " . $messages);
+                throw new ApiException(
+                    "API Error: " . $messages,
+                    $responseData['code'] ?? 0,
+                    null,
+                    $response->getStatusCode(),
+                    $responseBody,
+                    $responseData['errorCode'] ?? '',
+                    $responseData['errorData'] ?? []
+                );
             }
 
             return $responseData;

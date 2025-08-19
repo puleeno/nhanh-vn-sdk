@@ -94,11 +94,7 @@ try {
         echo '<div class="debug-info">';
         echo '<h4>🔍 Debug Search Method:</h4>';
 
-        $searchCriteria = [
-            'page' => 1,
-            'limit' => 10,
-            'status' => 1 // Chỉ lấy sản phẩm hoạt động
-        ];
+        $searchCriteria = [];
         echo '<p><strong>Search Criteria:</strong></p>';
         echo '<pre>' . htmlspecialchars(json_encode($searchCriteria, JSON_PRETTY_PRINT)) . '</pre>';
         echo '</div>';

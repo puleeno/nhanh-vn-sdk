@@ -57,7 +57,7 @@ try {
 
     try {
         // Sử dụng boot file để khởi tạo client
-        $client = bootNhanhVnClientSilent();
+        $client = bootNhanhVnClientWithLogger('DEBUG');
 
         echo '<div class="status success">';
         echo '<h4>✅ SDK client đã sẵn sàng!</h4>';
