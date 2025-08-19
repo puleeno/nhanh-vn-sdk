@@ -98,7 +98,7 @@ class ShippingManager
 
             $this->logger->debug("ShippingManager::getLocationSearchValidationErrors() result", [
                 'errorCount' => count($errors)
-            ]);
+                ]);
 
             return $errors;
 

@@ -69,6 +69,12 @@
 - ✅ **Memory management** với automatic cleanup
 - ✅ **Documentation** và examples
 
+### Tính năng đặc biệt
+- **Memory Management**: Tự động cleanup với `unset()`
+- **Validation**: Hỗ trợ tiếng Việt với thông báo lỗi chi tiết
+- **Cache System**: TTL thông minh cho từng loại dữ liệu
+- **Batch Operations**: Hỗ trợ tối đa 50 khách hàng mỗi request
+
 ### Cần implement
 - ❌ **5/7 APIs** còn lại
 - ❌ **Actual API calls** đến Nhanh.vn endpoints

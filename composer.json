@@ -1,8 +1,23 @@
 {
     "name": "puleeno/nhanh-vn-sdk",
-    "description": "PHP SDK cho Nhanh.vn API",
+    "description": "PHP SDK chính thức cho Nhanh.vn API - Giải pháp tích hợp hoàn chỉnh với kiến trúc SOLID, cache thông minh và memory management tối ưu",
     "type": "library",
+    "version": "0.4.0",
     "license": "MIT",
+    "keywords": [
+        "nhanh-vn",
+        "nhanhvn",
+        "api",
+        "sdk",
+        "php",
+        "ecommerce",
+        "pos",
+        "inventory",
+        "shipping",
+        "orders",
+        "products",
+        "customers"
+    ],
     "authors": [
         {
             "name": "Puleeno Nguyen",

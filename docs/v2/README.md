@@ -1,6 +1,8 @@
-# Nhanh.vn SDK v2.0 - Hướng dẫn sử dụng
+# Nhanh.vn SDK v2.0 - Advanced Usage Guide
 
 ## Tổng quan
+
+**⚠️ Lưu ý:** Đây là tài liệu nâng cao cho SDK v2.0. Để bắt đầu, hãy xem [docs/README.md](../README.md) trước.
 
 Nhanh.vn SDK v2.0 là thư viện PHP hiện đại để tích hợp với Nhanh.vn API. SDK được thiết kế theo các nguyên tắc SOLID, sử dụng design patterns phổ biến và cung cấp API dễ sử dụng.
 

@@ -20,6 +20,24 @@
 - **Modes**: `update` (mặc định), `deleteall`
 - **Example**: `examples/public/add_product_images.php`
 
+### ✅ Danh sách sản phẩm
+- **Endpoint**: `/api/product/list`
+- **Method**: `getAll()`, `getByPage()`
+- **Chức năng**: Lấy danh sách sản phẩm với phân trang và filter
+- **Status**: Đã implement hoàn chỉnh
+
+### ✅ Chi tiết sản phẩm
+- **Endpoint**: `/api/product/detail`
+- **Method**: `getById()`, `getByCode()`
+- **Chức năng**: Lấy thông tin chi tiết sản phẩm
+- **Status**: Đã implement hoàn chỉnh
+
+### ✅ Danh mục sản phẩm
+- **Endpoint**: `/api/product/category`
+- **Method**: `getCategories()`, `getByCategory()`
+- **Chức năng**: Lấy danh sách danh mục và sản phẩm theo danh mục
+- **Status**: Đã implement hoàn chỉnh
+
 ## Danh sách API chưa implement
 
 ### ✅ Danh sách sản phẩm
