@@ -166,7 +166,7 @@ class ClientConfig
      */
     public function getBaseUrl(): string
     {
-        return $this->apiDomain . '/api';
+        return $this->apiDomain;
     }
 
     /**
