@@ -22,7 +22,6 @@ Chỉnh sửa file `auth.json` với thông tin thực của bạn:
     "appId": "YOUR_APP_ID",
     "secretKey": "YOUR_SECRET_KEY",
     "redirectUrl": "http://localhost:8000/callback",
-    "businessId": "YOUR_BUSINESS_ID",
     "environment": "sandbox"
 }
 ```

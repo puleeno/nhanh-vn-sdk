@@ -4,10 +4,14 @@ namespace Puleeno\NhanhVn\Client;
 
 use Puleeno\NhanhVn\Config\ClientConfig;
 use Puleeno\NhanhVn\Modules\ProductModule;
+use Puleeno\NhanhVn\Modules\OAuthModule;
 use Puleeno\NhanhVn\Managers\ProductManager;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Services\ProductService;
+use Puleeno\NhanhVn\Services\OAuthService;
 use Puleeno\NhanhVn\Services\CacheService;
+use Puleeno\NhanhVn\Contracts\LoggerInterface;
+use Puleeno\NhanhVn\Services\Logger\NullLogger;
 use Puleeno\NhanhVn\Exceptions\ConfigurationException;
 
 /**
@@ -18,10 +22,13 @@ class NhanhVnClient
     private static ?self $instance = null;
     private ClientConfig $config;
     private ProductModule $products;
+    private OAuthModule $oauth;
+    private LoggerInterface $logger;
 
     private function __construct(ClientConfig $config)
     {
         $this->config = $config;
+        $this->logger = new NullLogger(); // Default null logger
         $this->initializeModules();
     }
 
@@ -44,18 +51,21 @@ class NhanhVnClient
     {
         // Initialize services
         $cacheService = new CacheService();
+        $httpService = new \Puleeno\NhanhVn\Services\HttpService($this->config, $this->logger);
 
         // Initialize repositories
         $productRepository = new ProductRepository($cacheService);
 
         // Initialize services
         $productService = new ProductService($productRepository, $cacheService);
+        $oauthService = new OAuthService($this->config, $this->logger);
 
         // Initialize managers
         $productManager = new ProductManager($productRepository, $productService);
 
         // Initialize modules
-        $this->products = new ProductModule($productManager);
+        $this->products = new ProductModule($productManager, $httpService, $this->logger);
+        $this->oauth = new OAuthModule($oauthService);
     }
 
     /**
@@ -72,6 +82,35 @@ class NhanhVnClient
     public function products(): ProductModule
     {
         return $this->products;
+    }
+
+    /**
+     * Get OAuth module
+     */
+    public function oauth(): OAuthModule
+    {
+        return $this->oauth;
+    }
+
+    /**
+     * Set logger for the client
+     */
+    public function setLogger(LoggerInterface $logger): self
+    {
+        $this->logger = $logger;
+
+        // Re-initialize modules with new logger
+        $this->initializeModules();
+
+        return $this;
+    }
+
+    /**
+     * Get current logger
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
     }
 
     /**
@@ -142,7 +181,7 @@ class NhanhVnClient
     public function exchangeAccessCode(string $accessCode): array
     {
         // TODO: Implement OAuth token exchange
-        // POST https://pos.open.nhanh.vn/api/oauth/access_token
+        // POST https://open.nhanh.vn/api/oauth/access_token
         // Content-Type: application/x-www-form-urlencoded
 
         return [

@@ -16,8 +16,10 @@ class ClientConfig
     private const DEFAULT_RATE_LIMIT = 150; // requests per 30 seconds
 
     private string $appId;
-    private string $secretKey;
-    private string $returnLink;
+    private ?string $secretKey;
+    private ?string $returnLink;
+    private ?string $businessId;
+    private ?string $accessToken;
     private string $apiDomain;
     private string $apiVersion;
     private int $timeout;
@@ -31,8 +33,10 @@ class ClientConfig
         $this->validateRequiredConfig($config);
 
         $this->appId = $config['appId'];
-        $this->secretKey = $config['secretKey'];
+        $this->secretKey = $config['secretKey'] ?? null;
         $this->returnLink = $config['returnLink'] ?? null;
+        $this->businessId = $config['businessId'] ?? null;
+        $this->accessToken = $config['accessToken'] ?? null;
         $this->apiDomain = $config['apiDomain'] ?? self::DEFAULT_API_DOMAIN;
         $this->apiVersion = $config['apiVersion'] ?? self::DEFAULT_API_VERSION;
         $this->timeout = $config['timeout'] ?? self::DEFAULT_TIMEOUT;
@@ -45,30 +49,66 @@ class ClientConfig
     }
 
     /**
-     * Kiểm tra các tham số bắt buộc
+     * Kiểm tra các tham số bắt buộc cho API calls
      */
     private function validateRequiredConfig(array $config): void
     {
-        $required = ['appId', 'secretKey'];
+        // API Request bắt buộc: version, appId, businessId, accessToken
+        if (!isset($config['appId']) || empty($config['appId'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc: appId");
+        }
 
-        foreach ($required as $field) {
-            if (!isset($config[$field]) || empty($config[$field])) {
-                throw new ConfigurationException("Thiếu tham số bắt buộc: {$field}");
-            }
+        if (!isset($config['businessId']) || empty($config['businessId'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc: businessId");
+        }
+
+        if (!isset($config['accessToken']) || empty($config['accessToken'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc: accessToken");
+        }
+
+        // version luôn bắt buộc (mặc định là 2.0)
+        // secretKey không bắt buộc cho API calls, chỉ cần cho OAuth flow
+    }
+
+    /**
+     * Kiểm tra các tham số bắt buộc cho Get Access Code
+     */
+    public function validateAccessCodeConfig(array $config): void
+    {
+        // Get Access Code bắt buộc: appId, secretKey, redirectUrl
+        if (!isset($config['appId']) || empty($config['appId'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc cho Get Access Code: appId");
+        }
+
+        if (!isset($config['secretKey']) || empty($config['secretKey'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc cho Get Access Code: secretKey");
+        }
+
+        if (!isset($config['redirectUrl']) || empty($config['redirectUrl'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc cho Get Access Code: redirectUrl");
         }
     }
 
     /**
-     * Kiểm tra các tham số bắt buộc cho OAuth (bao gồm returnLink)
+     * Kiểm tra các tham số bắt buộc cho Get Access Token
      */
-    public function validateOAuthConfig(array $config): void
+    public function validateAccessTokenConfig(array $config): void
     {
-        $required = ['appId', 'secretKey', 'returnLink'];
+        // Get Access Token bắt buộc: secretKey, version, appId, accessCode
+        if (!isset($config['secretKey']) || empty($config['secretKey'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc cho Get Access Token: secretKey");
+        }
 
-        foreach ($required as $field) {
-            if (!isset($config[$field]) || empty($config[$field])) {
-                throw new ConfigurationException("Thiếu tham số bắt buộc cho OAuth: {$field}");
-            }
+        if (!isset($config['version']) || empty($config['version'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc cho Get Access Token: version");
+        }
+
+        if (!isset($config['appId']) || empty($config['appId'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc cho Get Access Token: appId");
+        }
+
+        if (!isset($config['accessCode']) || empty($config['accessCode'])) {
+            throw new ConfigurationException("Thiếu tham số bắt buộc cho Get Access Token: accessCode");
         }
     }
 
@@ -101,8 +141,10 @@ class ClientConfig
 
     // Getters
     public function getAppId(): string { return $this->appId; }
-    public function getSecretKey(): string { return $this->secretKey; }
+    public function getSecretKey(): ?string { return $this->secretKey; }
     public function getReturnLink(): ?string { return $this->returnLink; }
+    public function getBusinessId(): ?string { return $this->businessId; }
+    public function getAccessToken(): ?string { return $this->accessToken; }
     public function getApiDomain(): string { return $this->apiDomain; }
     public function getApiVersion(): string { return $this->apiVersion; }
     public function getTimeout(): int { return $this->timeout; }
@@ -120,12 +162,12 @@ class ClientConfig
     }
 
     /**
-     * Lấy OAuth URL
+     * Lấy OAuth URL cho Get Access Code
      */
     public function getOAuthUrl(): string
     {
         if ($this->returnLink === null) {
-            throw new ConfigurationException('Return link không được cung cấp. Không thể tạo OAuth URL.');
+            throw new ConfigurationException('Redirect URL không được cung cấp. Không thể tạo OAuth URL.');
         }
 
         $params = [
@@ -135,5 +177,13 @@ class ClientConfig
         ];
 
         return 'https://nhanh.vn/oauth?' . http_build_query($params);
+    }
+
+    /**
+     * Kiểm tra xem config có hợp lệ cho API calls không
+     */
+    public function isValid(): bool
+    {
+        return !empty($this->appId) && !empty($this->businessId) && !empty($this->accessToken);
     }
 }

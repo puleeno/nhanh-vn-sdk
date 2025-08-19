@@ -4,7 +4,6 @@ namespace Puleeno\NhanhVn\Managers;
 
 use Illuminate\Support\Collection;
 use Puleeno\NhanhVn\Entities\Product\Product;
-use Puleeno\NhanhVn\Entities\Product\ProductCollection;
 use Puleeno\NhanhVn\Entities\Product\ProductCategory;
 use Puleeno\NhanhVn\Entities\Product\ProductBrand;
 use Puleeno\NhanhVn\Entities\Product\ProductType;
@@ -57,25 +56,27 @@ class ProductManager
     /**
      * Tạo product collection từ array data
      */
-    public function createProductCollection(array $data): ProductCollection
+    public function createProductCollection(array $data): Collection
     {
-        return $this->productRepository->createProductCollection($data);
+        // DEBUG: Log collection creation
+        error_log("ProductManager::createProductCollection() called with data count: " . count($data));
+        return new Collection($data);
     }
 
     /**
      * Tạo product collection từ array products
      */
-    public function createProductCollectionFromProducts(array $products, array $pagination = []): ProductCollection
+    public function createProductCollectionFromProducts(array $products, array $pagination = []): Collection
     {
-        return $this->productRepository->createProductCollectionFromProducts($products, $pagination);
+        return new Collection($products);
     }
 
     /**
      * Tạo product collection từ Collection object
      */
-    public function createProductCollectionFromCollection(Collection $products, array $pagination = []): ProductCollection
+    public function createProductCollectionFromCollection(Collection $products, array $pagination = []): Collection
     {
-        return $this->productRepository->createProductCollectionFromCollection($products, $pagination);
+        return $products;
     }
 
     /**
@@ -609,33 +610,44 @@ class ProductManager
     /**
      * Search products
      */
-    public function searchProducts(ProductCollection $collection, string $term): Collection
+    public function searchProducts(Collection $collection, string $term): Collection
     {
-        return $this->productRepository->searchProducts($collection, $term);
+        return $collection->filter(function($product) use ($term) {
+            return stripos($product->getName(), $term) !== false;
+        });
     }
 
     /**
      * Sort products
      */
-    public function sortProducts(ProductCollection $collection, string $field, bool $ascending = true): Collection
+    public function sortProducts(Collection $collection, string $field, bool $ascending = true): Collection
     {
-        return $this->productRepository->sortProducts($collection, $field, $ascending);
+        return $collection->sortBy($field, SORT_REGULAR, !$ascending);
     }
 
     /**
      * Paginate products
      */
-    public function paginateProducts(ProductCollection $collection, int $page = 1, int $perPage = 20): array
+    public function paginateProducts(Collection $collection, int $page = 1, int $perPage = 20): array
     {
-        return $this->productRepository->paginateProducts($collection, $page, $perPage);
+        $total = $collection->count();
+        $items = $collection->forPage($page, $perPage);
+
+        return [
+            'data' => $items,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+            'last_page' => ceil($total / $perPage)
+        ];
     }
 
     /**
      * Get product by ID
      */
-    public function getProductById(ProductCollection $collection, int $id): ?Product
+    public function getProductById(Collection $collection, int $id): ?Product
     {
-        return $this->productRepository->getProductById($collection, $id);
+        return $collection->firstWhere('id', $id);
     }
 
     /**

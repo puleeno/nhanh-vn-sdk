@@ -78,6 +78,33 @@ class Product extends AbstractEntity
         return $this->getAttribute('updatedAt');
     }
 
+    public function getId(): ?int
+    {
+        return $this->getIdNhanh();
+    }
+
+    public function getCategoryName(): ?string
+    {
+        return $this->getAttribute('categoryName');
+    }
+
+    public function getInventory(): array
+    {
+        return $this->getAttribute('inventory', []);
+    }
+
+    public function getAvailableQuantity(): int
+    {
+        $inventory = $this->getInventory();
+        return isset($inventory['available']) ? (int)$inventory['available'] : 0;
+    }
+
+    public function getTotalQuantity(): int
+    {
+        $inventory = $this->getInventory();
+        return isset($inventory['remain']) ? (int)$inventory['remain'] : 0;
+    }
+
     // Business logic methods
     public function isActive(): bool
     {

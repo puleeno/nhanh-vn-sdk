@@ -3,8 +3,9 @@
 namespace Puleeno\NhanhVn\Modules;
 
 use Puleeno\NhanhVn\Managers\ProductManager;
+use Puleeno\NhanhVn\Services\HttpService;
+use Puleeno\NhanhVn\Contracts\LoggerInterface;
 use Puleeno\NhanhVn\Entities\Product\Product;
-use Puleeno\NhanhVn\Entities\Product\ProductCollection;
 use Puleeno\NhanhVn\Entities\Product\ProductCategory;
 use Puleeno\NhanhVn\Entities\Product\ProductBrand;
 use Puleeno\NhanhVn\Entities\Product\ProductType;
@@ -22,6 +23,7 @@ use Puleeno\NhanhVn\Entities\Product\ProductInternalCategory;
 use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
 use Illuminate\Support\Collection;
+use Exception;
 
 /**
  * Product Module
@@ -29,18 +31,136 @@ use Illuminate\Support\Collection;
 class ProductModule
 {
     protected ProductManager $productManager;
+    protected HttpService $httpService;
+    protected LoggerInterface $logger;
 
-    public function __construct(ProductManager $productManager)
+    public function __construct(ProductManager $productManager, HttpService $httpService, LoggerInterface $logger)
     {
         $this->productManager = $productManager;
+        $this->httpService = $httpService;
+        $this->logger = $logger;
+    }
+
+        /**
+     * Tìm kiếm sản phẩm
+     */
+    public function search(array $criteria = []): Collection
+    {
+        // DEBUG: Log search criteria
+        $this->logger->debug("ProductModule::search() called with criteria", $criteria);
+
+        try {
+            // Chuẩn bị search criteria theo API Nhanh.vn
+            $searchData = $this->prepareSearchCriteria($criteria);
+
+            // Gọi API Nhanh.vn
+            $this->logger->info("ProductModule::search() calling Nhanh.vn API", $searchData);
+
+            $response = $this->httpService->callApi('/product/search', $searchData);
+
+            // Parse response
+            if (!isset($response['data']) || !isset($response['data']['products'])) {
+                $this->logger->warning("ProductModule::search() - Response không có products data");
+                return new Collection([]);
+            }
+
+            $products = $response['data']['products'];
+            $this->logger->info("ProductModule::search() - Found " . count($products) . " products from API");
+
+            // Chuyển đổi thành Product entities
+            $productEntities = [];
+            foreach ($products as $productData) {
+                try {
+                    $product = $this->productManager->createProduct($productData);
+                    $productEntities[] = $product;
+                } catch (Exception $e) {
+                    $this->logger->error("ProductModule::search() - Error creating product entity", ['error' => $e->getMessage()]);
+                    // Skip invalid product data
+                }
+            }
+
+            $this->logger->info("ProductModule::search() - Created " . count($productEntities) . " product entities");
+            return new Collection($productEntities);
+
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::search() error", ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**
-     * Tìm kiếm sản phẩm
+     * Chuẩn bị search criteria theo format API Nhanh.vn
      */
-    public function search(array $criteria = []): ProductCollection
+    private function prepareSearchCriteria(array $criteria): array
     {
-        return $this->productManager->searchProducts($criteria);
+        $searchData = [];
+
+        // Các field cơ bản
+        if (isset($criteria['page'])) {
+            $searchData['page'] = (int) $criteria['page'];
+        }
+
+        if (isset($criteria['limit'])) {
+            $searchData['icpp'] = min((int) $criteria['limit'], 100); // Tối đa 100
+        }
+
+        if (isset($criteria['sort'])) {
+            $searchData['sort'] = $criteria['sort'];
+        }
+
+        if (isset($criteria['name'])) {
+            $searchData['name'] = $criteria['name'];
+        }
+
+        if (isset($criteria['parentId'])) {
+            $searchData['parentId'] = (int) $criteria['parentId'];
+        }
+
+        if (isset($criteria['categoryId'])) {
+            $searchData['categoryId'] = (int) $criteria['categoryId'];
+        }
+
+        if (isset($criteria['status'])) {
+            $searchData['status'] = $criteria['status'];
+        }
+
+        if (isset($criteria['priceFrom'])) {
+            $searchData['priceFrom'] = (float) $criteria['priceFrom'];
+        }
+
+        if (isset($criteria['priceTo'])) {
+            $searchData['priceTo'] = (float) $criteria['priceTo'];
+        }
+
+        if (isset($criteria['brandId'])) {
+            $searchData['brandId'] = (int) $criteria['brandId'];
+        }
+
+        if (isset($criteria['imei'])) {
+            $searchData['imei'] = $criteria['imei'];
+        }
+
+        if (isset($criteria['showHot'])) {
+            $searchData['showHot'] = (int) $criteria['showHot'];
+        }
+
+        if (isset($criteria['showNew'])) {
+            $searchData['showNew'] = (int) $criteria['showNew'];
+        }
+
+        if (isset($criteria['showHome'])) {
+            $searchData['showHome'] = (int) $criteria['showHome'];
+        }
+
+        if (isset($criteria['updatedDateTimeFrom'])) {
+            $searchData['updatedDateTimeFrom'] = $criteria['updatedDateTimeFrom'];
+        }
+
+        if (isset($criteria['updatedDateTimeTo'])) {
+            $searchData['updatedDateTimeTo'] = $criteria['updatedDateTimeTo'];
+        }
+
+        return $searchData;
     }
 
     /**
@@ -81,7 +201,7 @@ class ProductModule
     /**
      * Lấy sản phẩm theo danh mục
      */
-    public function getByCategory(int $categoryId, array $options = []): ProductCollection
+    public function getByCategory(int $categoryId, array $options = []): Collection
     {
         return $this->productManager->getProductsByCategory($categoryId, $options);
     }
@@ -89,7 +209,7 @@ class ProductModule
     /**
      * Lấy sản phẩm theo thương hiệu
      */
-    public function getByBrand(int $brandId, array $options = []): ProductCollection
+    public function getByBrand(int $brandId, array $options = []): Collection
     {
         return $this->productManager->getProductsByBrand($brandId, $options);
     }
@@ -97,7 +217,7 @@ class ProductModule
     /**
      * Lấy sản phẩm nổi bật
      */
-    public function getHot(int $limit = 10): ProductCollection
+    public function getHot(int $limit = 10): Collection
     {
         return $this->productManager->getHotProducts($limit);
     }
@@ -105,7 +225,7 @@ class ProductModule
     /**
      * Lấy sản phẩm mới
      */
-    public function getNew(int $limit = 10): ProductCollection
+    public function getNew(int $limit = 10): Collection
     {
         return $this->productManager->getNewProducts($limit);
     }
@@ -113,7 +233,7 @@ class ProductModule
     /**
      * Lấy sản phẩm trang chủ
      */
-    public function getHome(int $limit = 20): ProductCollection
+    public function getHome(int $limit = 20): Collection
     {
         return $this->productManager->getHomeProducts($limit);
     }
@@ -121,7 +241,7 @@ class ProductModule
     /**
      * Lấy sản phẩm sắp hết hàng
      */
-    public function getLowStock(int $threshold = 10): ProductCollection
+    public function getLowStock(int $threshold = 10): Collection
     {
         return $this->productManager->getLowStockProducts($threshold);
     }
@@ -129,7 +249,7 @@ class ProductModule
     /**
      * Lấy sản phẩm hết hàng
      */
-    public function getOutOfStock(): ProductCollection
+    public function getOutOfStock(): Collection
     {
         return $this->productManager->getOutOfStockProducts();
     }
@@ -137,7 +257,7 @@ class ProductModule
     /**
      * Lấy sản phẩm liên quan
      */
-    public function getRelated(Product $product, int $limit = 5): ProductCollection
+    public function getRelated(Product $product, int $limit = 5): Collection
     {
         return $this->productManager->getRelatedProducts($product, $limit);
     }
@@ -145,7 +265,7 @@ class ProductModule
     /**
      * Lấy sản phẩm bán chạy
      */
-    public function getBestSelling(int $limit = 10): ProductCollection
+    public function getBestSelling(int $limit = 10): Collection
     {
         return $this->productManager->getBestSellingProducts($limit);
     }
@@ -153,7 +273,7 @@ class ProductModule
     /**
      * Lấy sản phẩm giảm giá
      */
-    public function getDiscounted(int $limit = 10): ProductCollection
+    public function getDiscounted(int $limit = 10): Collection
     {
         return $this->productManager->getDiscountedProducts($limit);
     }
@@ -161,7 +281,7 @@ class ProductModule
     /**
      * Lấy sản phẩm theo khoảng giá
      */
-    public function getByPriceRange(float $minPrice, float $maxPrice, array $options = []): ProductCollection
+    public function getByPriceRange(float $minPrice, float $maxPrice, array $options = []): Collection
     {
         return $this->productManager->getProductsByPriceRange($minPrice, $maxPrice, $options);
     }
