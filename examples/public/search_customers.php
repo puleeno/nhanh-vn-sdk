@@ -20,6 +20,18 @@ require_once __DIR__ . '/../boot/client.php';
         <h1>👥 Tìm kiếm khách hàng từ Nhanh.vn API sử dụng SDK</h1>
         <hr>
 
+        <!-- Navigation Bar -->
+        <div class="navigation-bar">
+            <nav>
+                <a href="index.php" class="nav-link">🏠 Trang chủ</a>
+                <a href="get_products.php" class="nav-link">📦 Sản phẩm</a>
+                <a href="get_categories.php" class="nav-link">📂 Danh mục</a>
+                <a href="add_product.php" class="nav-link">➕ Thêm sản phẩm</a>
+                <a href="add_product_images.php" class="nav-link">🖼️ Thêm ảnh sản phẩm</a>
+                <a href="search_customers.php" class="nav-link active">👥 Khách hàng</a>
+            </nav>
+        </div>
+
         <div class="section">
             <h2>📋 Thông tin Debug</h2>
             <div class="debug-info">
