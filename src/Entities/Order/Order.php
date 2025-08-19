@@ -163,14 +163,14 @@ class Order extends AbstractEntity
     /** @var string|null Tên nhân viên bán hàng */
     protected ?string $saleName = null;
 
-    /** @var int|null ID đơn hàng gốc (cho đơn trả hàng) */
-    protected ?int $returnFromOrderId = null;
+    /** @var string|null ID đơn hàng gốc (cho đơn trả hàng) */
+    protected ?string $returnFromOrderId = null;
 
     /** @var string|null Mã giới thiệu */
     protected ?string $affiliateCode = null;
 
-    /** @var int|null Tiền hoa hồng được hưởng */
-    protected ?int $affiliateBonusCash = null;
+    /** @var string|null Tiền hoa hồng được hưởng */
+    protected ?string $affiliateBonusCash = null;
 
     /** @var int|null Phần trăm hoa hồng được hưởng */
     protected ?int $affiliateBonusPercent = null;
@@ -219,6 +219,74 @@ class Order extends AbstractEntity
     public function __construct(array $data = [])
     {
         parent::__construct($data);
+
+        // Map data từ attributes sang properties để tương thích với getter methods
+        $this->id = $this->getAttribute('id');
+        $this->shopOrderId = $this->getAttribute('shopOrderId');
+        $this->merchantTrackingNumber = $this->getAttribute('merchantTrackingNumber');
+        $this->handoverId = $this->getAttribute('handoverId');
+        $this->depotId = $this->getAttribute('depotId');
+        $this->depotName = $this->getAttribute('depotName');
+        $this->typeId = $this->getAttribute('typeId');
+        $this->type = $this->getAttribute('type');
+        $this->moneyDiscount = $this->getAttribute('moneyDiscount');
+        $this->moneyDeposit = $this->getAttribute('moneyDeposit');
+        $this->moneyTransfer = $this->getAttribute('moneyTransfer');
+        $this->usedPoints = $this->getAttribute('usedPoints');
+        $this->moneyUsedPoints = $this->getAttribute('moneyUsedPoints');
+        $this->usedPointAmount = $this->getAttribute('usedPointAmount');
+        $this->serviceId = $this->getAttribute('serviceId');
+        $this->carrierId = $this->getAttribute('carrierId');
+        $this->carrierServiceType = $this->getAttribute('carrierServiceType');
+        $this->carrierServiceTypeName = $this->getAttribute('carrierServiceTypeName');
+        $this->carrierCode = $this->getAttribute('carrierCode');
+        $this->carrierName = $this->getAttribute('carrierName');
+        $this->carrierServiceName = $this->getAttribute('carrierServiceName');
+        $this->shipFee = $this->getAttribute('shipFee');
+        $this->codFee = $this->getAttribute('codFee');
+        $this->declaredFee = $this->getAttribute('declaredFee');
+        $this->customerShipFee = $this->getAttribute('customerShipFee');
+        $this->returnFee = $this->getAttribute('returnFee');
+        $this->overWeightShipFee = $this->getAttribute('overWeightShipFee');
+        $this->description = $this->getAttribute('description');
+        $this->privateDescription = $this->getAttribute('privateDescription');
+        $this->customerId = $this->getAttribute('customerId');
+        $this->customerName = $this->getAttribute('customerName');
+        $this->customerMobile = $this->getAttribute('customerMobile');
+        $this->customerEmail = $this->getAttribute('customerEmail');
+        $this->customerAddress = $this->getAttribute('customerAddress');
+        $this->customerCityId = $this->getAttribute('customerCityId');
+        $this->customerCity = $this->getAttribute('customerCity');
+        $this->customerDistrictId = $this->getAttribute('customerDistrictId');
+        $this->customerDistrict = $this->getAttribute('customerDistrict');
+        $this->createdById = $this->getAttribute('createdById');
+        $this->createdByName = $this->getAttribute('createdByName');
+        $this->createdDateTime = $this->getAttribute('createdDateTime');
+        $this->deliveryDate = $this->getAttribute('deliveryDate');
+        $this->statusCode = $this->getAttribute('statusCode');
+        $this->statusName = $this->getAttribute('statusName');
+        $this->calcTotalMoney = $this->getAttribute('calcTotalMoney');
+        $this->trafficSourceId = $this->getAttribute('trafficSourceId');
+        $this->trafficSourceName = $this->getAttribute('trafficSourceName');
+        $this->saleId = $this->getAttribute('saleId');
+        $this->saleName = $this->getAttribute('saleName');
+        $this->returnFromOrderId = $this->getAttribute('returnFromOrderId');
+        $this->affiliateCode = $this->getAttribute('affiliateCode');
+        $this->affiliateBonusCash = $this->getAttribute('affiliateBonusCash');
+        $this->affiliateBonusPercent = $this->getAttribute('affiliateBonusPercent');
+        $this->tags = $this->getAttribute('tags');
+        // Map cả channel và saleChannel
+        $this->saleChannel = $this->getAttribute('saleChannel') ?: $this->getAttribute('channel');
+        $this->ecomShopId = $this->getAttribute('ecomShopId');
+        $this->couponCode = $this->getAttribute('couponCode');
+        $this->products = $this->getAttribute('products');
+        $this->utmSource = $this->getAttribute('utmSource');
+        $this->utmMedium = $this->getAttribute('utmMedium');
+        $this->utmCampaign = $this->getAttribute('utmCampaign');
+        $this->facebook = $this->getAttribute('facebook');
+        $this->updatedAt = $this->getAttribute('updatedAt');
+        $this->packed = $this->getAttribute('packed');
+        $this->vat = $this->getAttribute('vat');
     }
 
     /**
@@ -281,7 +349,7 @@ class Order extends AbstractEntity
     public function getPrivateDescription(): ?string { return $this->privateDescription; }
     public function getCustomerId(): ?int { return $this->customerId; }
     public function getCustomerName(): ?string { return $this->customerName; }
-    public function getCustomerMobile(): ?string { return $this->customerName; }
+    public function getCustomerMobile(): ?string { return $this->customerMobile; }
     public function getCustomerEmail(): ?string { return $this->customerEmail; }
     public function getCustomerAddress(): ?string { return $this->customerAddress; }
     public function getCustomerCityId(): ?int { return $this->customerCityId; }
@@ -299,9 +367,9 @@ class Order extends AbstractEntity
     public function getTrafficSourceName(): ?string { return $this->trafficSourceName; }
     public function getSaleId(): ?int { return $this->saleId; }
     public function getSaleName(): ?string { return $this->saleName; }
-    public function getReturnFromOrderId(): ?int { return $this->returnFromOrderId; }
+    public function getReturnFromOrderId(): ?string { return $this->returnFromOrderId; }
     public function getAffiliateCode(): ?string { return $this->affiliateCode; }
-    public function getAffiliateBonusCash(): ?int { return $this->affiliateBonusCash; }
+    public function getAffiliateBonusCash(): ?string { return $this->affiliateBonusCash; }
     public function getAffiliateBonusPercent(): ?int { return $this->affiliateBonusPercent; }
     public function getTags(): ?array { return $this->tags; }
     public function getSaleChannel(): ?int { return $this->saleChannel; }
