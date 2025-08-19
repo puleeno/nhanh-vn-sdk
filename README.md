@@ -216,8 +216,21 @@ docs/                 # Tài liệu API chi tiết
 ### 🔐 OAuth Module
 - ✅ **Xác thực OAuth 2.0** - `$client->oauth()->getAuthorizationUrl()`
 
+### 🚚 Shipping Module
+- ✅ **Lấy danh sách địa điểm** - `$client->shipping()->searchCities()`, `$client->shipping()->searchDistricts()`, `$client->shipping()->searchWards()`
+- ✅ **Tìm kiếm địa điểm theo tên** - `$client->shipping()->searchByName()`
+- ✅ **Tìm kiếm địa điểm theo ID** - `$client->shipping()->findById()`
+- ✅ **Validate dữ liệu tìm kiếm** - `$client->shipping()->validateSearchData()`
+- ✅ **Lấy danh sách hãng vận chuyển** - `$client->shipping()->getCarriers()`
+
+**Tính năng địa điểm:**
+- Hỗ trợ 3 cấp địa điểm: Thành phố (CITY), Quận huyện (DISTRICT), Phường xã (WARD)
+- Validation tự động với thông báo lỗi chi tiết bằng tiếng Việt
+- Tìm kiếm linh hoạt theo criteria, tên, hoặc ID
+- Cache thông minh với thời gian khuyến cáo 24 giờ
+- Tương thích với các API khác (Order, Shipping Fee)
+
 ### 📋 Các Module khác (Chưa implement)
-- ⏳ **Shipping Module** - Vận chuyển
 - ⏳ **Bill Module** - Xuất nhập kho
 - ⏳ **Website Module** - Tin tức, subscriber
 - ⏳ **Supplier Module** - Nhà cung cấp

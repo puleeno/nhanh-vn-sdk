@@ -85,15 +85,30 @@
                     <p>Demo lấy danh sách đơn hàng với các bộ lọc và phân trang</p>
                     <a href="get_orders.php" class="btn btn-success">Lấy Đơn Hàng</a>
                 </div>
-                <div class="example-item">
-                    <h3>➕ Thêm Đơn Hàng</h3>
-                    <p>Demo thêm đơn hàng mới với đầy đủ tùy chọn vận chuyển và thanh toán</p>
-                    <a href="add_order.php" class="btn btn-primary">Thêm Đơn Hàng</a>
-                </div>
+                                        <div class="example-item">
+                            <h3>➕ Thêm Đơn Hàng</h3>
+                            <p>Demo thêm đơn hàng mới với đầy đủ tùy chọn vận chuyển và thanh toán</p>
+                            <a href="add_order.php" class="btn btn-primary">Thêm Đơn Hàng</a>
+                        </div>
+                        <div class="example-item">
+                            <h3>🚚 Hãng Vận Chuyển</h3>
+                            <p>Demo lấy danh sách hãng vận chuyển và dịch vụ vận chuyển với cache management</p>
+                            <a href="get_shipping_carriers.php" class="btn btn-info">Hãng Vận Chuyển</a>
+                        </div>
+                        <div class="example-item">
+                            <h3>💰 Tính Phí Vận Chuyển</h3>
+                            <p>Demo tính phí vận chuyển cho đơn hàng từ Nhanh.vn (cả cổng Nhanh.vn và tự kết nối)</p>
+                            <a href="calculate_shipping_fee.php" class="btn btn-success">Tính Phí Vận Chuyển</a>
+                        </div>
                 <div class="example-item">
                     <h3>🔄 Cập Nhật Đơn Hàng</h3>
                     <p>Demo cập nhật đơn hàng: trạng thái, thanh toán, vận chuyển</p>
                     <a href="update_order.php" class="btn btn-warning">Cập Nhật Đơn Hàng</a>
+                </div>
+                <div class="example-item">
+                    <h3>🗺️ Lấy Địa Điểm</h3>
+                    <p>Demo lấy danh sách thành phố, quận huyện, phường xã từ Nhanh.vn API</p>
+                    <a href="get_locations.php" class="btn btn-info">Lấy Địa Điểm</a>
                 </div>
             </div>
         </div>

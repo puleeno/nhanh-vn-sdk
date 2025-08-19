@@ -199,4 +199,33 @@ class OrderRepository
         $request = $this->createOrderUpdateRequest($updateData);
         return $request->toApiFormat();
     }
+
+    /**
+     * Chuẩn bị search criteria cho API call
+     *
+     * @param array $searchParams Tham số tìm kiếm
+     * @return array Dữ liệu đã format cho API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function prepareSearchCriteria(array $searchParams): array
+    {
+        try {
+            // Tạo search request entity
+            $searchRequest = new OrderSearchRequest($searchParams);
+
+            // Validate dữ liệu
+            if (!$searchRequest->isValid()) {
+                $errors = $searchRequest->getErrors();
+                throw new Exception("Dữ liệu tìm kiếm không hợp lệ: " . implode(', ', array_merge(...$errors)));
+            }
+
+            // Chuyển đổi sang định dạng API
+            $apiData = $searchRequest->toApiFormat();
+
+            return $apiData;
+
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
 }

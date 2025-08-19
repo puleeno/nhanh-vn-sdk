@@ -330,8 +330,8 @@ class OrderModule
                 return $this->createEntitiesWithMemoryManagement($cachedData, 'createOrderSearchResponse');
             }
 
-            // Chuẩn bị search criteria theo API Nhanh.vn
-            $searchData = $this->prepareSearchCriteria($searchParams);
+            // Chuẩn bị search criteria theo API Nhanh.vn qua Manager
+            $searchData = $this->orderManager->prepareSearchCriteria($searchParams);
 
             // Gọi API Nhanh.vn
             $this->logger->info("OrderModule::search() calling Nhanh.vn API", $searchData);

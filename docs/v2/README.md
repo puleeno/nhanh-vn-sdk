@@ -528,6 +528,12 @@ try {
 ### Customers
 - `POST /api/customer/search` - Tìm kiếm khách hàng với các tiêu chí khác nhau
 
+### Orders
+- `POST /api/order/add` - Thêm đơn hàng mới với đầy đủ tùy chọn vận chuyển và thanh toán
+
+### Shipping
+- `GET /api/shipping/carrier` - Lấy danh sách hãng vận chuyển và dịch vụ vận chuyển
+
 ### Inventory
 - `POST /api/product/expire` - Quản lý hạn sử dụng
 - `POST /api/product/imei` - Quản lý IMEI
@@ -562,4 +568,8 @@ try {
 - **ProductAddRequest/Response Entities**: DTO pattern cho API requests/responses
 - **Customer Module**: Tìm kiếm và quản lý khách hàng với validation toàn diện
 - **Customer Search API**: Hỗ trợ tìm kiếm theo ID, mobile, type, date range
+- **Order Module**: Thêm đơn hàng mới với validation toàn diện và hỗ trợ đầy đủ tùy chọn vận chuyển
+- **Order Add API**: Hỗ trợ đơn hàng vận chuyển, tại cửa hàng, đặt trước với business rules validation
+- **Shipping Module**: Quản lý hãng vận chuyển và dịch vụ vận chuyển với cache management thông minh
+- **Shipping Carrier API**: Lấy danh sách hãng vận chuyển (Vietnam Post, Giaohangnhanh, J&T Express, Viettel Post, EMS, Ninjavan, Best Express...) với cache 24h
 - Documentation đầy đủ với examples

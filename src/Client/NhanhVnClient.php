@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Puleeno\NhanhVn\Client;
 
 use Puleeno\NhanhVn\Config\ClientConfig;
@@ -7,16 +9,20 @@ use Puleeno\NhanhVn\Modules\ProductModule;
 use Puleeno\NhanhVn\Modules\OAuthModule;
 use Puleeno\NhanhVn\Modules\CustomerModule;
 use Puleeno\NhanhVn\Modules\OrderModule;
+use Puleeno\NhanhVn\Modules\ShippingModule;
 use Puleeno\NhanhVn\Managers\ProductManager;
 use Puleeno\NhanhVn\Managers\CustomerManager;
 use Puleeno\NhanhVn\Managers\OrderManager;
+use Puleeno\NhanhVn\Managers\ShippingManager;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Repositories\CustomerRepository;
 use Puleeno\NhanhVn\Repositories\OrderRepository;
+use Puleeno\NhanhVn\Repositories\ShippingRepository;
 use Puleeno\NhanhVn\Services\ProductService;
 use Puleeno\NhanhVn\Services\CustomerService;
 use Puleeno\NhanhVn\Services\OAuthService;
 use Puleeno\NhanhVn\Services\CacheService;
+use Puleeno\NhanhVn\Services\HttpService;
 use Puleeno\NhanhVn\Contracts\LoggerInterface;
 use Puleeno\NhanhVn\Services\Logger\NullLogger;
 use Puleeno\NhanhVn\Exceptions\ConfigurationException;
@@ -32,6 +38,7 @@ class NhanhVnClient
     private OAuthModule $oauth;
     private CustomerModule $customers;
     private OrderModule $orders;
+    private ShippingModule $shipping;
     private LoggerInterface $logger;
 
     private function __construct(ClientConfig $config)
@@ -66,6 +73,7 @@ class NhanhVnClient
         $productRepository = new ProductRepository($cacheService);
         $customerRepository = new CustomerRepository();
         $orderRepository = new OrderRepository();
+        $shippingRepository = new ShippingRepository($cacheService, $this->logger);
 
         // Initialize services
         $productService = new ProductService($productRepository, $cacheService);
@@ -76,11 +84,13 @@ class NhanhVnClient
         $productManager = new ProductManager($productRepository, $productService);
         $customerManager = new CustomerManager($customerService);
         $orderManager = new OrderManager($orderRepository, $cacheService, $this->logger);
+        $shippingManager = new ShippingManager($shippingRepository, $httpService, $this->logger);
 
         // Initialize modules
         $this->products = new ProductModule($productManager, $httpService, $this->logger);
         $this->customers = new CustomerModule($customerManager, $httpService, $this->logger);
         $this->orders = new OrderModule($orderManager, $httpService, $this->logger);
+        $this->shipping = new ShippingModule($shippingManager, $httpService, $this->logger);
         $this->oauth = new OAuthModule($oauthService, $this->logger);
     }
 
@@ -114,6 +124,14 @@ class NhanhVnClient
     public function orders(): OrderModule
     {
         return $this->orders;
+    }
+
+    /**
+     * Get shipping module
+     */
+    public function shipping(): ShippingModule
+    {
+        return $this->shipping;
     }
 
     /**
@@ -252,6 +270,7 @@ class NhanhVnClient
                 'products' => 'ProductModule',
                 'customers' => 'CustomerModule',
                 'orders' => 'OrderModule',
+                'shipping' => 'ShippingModule',
                 'oauth' => 'OAuthModule'
             ]
         ];

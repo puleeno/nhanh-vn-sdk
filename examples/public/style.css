@@ -400,6 +400,120 @@ code {
     color: #166534;
     margin: 8px 0;
 }
+
+/* Shipping carriers specific styles */
+.carriers-list {
+    margin: 20px 0;
+}
+
+.carrier-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.carrier-header {
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+
+.carrier-header h5 {
+    margin: 0 0 12px 0;
+    color: #1e293b;
+    font-size: 1.3em;
+}
+
+.carrier-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.carrier-id {
+    background: #f1f5f9;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: #475569;
+}
+
+.carrier-logo {
+    background: #f0f9ff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
+}
+
+.carrier-logo a {
+    color: #0369a1;
+    text-decoration: none;
+}
+
+.carrier-logo a:hover {
+    text-decoration: underline;
+}
+
+.carrier-services {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.carrier-services h6 {
+    margin: 0 0 12px 0;
+    color: #475569;
+    font-size: 1.1em;
+}
+
+.carrier-services ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.carrier-services li {
+    margin-bottom: 8px;
+    color: #334155;
+}
+
+.no-services {
+    color: #94a3b8;
+    font-style: italic;
+    margin: 0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-info {
+    background: #06b6d4;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #0891b2;
+}
+
+/* Form textarea */
+.form-group textarea {
     min-height: 100px;
     font-family: inherit;
     line-height: 1.5;
@@ -626,4 +740,99 @@ code {
     background: #1e293b;
     color: #e2e8f0;
     border: 1px solid #334155;
+}
+
+/* Shipping Fees specific styles */
+.shipping-fees-list {
+    margin-top: 20px;
+}
+
+.fee-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f9f9f9;
+}
+
+.fee-header {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.fee-header h6 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.fee-service {
+    font-weight: bold;
+    color: #007cba;
+    margin-bottom: 5px;
+}
+
+.fee-description {
+    font-size: 0.9em;
+    color: #666;
+    font-style: italic;
+}
+
+.fee-details {
+    display: grid;
+    gap: 8px;
+}
+
+.fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+}
+
+.fee-row.total {
+    border-top: 2px solid #007cba;
+    margin-top: 10px;
+    padding-top: 10px;
+    font-size: 1.1em;
+}
+
+.fee-label {
+    color: #333;
+    flex-grow: 1;
+}
+
+.fee-value {
+    color: #007cba;
+    font-weight: bold;
+    text-align: right;
+}
+
+.fee-note {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.fee-summary {
+    background: #e7f3ff;
+    border: 1px solid #b3d7ff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.fee-summary h5 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.fee-summary p {
+    margin: 5px 0;
+    color: #333;
 }
