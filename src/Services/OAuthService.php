@@ -28,28 +28,34 @@ class OAuthService
      */
     public function exchangeAccessCode(string $accessCode): array
     {
-        $url = $this->config->getBaseUrl() . '/oauth/access_token';
-
-        $data = [
-            'version' => $this->config->getApiVersion(),
-            'appId' => $this->config->getAppId(),
-            'secretKey' => $this->config->getSecretKey(),
-            'accessCode' => $accessCode
-        ];
-
-        $client = new Client([
-            'timeout' => $this->config->getTimeout(),
-            'headers' => [
-                'Content-Type' => 'application/x-www-form-urlencoded'
-            ],
-            'verify' => false, // Disable SSL verification for development
-            'curl' => [
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false
-            ]
-        ]);
-
         try {
+            $url = $this->config->getBaseUrl() . '/api/oauth/access_token';
+
+            $data = [
+                'version' => $this->config->getApiVersion(),
+                'appId' => $this->config->getAppId(),
+                'secretKey' => $this->config->getSecretKey(),
+                'accessCode' => $accessCode
+            ];
+
+            $client = new Client([
+                'timeout' => $this->config->getTimeout(),
+                'headers' => [
+                    'Content-Type' => 'application/x-www-form-urlencoded'
+                ],
+                'verify' => false, // Disable SSL verification for development
+                'curl' => [
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false
+                ]
+            ]);
+
+            $this->logger->info('Exchanging access code for token', [
+                'url' => $url,
+                'appId' => $this->config->getAppId(),
+                'accessCode' => substr($accessCode, 0, 10) . '...'
+            ]);
+
             $response = $client->post($url, [
                 'form_params' => $data
             ]);
@@ -67,9 +73,21 @@ class OAuthService
                 throw new ApiException($message);
             }
 
+            $this->logger->info('Successfully exchanged access code for token');
+
             return $result;
+
         } catch (RequestException $e) {
+            $this->logger->error('Request failed when exchanging access code', [
+                'error' => $e->getMessage(),
+                'url' => $url ?? 'unknown'
+            ]);
             throw new ApiException('Không thể kết nối đến Nhanh.vn API: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            $this->logger->error('Unexpected error when exchanging access code', [
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
     }
 
@@ -78,12 +96,37 @@ class OAuthService
      */
     public function getOAuthUrl(string $returnLink): string
     {
-        $params = [
-            'version' => $this->config->getApiVersion(),
-            'appId' => $this->config->getAppId(),
-            'returnLink' => $returnLink
-        ];
+        try {
+            $params = [
+                'version' => $this->config->getApiVersion(),
+                'appId' => $this->config->getAppId(),
+                'returnLink' => $returnLink
+            ];
 
-        return 'https://nhanh.vn/oauth?' . http_build_query($params);
+            // Thêm businessId nếu có
+            if ($this->config->getBusinessId()) {
+                $params['businessId'] = $this->config->getBusinessId();
+            }
+
+            $this->logger->info('Generated OAuth URL', [
+                'params' => array_merge($params, ['returnLink' => '***hidden***'])
+            ]);
+
+            return 'https://nhanh.vn/oauth?' . http_build_query($params);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error generating OAuth URL', [
+                'error' => $e->getMessage()
+            ]);
+
+            // Fallback nếu có lỗi
+            $fallbackParams = [
+                'version' => '2.0',
+                'appId' => $this->config->getAppId() ?? 'unknown',
+                'returnLink' => $returnLink
+            ];
+
+            return 'https://nhanh.vn/oauth?' . http_build_query($fallbackParams);
+        }
     }
 }

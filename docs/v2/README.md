@@ -6,6 +6,14 @@
 
 Nhanh.vn SDK v2.0 là thư viện PHP hiện đại để tích hợp với Nhanh.vn API. SDK được thiết kế theo các nguyên tắc SOLID, sử dụng design patterns phổ biến và cung cấp API dễ sử dụng.
 
+**🔐 Lưu ý về xác thực:** Nhanh.vn API 2.0 sử dụng flow xác thực riêng của họ (không phải OAuth 2.0 chuẩn). Flow này bao gồm:
+1. Tạo URL xác thực với `appId`, `secretKey` và `redirectUrl`
+2. User authorize và nhận `access_code`
+3. Đổi `access_code` lấy `access_token`
+4. Sử dụng `access_token` để gọi các API khác
+
+SDK cung cấp `OAuthExample` class để xử lý flow xác thực này một cách dễ dàng.
+
 ## Cài đặt
 
 ```bash
@@ -24,7 +32,8 @@ $config = new ClientConfig([
     'appId' => 'YOUR_APP_ID',
     'businessId' => 'YOUR_BUSINESS_ID',
     'accessToken' => 'YOUR_ACCESS_TOKEN',
-    'environment' => 'production', // hoặc 'sandbox'
+    'apiVersion' => '2.0',
+    'baseUrl' => 'https://pos.open.nhanh.vn',
     'timeout' => 30,
     'retryAttempts' => 3
 ]);
@@ -32,37 +41,106 @@ $config = new ClientConfig([
 $client = NhanhVnClient::getInstance($config);
 ```
 
-### OAuth Flow
+### OAuth Flow (Sử dụng OAuthExample)
 
-#### Bước 1: Lấy Access Code
+**⚠️ Lưu ý:** Nhanh.vn API 2.0 không sử dụng OAuth chuẩn mà là flow xác thực riêng của họ. Tên "OAuth" ở đây chỉ là tên gọi, không phải protocol OAuth 2.0 chuẩn.
+
+#### Bước 1: Tạo OAuthExample instance
 
 ```php
-// Tạo URL OAuth để user authorize
-$oauthUrl = $client->getOAuthUrl('https://your-app.com/callback');
+use Examples\OAuthExample;
 
-// Redirect user đến URL này
-header('Location: ' . $oauthUrl);
-exit;
+$app = new OAuthExample();
+
+// Hiển thị link xác thực
+$app->showOAuthLink();
+
+// Lấy URL xác thực
+$authUrl = $app->getOAuthUrl();
+echo "URL xác thực: " . $authUrl;
 ```
 
-#### Bước 2: Đổi Access Code lấy Access Token
+#### Bước 2: Xử lý Callback xác thực
 
 ```php
-// Sau khi user authorize, bạn nhận được access_code từ callback
-$accessCode = $_GET['access_code'] ?? null;
+// Trong file callback.php
+$app = new OAuthExample();
+$app->handleCallback();
+```
 
-if ($accessCode) {
-    try {
-        $accessToken = $client->exchangeAccessCode($accessCode);
+#### Bước 3: Khởi tạo Client với Access Token
 
-        // Lưu access token vào database hoặc session
-        $_SESSION['nhanhvn_access_token'] = $accessToken;
+```php
+// Sử dụng boot file để khởi tạo client
+require_once __DIR__ . '/boot/client.php';
 
-        echo "Xác thực thành công! Access Token: " . $accessToken;
-    } catch (Exception $e) {
-        echo "Lỗi xác thực: " . $e->getMessage();
-    }
+// Khởi tạo client không có logger
+$client = bootNhanhVnClientSilent();
+
+// Hoặc khởi tạo client với Monolog logger
+$client = bootNhanhVnClientWithLogger('DEBUG');
+
+// Kiểm tra client đã sẵn sàng
+if (isClientReady()) {
+    echo "Client đã sẵn sàng!";
+} else {
+    echo "Client chưa sẵn sàng. Vui lòng chạy flow xác thực trước!";
 }
+```
+
+#### Bước 4: Lấy thông tin Client
+
+```php
+$clientInfo = getClientInfo();
+echo "App ID: " . $clientInfo['appId'];
+echo "Business ID: " . $clientInfo['businessId'];
+echo "API Version: " . $clientInfo['apiVersion'];
+echo "Has Access Token: " . ($clientInfo['hasAccessToken'] ? 'Yes' : 'No');
+```
+
+### Flow xác thực thực tế của Nhanh.vn
+
+1. **Tạo URL xác thực**: Sử dụng `appId`, `secretKey` và `redirectUrl`
+2. **User authorize**: User truy cập URL và cấp quyền
+3. **Nhận access_code**: Nhanh.vn trả về `access_code` qua callback
+4. **Đổi access_code lấy access_token**: Gọi API để đổi `access_code` thành `access_token`
+5. **Sử dụng access_token**: Sử dụng `access_token` để gọi các API khác
+
+### Sử dụng NhanhClientBuilder (Khuyến nghị)
+
+```php
+use Puleeno\NhanhVn\Client\NhanhClientBuilder;
+
+// Tạo client cơ bản
+$client = NhanhClientBuilder::create()
+    ->withAppId('YOUR_APP_ID')
+    ->withBusinessId('YOUR_BUSINESS_ID')
+    ->withAccessToken('YOUR_ACCESS_TOKEN')
+    ->build();
+
+// Tạo client với logging
+$client = NhanhClientBuilder::create()
+    ->withAppId('YOUR_APP_ID')
+    ->withBusinessId('YOUR_BUSINESS_ID')
+    ->withAccessToken('YOUR_ACCESS_TOKEN')
+    ->withLogger()
+    ->withLogLevel('DEBUG')
+    ->withLogFile('logs/nhanh-vn-sdk.log')
+    ->withConsoleLogging()
+    ->build();
+
+// Sử dụng presets
+$client = NhanhClientBuilder::createDevelopment(
+    'YOUR_APP_ID',
+    'YOUR_BUSINESS_ID',
+    'YOUR_ACCESS_TOKEN'
+);
+
+$client = NhanhClientBuilder::createProduction(
+    'YOUR_APP_ID',
+    'YOUR_BUSINESS_ID',
+    'YOUR_ACCESS_TOKEN'
+);
 ```
 
 ## Sử dụng API
@@ -74,23 +152,19 @@ if ($accessCode) {
 ```php
 try {
     // Tìm kiếm cơ bản
-    $products = $client->products()->search('iPhone');
-
-    // Tìm kiếm nâng cao
-    $products = $client->products()->search('iPhone', [
-        'categoryId' => 1,
-        'brandId' => 2,
-        'minPrice' => 1000000,
-        'maxPrice' => 50000000,
+    $searchCriteria = [
         'page' => 1,
-        'limit' => 20
-    ]);
+        'limit' => 10,
+        'status' => 'Active'
+    ];
+
+    $products = $client->products()->search($searchCriteria);
 
     // Xử lý kết quả
     foreach ($products as $product) {
         echo "Tên: " . $product->getName() . "\n";
         echo "Giá: " . number_format($product->getPrice()) . " VNĐ\n";
-        echo "Danh mục: " . $product->getCategory()->getName() . "\n";
+        echo "Tồn kho: " . $product->getAvailableQuantity() . " / " . $product->getTotalQuantity() . "\n";
         echo "---\n";
     }
 
@@ -456,7 +530,25 @@ $productsArray = $products->toArray();
 
 ## Best Practices
 
-### 1. Singleton Pattern
+### 1. Sử dụng OAuthExample cho xác thực
+
+```php
+// ĐÚNG - Sử dụng OAuthExample class
+use Examples\OAuthExample;
+
+$app = new OAuthExample();
+$app->showOAuthLink(); // Hiển thị link xác thực
+$app->handleCallback(); // Xử lý callback
+
+// Sử dụng boot file để khởi tạo client
+require_once __DIR__ . '/boot/client.php';
+$client = bootNhanhVnClientSilent();
+
+// SAI - Không tự implement flow xác thực
+// $client->getOAuthUrl() // Không tồn tại method này
+```
+
+### 2. Singleton Pattern
 
 ```php
 // ĐÚNG - Sử dụng singleton
@@ -466,12 +558,12 @@ $client = NhanhVnClient::getInstance($config);
 $client = new NhanhVnClient($config);
 ```
 
-### 2. Error Handling
+### 3. Error Handling
 
 ```php
 // Luôn wrap API calls trong try-catch
 try {
-    $result = $client->products()->search('test');
+    $result = $client->products()->search($searchCriteria);
 } catch (Exception $e) {
     // Log lỗi
     error_log("Nhanh.vn API Error: " . $e->getMessage());
@@ -483,7 +575,7 @@ try {
 }
 ```
 
-### 3. Caching
+### 4. Caching
 
 ```php
 // Kiểm tra cache trước khi gọi API
@@ -495,7 +587,7 @@ if ($client->products()->isCacheAvailable()) {
 }
 ```
 
-### 4. Rate Limiting
+### 5. Rate Limiting
 
 ```php
 // Implement exponential backoff
@@ -503,7 +595,7 @@ $baseDelay = 1;
 $maxDelay = 60;
 
 try {
-    $result = $client->products()->search('test');
+    $result = $client->products()->search($searchCriteria);
 } catch (RateLimitException $e) {
     $delay = min($baseDelay * pow(2, $retryCount), $maxDelay);
     sleep($delay);
@@ -511,10 +603,30 @@ try {
 }
 ```
 
+### 6. Sử dụng NhanhClientBuilder
+
+```php
+// Khuyến nghị sử dụng Builder pattern
+$client = NhanhClientBuilder::create()
+    ->withAppId('YOUR_APP_ID')
+    ->withBusinessId('YOUR_BUSINESS_ID')
+    ->withAccessToken('YOUR_ACCESS_TOKEN')
+    ->withLogger()
+    ->withLogLevel('DEBUG')
+    ->build();
+
+// Hoặc sử dụng presets
+$client = NhanhClientBuilder::createDevelopment(
+    'YOUR_APP_ID',
+    'YOUR_BUSINESS_ID',
+    'YOUR_ACCESS_TOKEN'
+);
+```
+
 ## API Endpoints
 
-### OAuth
-- `GET /oauth` - Lấy access code
+### Xác thực (Authentication)
+- `GET /oauth` - Lấy access code (không phải OAuth chuẩn)
 - `POST /api/oauth/access_token` - Đổi access code lấy access token
 
 ### Products
@@ -526,15 +638,21 @@ try {
 - `POST /api/product/category` - Quản lý danh mục
 - `POST /api/product/internalcategory` - Quản lý danh mục nội bộ
 - `POST /api/product/gift` - Quản lý quà tặng
+- `POST /api/product/externalimage` - Thêm ảnh sản phẩm từ CDN bên ngoài
 
 ### Customers
 - `POST /api/customer/search` - Tìm kiếm khách hàng với các tiêu chí khác nhau
+- `POST /api/customer/add` - Thêm khách hàng mới (hỗ trợ batch)
 
 ### Orders
 - `POST /api/order/add` - Thêm đơn hàng mới với đầy đủ tùy chọn vận chuyển và thanh toán
+- `POST /api/order/update` - Cập nhật đơn hàng
+- `POST /api/order/search` - Tìm kiếm đơn hàng
 
 ### Shipping
 - `GET /api/shipping/carrier` - Lấy danh sách hãng vận chuyển và dịch vụ vận chuyển
+- `POST /api/shipping/fee` - Tính phí vận chuyển
+- `POST /api/shipping/location` - Quản lý địa điểm (thành phố, quận huyện, phường xã)
 
 ### Inventory
 - `POST /api/product/expire` - Quản lý hạn sử dụng
@@ -555,6 +673,15 @@ try {
 - **Issues**: [GitHub Issues](https://github.com/puleeno/nhanh-vn-sdk/issues)
 - **Email**: puleeno@gmail.com
 
+## Tài liệu chi tiết
+
+- **[OAuth Flow](oauth-flow.md)** - Hướng dẫn chi tiết về flow xác thực
+- **[Client Builder](client-builder.md)** - Sử dụng NhanhClientBuilder
+- **[Product Management](product/README.md)** - Quản lý sản phẩm
+- **[Customer Management](customer/README.md)** - Quản lý khách hàng
+- **[Order Management](order/README.md)** - Quản lý đơn hàng
+- **[Shipping Management](shipping/README.md)** - Quản lý vận chuyển
+
 ## Changelog
 
 ### v2.0.0
@@ -564,14 +691,23 @@ try {
 - Tích hợp Laravel Collections và Carbon
 - Hệ thống cache thông minh
 - Error handling toàn diện với custom exceptions
-- OAuth flow hoàn chỉnh
+- **Flow xác thực riêng**: Sử dụng access_code và access_token (không phải OAuth chuẩn)
 - **Product Add API**: Hỗ trợ thêm/cập nhật sản phẩm với validation toàn diện
 - **Batch Operations**: Hỗ trợ thêm tối đa 300 sản phẩm cùng lúc
 - **ProductAddRequest/Response Entities**: DTO pattern cho API requests/responses
 - **Customer Module**: Tìm kiếm và quản lý khách hàng với validation toàn diện
 - **Customer Search API**: Hỗ trợ tìm kiếm theo ID, mobile, type, date range
+- **Customer Add API**: Hỗ trợ thêm khách hàng đơn lẻ và batch
 - **Order Module**: Thêm đơn hàng mới với validation toàn diện và hỗ trợ đầy đủ tùy chọn vận chuyển
 - **Order Add API**: Hỗ trợ đơn hàng vận chuyển, tại cửa hàng, đặt trước với business rules validation
+- **Order Update API**: Cập nhật đơn hàng với validation toàn diện
+- **Order Search API**: Tìm kiếm đơn hàng với các bộ lọc và phân trang
 - **Shipping Module**: Quản lý hãng vận chuyển và dịch vụ vận chuyển với cache management thông minh
 - **Shipping Carrier API**: Lấy danh sách hãng vận chuyển (Vietnam Post, Giaohangnhanh, J&T Express, Viettel Post, EMS, Ninjavan, Best Express...) với cache 24h
-- Documentation đầy đủ với examples
+- **Shipping Fee API**: Tính phí vận chuyển cho đơn hàng
+- **Location API**: Quản lý địa điểm (thành phố, quận huyện, phường xã)
+- **Product External Image API**: Thêm ảnh sản phẩm từ CDN bên ngoài
+- **Boot File System**: Hệ thống khởi tạo client thông minh với OAuthExample
+- **Monolog Integration**: Tích hợp logging toàn diện với Monolog
+- **Client Builder Pattern**: NhanhClientBuilder với fluent interface
+- Documentation đầy đủ với examples thực tế

@@ -122,6 +122,7 @@ class OAuthExample
         try {
             $client = $this->initializeClient();
             if ($client) {
+                // Sử dụng SDK method
                 return $client->getOAuthUrl($this->config['redirectUrl']);
             }
         } catch (\Exception $e) {
@@ -136,6 +137,12 @@ class OAuthExample
             'appId' => $this->config['appId'],
             'returnLink' => $this->config['redirectUrl']
         ];
+
+        // Thêm businessId nếu có
+        if (isset($this->config['businessId'])) {
+            $params['businessId'] = $this->config['businessId'];
+        }
+
         return $baseUrl . '?' . http_build_query($params);
     }
 
@@ -280,7 +287,9 @@ class OAuthExample
             // Tạo config tạm thời để khởi tạo client
             $tempConfig = new \Puleeno\NhanhVn\Config\ClientConfig([
                 'appId' => $this->config['appId'],
-                'secretKey' => $this->config['secretKey']
+                'secretKey' => $this->config['secretKey'],
+                'apiVersion' => '2.0',
+                'baseUrl' => 'https://pos.open.nhanh.vn'
             ]);
 
             // Khởi tạo client tạm thời
