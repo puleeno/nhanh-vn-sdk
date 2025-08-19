@@ -2,7 +2,7 @@
 
 ## Tổng quan
 
-Order API cung cấp các chức năng để quản lý đơn hàng từ Nhanh.vn, bao gồm tìm kiếm, lọc và phân tích đơn hàng.
+Order API cung cấp các chức năng để quản lý đơn hàng từ Nhanh.vn, bao gồm tìm kiếm, lọc, thêm mới, cập nhật và phân tích đơn hàng.
 
 ## Endpoints
 
@@ -44,6 +44,90 @@ Order API cung cấp các chức năng để quản lý đơn hàng từ Nhanh.v
 | `updatedDateTimeFrom` | string | No | Thời gian cập nhật từ (định dạng: Y-m-d H:i:s) |
 | `updatedDateTimeTo` | string | No | Thời gian cập nhật đến (định dạng: Y-m-d H:i:s) |
 | `dataOptions` | array | No | Lựa chọn dữ liệu cần lấy thêm |
+
+### 2. Thêm đơn hàng mới
+
+**Endpoint:** `/api/order/add`
+
+**Method:** `POST`
+
+**Mô tả:** Thêm đơn hàng mới vào hệ thống Nhanh.vn.
+
+**Parameters:** Xem chi tiết trong [OrderAddRequest](../src/Entities/Order/OrderAddRequest.php)
+
+### 3. Cập nhật đơn hàng
+
+**Endpoint:** `/api/order/update`
+
+**Method:** `POST`
+
+**Mô tả:** Cập nhật thông tin đơn hàng khi khách hàng thực hiện chuyển khoản online, hủy đơn hàng hoặc gửi đơn hàng qua hãng vận chuyển.
+
+**Lưu ý quan trọng:**
+- Phải cung cấp ít nhất một trong hai giá trị: `id` hoặc `orderId`
+- Hệ thống sẽ ưu tiên thông tin `orderId` trên Nhanh.vn
+- Khi `autoSend = 1`, hệ thống sẽ tự động gửi đơn hàng sang hãng vận chuyển
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string(20) | No | ID đơn hàng trên website của bạn |
+| `orderId` | string(20) | ** | ID đơn hàng của Nhanh.vn |
+| `autoSend` | int | No | Biến đánh dấu gửi luôn đơn hàng sang hãng vận chuyển (0: Không, 1: Có) |
+| `moneyTransfer` | int | No | Số tiền khách đã chuyển khoản |
+| `moneyTransferAccountId` | int | No | Tài khoản nhận tiền chuyển khoản (áp dụng với doanh nghiệp sử dụng kế toán) |
+| `paymentCode` | string(255) | No | Mã giao dịch thanh toán |
+| `paymentGateway` | string(255) | No | Tên của cổng thanh toán |
+| `status` | string | No | Trạng thái đơn hàng (Success, Confirmed, Canceled, Aborted) |
+| `description` | string(255) | No | Ghi chú khách hàng |
+| `privateDescription` | string(255) | No | Ghi chú nội bộ |
+| `customerShipFee` | int | No | Phí ship báo khách |
+
+#### Trạng thái đơn hàng (status)
+
+| Giá trị | Mô tả | Điều kiện thay đổi |
+|----------|-------|-------------------|
+| `Success` | Thành công | Luôn có thể thay đổi |
+| `Confirmed` | Đã xác nhận | Luôn có thể thay đổi |
+| `Canceled` | Khách hủy | Chỉ đổi được khi đơn hàng đang ở trạng thái Mới, Đang xác nhận, Đã xác nhận |
+| `Aborted` | Hệ thống hủy | Chỉ đổi được khi đơn hàng đang ở trạng thái Mới, Đang xác nhận, Đã xác nhận |
+
+#### Response
+
+```json
+{
+    "code": 1,
+    "messages": [],
+    "data": {
+        "orderId": 125123098,
+        "status": "Shipping",
+        "shipFee": 30000,
+        "codFee": 13000,
+        "shipFeeDiscount": 0,
+        "codFeeDiscount": 0,
+        "carrierCode": "GHN123456789"
+    }
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `orderId` | int | ID đơn hàng trên Nhanh.vn |
+| `status` | string | Trạng thái hiện tại của đơn hàng |
+| `shipFee` | int | Phí vận chuyển |
+| `codFee` | int | Phí thu tiền hộ |
+| `shipFeeDiscount` | int | Phí vận chuyển được giảm giá |
+| `codFeeDiscount` | int | Phí thu tiền hộ được giảm giá |
+| `carrierCode` | string | Mã vận đơn (chỉ có khi gửi đơn hàng thành công sang hãng vận chuyển) |
+
+**Lưu ý về phí:**
+- `shipFee` và `codFee` dùng trong tình huống đơn hàng có sử dụng dịch vụ vận chuyển
+- `shipFeeDiscount` là phí vận chuyển được chiết khấu
+- `codFeeDiscount` là phí thu tiền hộ được chiết khấu
+- Phí thực tế = Phí gốc - Phí giảm giá
 
 #### Loại đơn hàng (type)
 
@@ -365,7 +449,7 @@ try {
     $orders = $client->orders()->search($searchParams);
 } catch (Exception $e) {
     echo "Lỗi: " . $e->getMessage() . "\n";
-    
+
     // Log lỗi
     $logger->error("Order search failed", [
         'error' => $e->getMessage(),

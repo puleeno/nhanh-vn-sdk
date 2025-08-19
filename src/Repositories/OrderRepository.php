@@ -5,6 +5,8 @@ namespace Puleeno\NhanhVn\Repositories;
 use Puleeno\NhanhVn\Entities\Order\Order;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchRequest;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchResponse;
+use Puleeno\NhanhVn\Entities\Order\OrderUpdateRequest;
+use Puleeno\NhanhVn\Entities\Order\OrderUpdateResponse;
 
 /**
  * Order Repository - Quản lý việc tạo Order entities
@@ -34,6 +36,28 @@ class OrderRepository
     public function createOrderSearchResponse(array $responseData): OrderSearchResponse
     {
         return new OrderSearchResponse($responseData);
+    }
+
+    /**
+     * Tạo OrderUpdateRequest từ dữ liệu cập nhật
+     *
+     * @param array $updateData Dữ liệu cập nhật đơn hàng
+     * @return OrderUpdateRequest Request đã được tạo
+     */
+    public function createOrderUpdateRequest(array $updateData): OrderUpdateRequest
+    {
+        return new OrderUpdateRequest($updateData);
+    }
+
+    /**
+     * Tạo OrderUpdateResponse từ dữ liệu API
+     *
+     * @param array $responseData Dữ liệu response từ API
+     * @return OrderUpdateResponse Response đã được tạo
+     */
+    public function createOrderUpdateResponse(array $responseData): OrderUpdateResponse
+    {
+        return OrderUpdateResponse::createFromApiResponse($responseData);
     }
 
     /**
@@ -101,6 +125,22 @@ class OrderRepository
     }
 
     /**
+     * Validate dữ liệu cập nhật đơn hàng
+     *
+     * @param array $updateData Dữ liệu cần validate
+     * @return bool True nếu hợp lệ, false nếu không hợp lệ
+     */
+    public function validateUpdateData(array $updateData): bool
+    {
+        try {
+            $request = $this->createOrderUpdateRequest($updateData);
+            return $request->isValid();
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
      * Lấy danh sách lỗi validation
      *
      * @param array $searchData Dữ liệu cần validate
@@ -110,6 +150,22 @@ class OrderRepository
     {
         try {
             $request = $this->createOrderSearchRequest($searchData);
+            return $request->getErrors();
+        } catch (\Exception $e) {
+            return ['general' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Lấy danh sách lỗi validation cho cập nhật đơn hàng
+     *
+     * @param array $updateData Dữ liệu cần validate
+     * @return array Mảng chứa các lỗi validation
+     */
+    public function getUpdateValidationErrors(array $updateData): array
+    {
+        try {
+            $request = $this->createOrderUpdateRequest($updateData);
             return $request->getErrors();
         } catch (\Exception $e) {
             return ['general' => $e->getMessage()];
@@ -129,6 +185,18 @@ class OrderRepository
         // Tự động set date range nếu cần
         $request->setDefaultDateRange();
 
+        return $request->toApiFormat();
+    }
+
+    /**
+     * Chuẩn bị dữ liệu cập nhật cho API
+     *
+     * @param array $updateData Dữ liệu cập nhật từ người dùng
+     * @return array Dữ liệu đã được format cho API
+     */
+    public function prepareUpdateData(array $updateData): array
+    {
+        $request = $this->createOrderUpdateRequest($updateData);
         return $request->toApiFormat();
     }
 }

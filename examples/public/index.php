@@ -90,6 +90,11 @@
                     <p>Demo thêm đơn hàng mới với đầy đủ tùy chọn vận chuyển và thanh toán</p>
                     <a href="add_order.php" class="btn btn-primary">Thêm Đơn Hàng</a>
                 </div>
+                <div class="example-item">
+                    <h3>🔄 Cập Nhật Đơn Hàng</h3>
+                    <p>Demo cập nhật đơn hàng: trạng thái, thanh toán, vận chuyển</p>
+                    <a href="update_order.php" class="btn btn-warning">Cập Nhật Đơn Hàng</a>
+                </div>
             </div>
         </div>
 

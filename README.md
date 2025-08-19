@@ -16,7 +16,7 @@ Nhanh.vn PHP SDK là thư viện PHP chính thức được phát triển để 
 - **🔐 Xác thực OAuth 2.0**: Hỗ trợ đầy đủ luồng xác thực OAuth với Nhanh.vn
 - **📦 Quản lý sản phẩm**: API đầy đủ cho việc quản lý sản phẩm, danh mục, thương hiệu
 - **👥 Quản lý khách hàng**: Tìm kiếm và quản lý thông tin khách hàng
-- **📋 Quản lý đơn hàng**: Tìm kiếm, lọc và phân tích đơn hàng với giới hạn 10 ngày
+- **📋 Quản lý đơn hàng**: Tìm kiếm, lọc, thêm mới, cập nhật và phân tích đơn hàng
 - **📊 Cache thông minh**: Hệ thống cache tự động để tối ưu hiệu suất
 - **📝 Logging chi tiết**: Ghi log đầy đủ cho việc debug và theo dõi
 - **🔄 Xử lý lỗi tự động**: Xử lý và phục hồi lỗi một cách thông minh
@@ -207,6 +207,11 @@ docs/                 # Tài liệu API chi tiết
 - ✅ **Lọc theo khoảng thời gian** - `$client->orders()->getByDateRange()`
 - ✅ **Lọc theo thời gian giao hàng** - `$client->orders()->getByDeliveryDateRange()`
 - ✅ **Lọc theo thời gian cập nhật** - `$client->orders()->getByUpdatedDateTimeRange()`
+- ✅ **Thêm đơn hàng mới** - `$client->orders()->add()`
+- ✅ **Cập nhật đơn hàng** - `$client->orders()->update()`
+- ✅ **Cập nhật trạng thái** - `$client->orders()->updateStatus()`
+- ✅ **Cập nhật thanh toán** - `$client->orders()->updatePayment()`
+- ✅ **Gửi sang hãng vận chuyển** - `$client->orders()->sendToCarrier()`
 
 ### 🔐 OAuth Module
 - ✅ **Xác thực OAuth 2.0** - `$client->oauth()->getAuthorizationUrl()`

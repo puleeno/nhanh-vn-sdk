@@ -7,6 +7,8 @@ use Puleeno\NhanhVn\Entities\Order\Order;
 use Puleeno\NhanhVn\Entities\Order\OrderAddRequest;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchRequest;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchResponse;
+use Puleeno\NhanhVn\Entities\Order\OrderUpdateRequest;
+use Puleeno\NhanhVn\Entities\Order\OrderUpdateResponse;
 use Puleeno\NhanhVn\Services\CacheService;
 use Puleeno\NhanhVn\Contracts\LoggerInterface;
 
@@ -14,7 +16,7 @@ use Puleeno\NhanhVn\Contracts\LoggerInterface;
  * Order Manager - Quản lý business logic cho đơn hàng
  *
  * Manager này chịu trách nhiệm xử lý các logic nghiệp vụ liên quan đến đơn hàng
- * bao gồm: validation, cache management, business rules
+ * bao gồm: validation, cache management, business rules, thêm mới, cập nhật
  */
 class OrderManager
 {
@@ -70,6 +72,34 @@ class OrderManager
     }
 
     /**
+     * Validate dữ liệu cập nhật đơn hàng
+     *
+     * @param array $updateData Dữ liệu cần validate
+     * @return bool True nếu hợp lệ, false nếu không hợp lệ
+     */
+    public function validateUpdateData(array $updateData): bool
+    {
+        $this->logger->debug("OrderManager::validateUpdateData() called", $updateData);
+
+        try {
+            $isValid = $this->orderRepository->validateUpdateData($updateData);
+
+            $this->logger->info("OrderManager::validateUpdateData() result", [
+                'params' => $updateData,
+                'isValid' => $isValid
+            ]);
+
+            return $isValid;
+        } catch (\Exception $e) {
+            $this->logger->error("OrderManager::validateUpdateData() error", [
+                'error' => $e->getMessage(),
+                'params' => $updateData
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Lấy danh sách lỗi validation
      *
      * @param array $searchData Dữ liệu cần validate
@@ -79,6 +109,21 @@ class OrderManager
     {
         try {
             return $this->orderRepository->getSearchValidationErrors($searchData);
+        } catch (\Exception $e) {
+            return ['general' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Lấy danh sách lỗi validation cho cập nhật đơn hàng
+     *
+     * @param array $updateData Dữ liệu cần validate
+     * @return array Mảng chứa các lỗi validation
+     */
+    public function getUpdateValidationErrors(array $updateData): array
+    {
+        try {
+            return $this->orderRepository->getUpdateValidationErrors($updateData);
         } catch (\Exception $e) {
             return ['general' => $e->getMessage()];
         }
@@ -382,6 +427,64 @@ class OrderManager
     public function getOrderRepository(): OrderRepository
     {
         return $this->orderRepository;
+    }
+
+    /**
+     * Tạo OrderUpdateRequest từ dữ liệu
+     *
+     * @param array $updateData Dữ liệu cập nhật đơn hàng
+     * @return OrderUpdateRequest Request đã được tạo
+     */
+    public function createOrderUpdateRequest(array $updateData): OrderUpdateRequest
+    {
+        $this->logger->debug("OrderManager::createOrderUpdateRequest() called", $updateData);
+
+        try {
+            $request = $this->orderRepository->createOrderUpdateRequest($updateData);
+
+            $this->logger->info("OrderManager::createOrderUpdateRequest() - Created request", [
+                'orderId' => $request->getOrderId(),
+                'id' => $request->getId(),
+                'updateType' => $request->getUpdateType()
+            ]);
+
+            return $request;
+        } catch (\Exception $e) {
+            $this->logger->error("OrderManager::createOrderUpdateRequest() error", [
+                'error' => $e->getMessage(),
+                'updateData' => $updateData
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Tạo OrderUpdateResponse từ dữ liệu API
+     *
+     * @param array $responseData Dữ liệu response từ API
+     * @return OrderUpdateResponse Response đã được tạo
+     */
+    public function createOrderUpdateResponse(array $responseData): OrderUpdateResponse
+    {
+        $this->logger->debug("OrderManager::createOrderUpdateResponse() called", $responseData);
+
+        try {
+            $response = $this->orderRepository->createOrderUpdateResponse($responseData);
+
+            $this->logger->info("OrderManager::createOrderUpdateResponse() - Created response", [
+                'success' => $response->isSuccess(),
+                'code' => $response->getCode(),
+                'orderId' => $response->getOrderId()
+            ]);
+
+            return $response;
+        } catch (\Exception $e) {
+            $this->logger->error("OrderManager::createOrderUpdateResponse() error", [
+                'error' => $e->getMessage(),
+                'responseData' => $responseData
+            ]);
+            throw $e;
+        }
     }
 
     /**

@@ -9,6 +9,8 @@ use Puleeno\NhanhVn\Entities\Order\Order;
 use Puleeno\NhanhVn\Entities\Order\OrderAddRequest;
 use Puleeno\NhanhVn\Entities\Order\OrderAddResponse;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchResponse;
+use Puleeno\NhanhVn\Entities\Order\OrderUpdateRequest;
+use Puleeno\NhanhVn\Entities\Order\OrderUpdateResponse;
 use Illuminate\Support\Collection;
 use Exception;
 
@@ -16,7 +18,7 @@ use Exception;
  * Order Module - Quản lý các thao tác liên quan đến đơn hàng
  *
  * Module này cung cấp các method để tương tác với API đơn hàng của Nhanh.vn
- * bao gồm: tìm kiếm, lấy chi tiết, quản lý cache và các thao tác khác
+ * bao gồm: tìm kiếm, lấy chi tiết, thêm mới, cập nhật, quản lý cache và các thao tác khác
  */
 class OrderModule
 {
@@ -110,6 +112,205 @@ class OrderModule
     }
 
     /**
+     * Cập nhật đơn hàng trên Nhanh.vn
+     *
+     * Sử dụng để cập nhật thông tin đơn hàng khi:
+     * - Khách hàng thực hiện chuyển khoản online
+     * - Khách hàng hủy đơn hàng
+     * - Gửi đơn hàng qua các hãng vận chuyển
+     *
+     * @param OrderUpdateRequest $request Request chứa thông tin cập nhật
+     * @return OrderUpdateResponse Response từ API cập nhật đơn hàng
+     * @throws Exception Khi có lỗi xảy ra trong quá trình cập nhật đơn hàng
+     */
+    public function update(OrderUpdateRequest $request): OrderUpdateResponse
+    {
+        $this->logger->info("OrderModule::update() - Updating order", [
+            'orderId' => $request->getOrderId(),
+            'id' => $request->getId(),
+            'updateType' => $request->getUpdateType()
+        ]);
+
+        try {
+            // Validate request
+            if (!$request->isValid()) {
+                $errors = $request->getErrors();
+                $this->logger->error("OrderModule::update() - Validation failed", ['errors' => $errors]);
+                throw new Exception("Validation failed: " . implode(', ', $errors));
+            }
+
+            // Chuẩn bị data cho API
+            $updateData = $request->toApiFormat();
+
+            // Gọi API Nhanh.vn để cập nhật đơn hàng
+            $this->logger->info("OrderModule::update() calling Nhanh.vn API", [
+                'endpoint' => '/order/update',
+                'updateData' => $updateData
+            ]);
+
+            $response = $this->httpService->callApi('/order/update', $updateData);
+
+            // Parse response
+            if (!isset($response['code'])) {
+                $this->logger->error("OrderModule::update() - Invalid response format", ['response' => $response]);
+                throw new Exception("Invalid response format from Nhanh.vn API");
+            }
+
+            // Tạo response entity
+            $updateResponse = $this->orderManager->createOrderUpdateResponse($response);
+
+            if ($updateResponse->isSuccess()) {
+                $this->logger->info("OrderModule::update() - Order updated successfully", [
+                    'orderId' => $updateResponse->getOrderId(),
+                    'status' => $updateResponse->getStatus(),
+                    'carrierCode' => $updateResponse->getCarrierCode()
+                ]);
+
+                // Clear cache để đảm bảo dữ liệu mới nhất
+                $this->clearCache();
+            } else {
+                $this->logger->warning("OrderModule::update() - Order update failed", [
+                    'code' => $updateResponse->getCode(),
+                    'messages' => $updateResponse->getMessages()
+                ]);
+            }
+
+            return $updateResponse;
+
+        } catch (Exception $e) {
+            $this->logger->error("OrderModule::update() - Error updating order", [
+                'error' => $e->getMessage(),
+                'orderId' => $request->getOrderId(),
+                'id' => $request->getId()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Cập nhật đơn hàng từ array data
+     *
+     * @param array $updateData Dữ liệu cập nhật đơn hàng
+     * @return OrderUpdateResponse Response từ API cập nhật đơn hàng
+     * @throws Exception Khi có lỗi xảy ra trong quá trình cập nhật đơn hàng
+     */
+    public function updateFromArray(array $updateData): OrderUpdateResponse
+    {
+        $this->logger->debug("OrderModule::updateFromArray() called", $updateData);
+
+        try {
+            // Validate dữ liệu đầu vào
+            if (!$this->orderManager->validateUpdateData($updateData)) {
+                $errors = $this->orderManager->getUpdateValidationErrors($updateData);
+                $this->logger->error("OrderModule::updateFromArray() - Validation failed", ['errors' => $errors]);
+                throw new Exception("Validation failed: " . implode(', ', $errors));
+            }
+
+            // Tạo OrderUpdateRequest entity
+            $request = $this->orderManager->createOrderUpdateRequest($updateData);
+
+            // Gọi method update chính
+            return $this->update($request);
+
+        } catch (Exception $e) {
+            $this->logger->error("OrderModule::updateFromArray() - Error", ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái đơn hàng
+     *
+     * @param string $orderId ID đơn hàng Nhanh.vn
+     * @param string $status Trạng thái mới
+     * @param string|null $description Ghi chú khách hàng
+     * @param string|null $privateDescription Ghi chú nội bộ
+     * @return OrderUpdateResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function updateStatus(string $orderId, string $status, ?string $description = null, ?string $privateDescription = null): OrderUpdateResponse
+    {
+        $this->logger->info("OrderModule::updateStatus() - Updating order status", [
+            'orderId' => $orderId,
+            'status' => $status
+        ]);
+
+        try {
+            $request = OrderUpdateRequest::createStatusUpdate($orderId, $status, $description, $privateDescription);
+            return $this->update($request);
+
+        } catch (Exception $e) {
+            $this->logger->error("OrderModule::updateStatus() - Error", [
+                'error' => $e->getMessage(),
+                'orderId' => $orderId,
+                'status' => $status
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Cập nhật thông tin thanh toán đơn hàng
+     *
+     * @param string $orderId ID đơn hàng Nhanh.vn
+     * @param float $moneyTransfer Số tiền chuyển khoản
+     * @param string $paymentCode Mã giao dịch
+     * @param string $paymentGateway Tên cổng thanh toán
+     * @param int|null $accountId ID tài khoản nhận tiền
+     * @return OrderUpdateResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function updatePayment(string $orderId, float $moneyTransfer, string $paymentCode, string $paymentGateway, ?int $accountId = null): OrderUpdateResponse
+    {
+        $this->logger->info("OrderModule::updatePayment() - Updating payment info", [
+            'orderId' => $orderId,
+            'moneyTransfer' => $moneyTransfer,
+            'paymentCode' => $paymentCode,
+            'paymentGateway' => $paymentGateway
+        ]);
+
+        try {
+            $request = OrderUpdateRequest::createPaymentUpdate($orderId, $moneyTransfer, $paymentCode, $paymentGateway, $accountId);
+            return $this->update($request);
+
+        } catch (Exception $e) {
+            $this->logger->error("OrderModule::updatePayment() - Error", [
+                'error' => $e->getMessage(),
+                'orderId' => $orderId
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Gửi đơn hàng sang hãng vận chuyển
+     *
+     * @param string $orderId ID đơn hàng Nhanh.vn
+     * @param float|null $customerShipFee Phí ship báo khách
+     * @return OrderUpdateResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function sendToCarrier(string $orderId, ?float $customerShipFee = null): OrderUpdateResponse
+    {
+        $this->logger->info("OrderModule::sendToCarrier() - Sending order to carrier", [
+            'orderId' => $orderId,
+            'customerShipFee' => $customerShipFee
+        ]);
+
+        try {
+            $request = OrderUpdateRequest::createShippingUpdate($orderId, $customerShipFee);
+            return $this->update($request);
+
+        } catch (Exception $e) {
+            $this->logger->error("OrderModule::sendToCarrier() - Error", [
+                'error' => $e->getMessage(),
+                'orderId' => $orderId
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
      * Tìm kiếm đơn hàng theo các tiêu chí
      *
      * @param array $searchParams Các tiêu chí tìm kiếm
@@ -175,100 +376,6 @@ class OrderModule
             if (isset($searchData)) unset($searchData);
             throw $e;
         }
-    }
-
-    /**
-     * Chuẩn bị search criteria theo format API Nhanh.vn
-     *
-     * @param array $searchParams Các tiêu chí tìm kiếm từ người dùng
-     * @return array Các tiêu chí đã được format theo chuẩn API Nhanh.vn
-     */
-    private function prepareSearchCriteria(array $searchParams): array
-    {
-        $searchData = [];
-
-        // Các field cơ bản
-        if (isset($searchParams['page'])) {
-            $searchData['page'] = (int) $searchParams['page'];
-        }
-
-        if (isset($searchParams['limit'])) {
-            $searchData['icpp'] = min((int) $searchParams['limit'], 100); // Tối đa 100
-        }
-
-        if (isset($searchParams['fromDate'])) {
-            $searchData['fromDate'] = $searchParams['fromDate'];
-        }
-
-        if (isset($searchParams['toDate'])) {
-            $searchData['toDate'] = $searchParams['toDate'];
-        }
-
-        if (isset($searchParams['id'])) {
-            $searchData['id'] = (int) $searchParams['id'];
-        }
-
-        if (isset($searchParams['customerMobile'])) {
-            $searchData['customerMobile'] = $searchParams['customerMobile'];
-        }
-
-        if (isset($searchParams['customerId'])) {
-            $searchData['customerId'] = (int) $searchParams['customerId'];
-        }
-
-        if (isset($searchParams['statuses'])) {
-            $searchData['statuses'] = $searchParams['statuses'];
-        }
-
-        if (isset($searchParams['fromDeliveryDate'])) {
-            $searchData['fromDeliveryDate'] = $searchParams['fromDeliveryDate'];
-        }
-
-        if (isset($searchParams['toDeliveryDate'])) {
-            $searchData['toDeliveryDate'] = $searchParams['toDeliveryDate'];
-        }
-
-        if (isset($searchParams['carrierId'])) {
-            $searchData['carrierId'] = (int) $searchParams['carrierId'];
-        }
-
-        if (isset($searchParams['carrierCode'])) {
-            $searchData['carrierCode'] = $searchParams['carrierCode'];
-        }
-
-        if (isset($searchParams['type'])) {
-            $searchData['type'] = (int) $searchParams['type'];
-        }
-
-        if (isset($searchParams['customerCityId'])) {
-            $searchData['customerCityId'] = (int) $searchParams['customerCityId'];
-        }
-
-        if (isset($searchParams['customerDistrictId'])) {
-            $searchData['customerDistrictId'] = (int) $searchParams['customerDistrictId'];
-        }
-
-        if (isset($searchParams['handoverId'])) {
-            $searchData['handoverId'] = (int) $searchParams['handoverId'];
-        }
-
-        if (isset($searchParams['depotId'])) {
-            $searchData['depotId'] = (int) $searchParams['depotId'];
-        }
-
-        if (isset($searchParams['updatedDateTimeFrom'])) {
-            $searchData['updatedDateTimeFrom'] = $searchParams['updatedDateTimeFrom'];
-        }
-
-        if (isset($searchParams['updatedDateTimeTo'])) {
-            $searchData['updatedDateTimeTo'] = $searchParams['updatedDateTimeTo'];
-        }
-
-        if (isset($searchParams['dataOptions'])) {
-            $searchData['dataOptions'] = $searchParams['dataOptions'];
-        }
-
-        return $searchData;
     }
 
     /**
