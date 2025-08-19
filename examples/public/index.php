@@ -75,6 +75,11 @@
                     <p>Demo tìm kiếm khách hàng với các bộ lọc khác nhau</p>
                     <a href="search_customers.php" class="btn btn-success">Tìm Kiếm Khách Hàng</a>
                 </div>
+                <div class="example-item">
+                    <h3>➕ Thêm Khách Hàng</h3>
+                    <p>Demo thêm khách hàng mới và thêm nhiều khách hàng cùng lúc</p>
+                    <a href="add_customer.php" class="btn btn-primary">Thêm Khách Hàng</a>
+                </div>
             </div>
         </div>
 

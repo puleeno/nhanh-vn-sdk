@@ -5,6 +5,8 @@ namespace Puleeno\NhanhVn\Repositories;
 use Puleeno\NhanhVn\Entities\Customer\Customer;
 use Puleeno\NhanhVn\Entities\Customer\CustomerSearchRequest;
 use Puleeno\NhanhVn\Entities\Customer\CustomerSearchResponse;
+use Puleeno\NhanhVn\Entities\Customer\CustomerAddRequest;
+use Puleeno\NhanhVn\Entities\Customer\CustomerAddResponse;
 
 /**
  * Customer Repository
@@ -69,5 +71,38 @@ class CustomerRepository
     {
         $customersData = $response->getCustomers();
         return $this->createCustomers($customersData);
+    }
+
+    /**
+     * Tạo CustomerAddRequest entity
+     *
+     * @param array $data Dữ liệu khách hàng
+     * @return CustomerAddRequest
+     */
+    public function createCustomerAddRequest(array $data): CustomerAddRequest
+    {
+        return new CustomerAddRequest($data);
+    }
+
+    /**
+     * Tạo nhiều CustomerAddRequest entities
+     *
+     * @param array $customersData Mảng dữ liệu khách hàng
+     * @return CustomerAddRequest[]
+     */
+    public function createCustomerAddRequests(array $customersData): array
+    {
+        return array_map([$this, 'createCustomerAddRequest'], $customersData);
+    }
+
+    /**
+     * Tạo CustomerAddResponse entity
+     *
+     * @param array $data Dữ liệu response từ API
+     * @return CustomerAddResponse
+     */
+    public function createCustomerAddResponse(array $data): CustomerAddResponse
+    {
+        return CustomerAddResponse::createFromApiResponse($data);
     }
 }

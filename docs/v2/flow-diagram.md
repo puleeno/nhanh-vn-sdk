@@ -181,6 +181,7 @@ graph TB
 
 ### Customer APIs
 - **Customer Search**: `/api/customer/search`
+- **Customer Add**: `/api/customer/add`
 
 ## Data Flow
 

@@ -7,6 +7,7 @@ use Puleeno\NhanhVn\Services\HttpService;
 use Puleeno\NhanhVn\Contracts\LoggerInterface;
 use Puleeno\NhanhVn\Entities\Customer\CustomerSearchResponse;
 use Puleeno\NhanhVn\Entities\Customer\Customer;
+use Puleeno\NhanhVn\Entities\Customer\CustomerAddResponse;
 use Exception;
 
 /**
@@ -402,5 +403,274 @@ class CustomerModule
         unset($responseData, $data);
 
         return $entities;
+    }
+
+    /**
+     * Thêm một khách hàng mới
+     *
+     * @param array $customerData Dữ liệu khách hàng
+     * @return CustomerAddResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra trong quá trình thêm khách hàng
+     */
+    public function add(array $customerData): CustomerAddResponse
+    {
+        $this->logger->debug("CustomerModule::add() called with data", $customerData);
+
+        try {
+            // Validate request data
+            if (!$this->customerManager->validateAddRequest($customerData)) {
+                $errors = $this->getAddRequestErrors($customerData);
+                $this->logger->warning("CustomerModule::add() - Validation failed", ['errors' => $errors]);
+                
+                throw new Exception('Dữ liệu khách hàng không hợp lệ: ' . json_encode($errors));
+            }
+
+            // Chuẩn bị data cho API Nhanh.vn
+            $apiData = $this->prepareAddData($customerData);
+
+            // Gọi API Nhanh.vn
+            $this->logger->info("CustomerModule::add() calling Nhanh.vn API", $apiData);
+
+            $response = $this->httpService->callApi('/customer/add', $apiData);
+
+            // Parse response
+            if (!isset($response['code'])) {
+                $this->logger->warning("CustomerModule::add() - Response không có code");
+                throw new Exception('Response từ API không hợp lệ');
+            }
+
+            $this->logger->info("CustomerModule::add() - API response received", [
+                'code' => $response['code'],
+                'success' => $response['code'] === 1
+            ]);
+
+            // Create response entity
+            $addResponse = $this->customerManager->createCustomerAddResponse($response);
+
+            $this->logger->info("CustomerModule::add() - Created add response", [
+                'success' => $addResponse->isSuccess(),
+                'customerCount' => $addResponse->getSuccessCount()
+            ]);
+
+            // Giải phóng memory trước khi return
+            unset($response, $apiData);
+
+            return $addResponse;
+
+        } catch (Exception $e) {
+            $this->logger->error("CustomerModule::add() error", ['error' => $e->getMessage()]);
+            // Giải phóng memory trong trường hợp lỗi
+            if (isset($response)) unset($response);
+            if (isset($apiData)) unset($apiData);
+            throw $e;
+        }
+    }
+
+    /**
+     * Thêm nhiều khách hàng cùng lúc
+     *
+     * @param array $customersData Mảng dữ liệu khách hàng
+     * @return CustomerAddResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra trong quá trình thêm khách hàng
+     */
+    public function addBatch(array $customersData): CustomerAddResponse
+    {
+        $this->logger->debug("CustomerModule::addBatch() called with data", [
+            'customerCount' => count($customersData)
+        ]);
+
+        try {
+            // Validate batch size limit
+            if (count($customersData) > 50) {
+                throw new Exception('Mỗi request chỉ được gửi tối đa 50 khách hàng');
+            }
+
+            // Validate request data
+            if (!$this->customerManager->validateBatchAddRequest($customersData)) {
+                $errors = $this->getBatchAddRequestErrors($customersData);
+                $this->logger->warning("CustomerModule::addBatch() - Validation failed", ['errors' => $errors]);
+                
+                throw new Exception('Dữ liệu khách hàng không hợp lệ: ' . json_encode($errors));
+            }
+
+            // Chuẩn bị data cho API Nhanh.vn
+            $apiData = $this->prepareBatchAddData($customersData);
+
+            // Gọi API Nhanh.vn
+            $this->logger->info("CustomerModule::addBatch() calling Nhanh.vn API", [
+                'customerCount' => count($customersData)
+            ]);
+
+            $response = $this->httpService->callApi('/customer/add', $apiData);
+
+            // Parse response
+            if (!isset($response['code'])) {
+                $this->logger->warning("CustomerModule::addBatch() - Response không có code");
+                throw new Exception('Response từ API không hợp lệ');
+            }
+
+            $this->logger->info("CustomerModule::addBatch() - API response received", [
+                'code' => $response['code'],
+                'success' => $response['code'] === 1,
+                'processedCount' => count($response['data'] ?? [])
+            ]);
+
+            // Create response entity
+            $addResponse = $this->customerManager->createCustomerAddResponse($response);
+
+            $this->logger->info("CustomerModule::addBatch() - Created add response", [
+                'success' => $addResponse->isSuccess(),
+                'customerCount' => $addResponse->getSuccessCount()
+            ]);
+
+            // Giải phóng memory trước khi return
+            unset($response, $apiData);
+
+            return $addResponse;
+
+        } catch (Exception $e) {
+            $this->logger->error("CustomerModule::addBatch() error", ['error' => $e->getMessage()]);
+            // Giải phóng memory trong trường hợp lỗi
+            if (isset($response)) unset($response);
+            if (isset($apiData)) unset($apiData);
+            throw $e;
+        }
+    }
+
+    /**
+     * Validate add customer request
+     *
+     * @param array $customerData Dữ liệu khách hàng cần validate
+     * @return bool True nếu hợp lệ, false nếu không hợp lệ
+     */
+    public function validateAddRequest(array $customerData): bool
+    {
+        $this->logger->debug("CustomerModule::validateAddRequest() called", $customerData);
+
+        try {
+            $isValid = $this->customerManager->validateAddRequest($customerData);
+
+            $this->logger->info("CustomerModule::validateAddRequest() result", [
+                'params' => $customerData,
+                'isValid' => $isValid
+            ]);
+
+            return $isValid;
+        } catch (Exception $e) {
+            $this->logger->error("CustomerModule::validateAddRequest() error", [
+                'error' => $e->getMessage(),
+                'params' => $customerData
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Validate batch add customers request
+     *
+     * @param array $customersData Mảng dữ liệu khách hàng cần validate
+     * @return bool True nếu hợp lệ, false nếu không hợp lệ
+     */
+    public function validateBatchAddRequest(array $customersData): bool
+    {
+        $this->logger->debug("CustomerModule::validateBatchAddRequest() called", [
+            'customerCount' => count($customersData)
+        ]);
+
+        try {
+            $isValid = $this->customerManager->validateBatchAddRequest($customersData);
+
+            $this->logger->info("CustomerModule::validateBatchAddRequest() result", [
+                'customerCount' => count($customersData),
+                'isValid' => $isValid
+            ]);
+
+            return $isValid;
+        } catch (Exception $e) {
+            $this->logger->error("CustomerModule::validateBatchAddRequest() error", [
+                'error' => $e->getMessage(),
+                'customerCount' => count($customersData)
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Lấy danh sách lỗi validation của add request
+     *
+     * @param array $customerData Dữ liệu khách hàng cần validate
+     * @return array Mảng chứa các lỗi validation
+     */
+    public function getAddRequestErrors(array $customerData): array
+    {
+        try {
+            // Create a temporary request to get validation errors
+            $customerRepository = new \Puleeno\NhanhVn\Repositories\CustomerRepository();
+            $request = $customerRepository->createCustomerAddRequest($customerData);
+
+            if ($request->isValid()) {
+                return [];
+            }
+
+            return $request->getErrors();
+        } catch (Exception $e) {
+            return ['general' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Lấy danh sách lỗi validation của batch add request
+     *
+     * @param array $customersData Mảng dữ liệu khách hàng cần validate
+     * @return array Mảng chứa các lỗi validation
+     */
+    public function getBatchAddRequestErrors(array $customersData): array
+    {
+        try {
+            $errors = [];
+            $customerRepository = new \Puleeno\NhanhVn\Repositories\CustomerRepository();
+
+            foreach ($customersData as $index => $customerData) {
+                $request = $customerRepository->createCustomerAddRequest($customerData);
+                if (!$request->isValid()) {
+                    $errors[$index] = $request->getErrors();
+                }
+            }
+
+            return $errors;
+        } catch (Exception $e) {
+            return ['general' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Chuẩn bị data cho API thêm khách hàng
+     *
+     * @param array $customerData Dữ liệu khách hàng
+     * @return array Dữ liệu đã được format cho API
+     */
+    private function prepareAddData(array $customerData): array
+    {
+        $request = $this->customerManager->getManager()->getCustomerRepository()->createCustomerAddRequest($customerData);
+        return $request->toApiFormat();
+    }
+
+    /**
+     * Chuẩn bị data cho API thêm nhiều khách hàng
+     *
+     * @param array $customersData Mảng dữ liệu khách hàng
+     * @return array Dữ liệu đã được format cho API
+     */
+    private function prepareBatchAddData(array $customersData): array
+    {
+        $apiData = [];
+        $customerRepository = new \Puleeno\NhanhVn\Repositories\CustomerRepository();
+
+        foreach ($customersData as $customerData) {
+            $request = $customerRepository->createCustomerAddRequest($customerData);
+            $apiData[] = $request->toApiFormat();
+        }
+
+        return $apiData;
     }
 }

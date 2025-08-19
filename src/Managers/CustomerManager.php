@@ -4,6 +4,7 @@ namespace Puleeno\NhanhVn\Managers;
 
 use Puleeno\NhanhVn\Services\CustomerService;
 use Puleeno\NhanhVn\Entities\Customer\CustomerSearchResponse;
+use Puleeno\NhanhVn\Entities\Customer\CustomerAddResponse;
 
 /**
  * Customer Manager
@@ -134,5 +135,49 @@ class CustomerManager
     public function createCustomerSearchResponse(array $apiResponse): CustomerSearchResponse
     {
         return CustomerSearchResponse::createFromApiResponse($apiResponse);
+    }
+
+    /**
+     * Thêm một khách hàng mới
+     *
+     * @param array $customerData Dữ liệu khách hàng
+     * @return CustomerAddResponse Response từ API
+     */
+    public function addCustomer(array $customerData): CustomerAddResponse
+    {
+        return $this->customerService->addCustomer($customerData);
+    }
+
+    /**
+     * Thêm nhiều khách hàng cùng lúc
+     *
+     * @param array $customersData Mảng dữ liệu khách hàng
+     * @return CustomerAddResponse Response từ API
+     */
+    public function addCustomers(array $customersData): CustomerAddResponse
+    {
+        return $this->customerService->addCustomers($customersData);
+    }
+
+    /**
+     * Validate add customer request
+     *
+     * @param array $customerData
+     * @return bool
+     */
+    public function validateAddRequest(array $customerData): bool
+    {
+        return $this->customerService->validateAddRequest($customerData);
+    }
+
+    /**
+     * Validate batch add customers request
+     *
+     * @param array $customersData
+     * @return bool
+     */
+    public function validateBatchAddRequest(array $customersData): bool
+    {
+        return $this->customerService->validateBatchAddRequest($customersData);
     }
 }

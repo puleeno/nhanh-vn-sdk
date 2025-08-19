@@ -6,6 +6,8 @@ use Puleeno\NhanhVn\Repositories\CustomerRepository;
 use Puleeno\NhanhVn\Entities\Customer\Customer;
 use Puleeno\NhanhVn\Entities\Customer\CustomerSearchRequest;
 use Puleeno\NhanhVn\Entities\Customer\CustomerSearchResponse;
+use Puleeno\NhanhVn\Entities\Customer\CustomerAddRequest;
+use Puleeno\NhanhVn\Entities\Customer\CustomerAddResponse;
 
 /**
  * Customer Service
@@ -193,6 +195,155 @@ class CustomerService
                 'totalPages' => max(1, ceil($totalCustomers / $icpp)),
                 'customers' => $customers
             ]
+        ];
+    }
+
+    /**
+     * Thêm một khách hàng mới
+     *
+     * @param array $customerData Dữ liệu khách hàng
+     * @return CustomerAddResponse Response từ API
+     * @throws \InvalidArgumentException Khi dữ liệu không hợp lệ
+     */
+    public function addCustomer(array $customerData): CustomerAddResponse
+    {
+        $request = $this->customerRepository->createCustomerAddRequest($customerData);
+
+        if (!$request->isValid()) {
+            throw new \InvalidArgumentException(
+                'Dữ liệu khách hàng không hợp lệ: ' . json_encode($request->getErrors())
+            );
+        }
+
+        // TODO: Implement actual API call to Nhanh.vn
+        // For now, return mock response
+        $mockResponse = $this->getMockAddResponse($request);
+
+        return $this->customerRepository->createCustomerAddResponse($mockResponse);
+    }
+
+    /**
+     * Thêm nhiều khách hàng cùng lúc
+     *
+     * @param array $customersData Mảng dữ liệu khách hàng
+     * @return CustomerAddResponse Response từ API
+     * @throws \InvalidArgumentException Khi dữ liệu không hợp lệ
+     */
+    public function addCustomers(array $customersData): CustomerAddResponse
+    {
+        // Validate batch size limit (max 50 customers per request)
+        if (count($customersData) > 50) {
+            throw new \InvalidArgumentException(
+                'Mỗi request chỉ được gửi tối đa 50 khách hàng'
+            );
+        }
+
+        $requests = $this->customerRepository->createCustomerAddRequests($customersData);
+
+        // Validate all requests
+        foreach ($requests as $request) {
+            if (!$request->isValid()) {
+                throw new \InvalidArgumentException(
+                    'Dữ liệu khách hàng không hợp lệ: ' . json_encode($request->getErrors())
+                );
+            }
+        }
+
+        // TODO: Implement actual API call to Nhanh.vn
+        // For now, return mock response
+        $mockResponse = $this->getMockBatchAddResponse($requests);
+
+        return $this->customerRepository->createCustomerAddResponse($mockResponse);
+    }
+
+    /**
+     * Validate add customer request
+     *
+     * @param array $customerData
+     * @return bool
+     */
+    public function validateAddRequest(array $customerData): bool
+    {
+        try {
+            $request = $this->customerRepository->createCustomerAddRequest($customerData);
+            return $request->isValid();
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Validate batch add customers request
+     *
+     * @param array $customersData
+     * @return bool
+     */
+    public function validateBatchAddRequest(array $customersData): bool
+    {
+        try {
+            if (count($customersData) > 50) {
+                return false;
+            }
+
+            $requests = $this->customerRepository->createCustomerAddRequests($customersData);
+            foreach ($requests as $request) {
+                if (!$request->isValid()) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get mock add response for development/testing
+     *
+     * @param CustomerAddRequest $request
+     * @return array
+     */
+    private function getMockAddResponse(CustomerAddRequest $request): array
+    {
+        return [
+            'code' => 1,
+            'messages' => [],
+            'data' => [
+                [
+                    'id' => rand(1000000, 9999999),
+                    'mobile' => $request->getMobile(),
+                    'name' => $request->getName(),
+                    'type' => $request->getType() ?? 1,
+                    'status' => 'active'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Get mock batch add response for development/testing
+     *
+     * @param array $requests
+     * @return array
+     */
+    private function getMockBatchAddResponse(array $requests): array
+    {
+        $data = [];
+
+        foreach ($requests as $request) {
+            $data[] = [
+                'id' => rand(1000000, 9999999),
+                'mobile' => $request->getMobile(),
+                'name' => $request->getName(),
+                'type' => $request->getType() ?? 1,
+                'status' => 'active'
+            ];
+        }
+
+        return [
+            'code' => 1,
+            'messages' => [],
+            'data' => $data
         ];
     }
 }
