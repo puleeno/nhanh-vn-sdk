@@ -6,6 +6,8 @@ use Puleeno\NhanhVn\Managers\OrderManager;
 use Puleeno\NhanhVn\Services\HttpService;
 use Puleeno\NhanhVn\Contracts\LoggerInterface;
 use Puleeno\NhanhVn\Entities\Order\Order;
+use Puleeno\NhanhVn\Entities\Order\OrderAddRequest;
+use Puleeno\NhanhVn\Entities\Order\OrderAddResponse;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchResponse;
 use Illuminate\Support\Collection;
 use Exception;
@@ -39,6 +41,72 @@ class OrderModule
         $this->orderManager = $orderManager;
         $this->httpService = $httpService;
         $this->logger = $logger;
+    }
+
+    /**
+     * Thêm đơn hàng mới vào Nhanh.vn
+     *
+     * @param OrderAddRequest $request Request chứa thông tin đơn hàng
+     * @return OrderAddResponse Response từ API thêm đơn hàng
+     * @throws Exception Khi có lỗi xảy ra trong quá trình thêm đơn hàng
+     */
+    public function add(OrderAddRequest $request): OrderAddResponse
+    {
+        $this->logger->info("OrderModule::add() - Adding new order", [
+            'orderId' => $request->getId(),
+            'customerName' => $request->getCustomerName(),
+            'customerMobile' => $request->getCustomerMobile()
+        ]);
+
+        try {
+            // Validate request
+            if (!$request->validateForAdd()) {
+                $errors = $request->getErrors();
+                $this->logger->error("OrderModule::add() - Validation failed", ['errors' => $errors]);
+                throw new Exception("Validation failed: " . implode(', ', $errors));
+            }
+
+            // Chuẩn bị data cho API
+            $orderData = $request->toApiFormat();
+
+            // Gọi API Nhanh.vn để thêm đơn hàng
+            $this->logger->info("OrderModule::add() calling Nhanh.vn API", [
+                'endpoint' => '/order/add',
+                'orderData' => $orderData
+            ]);
+
+            $response = $this->httpService->callApi('/order/add', $orderData);
+
+            // Parse response
+            if (!isset($response['code'])) {
+                $this->logger->error("OrderModule::add() - Invalid response format", ['response' => $response]);
+                throw new Exception("Invalid response format from Nhanh.vn API");
+            }
+
+            // Tạo response entity
+            $addResponse = new OrderAddResponse($response);
+
+            if ($addResponse->isSuccess()) {
+                $this->logger->info("OrderModule::add() - Order added successfully", [
+                    'nhanhOrderId' => $addResponse->getNhanhOrderId(),
+                    'nhanhOrderCode' => $addResponse->getNhanhOrderCode()
+                ]);
+            } else {
+                $this->logger->warning("OrderModule::add() - Order add failed", [
+                    'code' => $addResponse->getCode(),
+                    'message' => $addResponse->getMessage()
+                ]);
+            }
+
+            return $addResponse;
+
+        } catch (Exception $e) {
+            $this->logger->error("OrderModule::add() - Error adding order", [
+                'error' => $e->getMessage(),
+                'orderId' => $request->getId()
+            ]);
+            throw $e;
+        }
     }
 
     /**

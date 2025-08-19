@@ -4,6 +4,7 @@ namespace Puleeno\NhanhVn\Managers;
 
 use Puleeno\NhanhVn\Repositories\OrderRepository;
 use Puleeno\NhanhVn\Entities\Order\Order;
+use Puleeno\NhanhVn\Entities\Order\OrderAddRequest;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchRequest;
 use Puleeno\NhanhVn\Entities\Order\OrderSearchResponse;
 use Puleeno\NhanhVn\Services\CacheService;
@@ -203,11 +204,11 @@ class OrderManager
     public function getCachedOrders(array $searchParams): ?array
     {
         $cacheKey = $this->getOrderCacheKey($searchParams);
-        
+
         $this->logger->debug("OrderManager::getCachedOrders() - Checking cache", ['key' => $cacheKey]);
 
         $cachedData = $this->cacheService->get($cacheKey);
-        
+
         if ($cachedData !== null) {
             $this->logger->info("OrderManager::getCachedOrders() - Cache hit", ['key' => $cacheKey]);
         } else {
@@ -228,7 +229,7 @@ class OrderManager
     public function cacheOrders(array $searchParams, array $ordersData, int $ttl = 3600): bool
     {
         $cacheKey = $this->getOrderCacheKey($searchParams);
-        
+
         $this->logger->debug("OrderManager::cacheOrders() - Caching orders", [
             'key' => $cacheKey,
             'ttl' => $ttl,
@@ -263,7 +264,7 @@ class OrderManager
     public function clearOrderCache(array $searchParams): bool
     {
         $cacheKey = $this->getOrderCacheKey($searchParams);
-        
+
         $this->logger->debug("OrderManager::clearOrderCache() - Clearing cache", ['key' => $cacheKey]);
 
         try {
@@ -381,6 +382,118 @@ class OrderManager
     public function getOrderRepository(): OrderRepository
     {
         return $this->orderRepository;
+    }
+
+    /**
+     * Validate dữ liệu thêm đơn hàng
+     *
+     * @param OrderAddRequest $request Request thêm đơn hàng
+     * @return bool True nếu hợp lệ, false nếu không hợp lệ
+     */
+    public function validateAddRequest(OrderAddRequest $request): bool
+    {
+        $this->logger->debug("OrderManager::validateAddRequest() called", [
+            'orderId' => $request->getId(),
+            'customerName' => $request->getCustomerName()
+        ]);
+
+        try {
+            $isValid = $request->validateForAdd();
+
+            $this->logger->info("OrderManager::validateAddRequest() result", [
+                'orderId' => $request->getId(),
+                'isValid' => $isValid,
+                'errors' => $request->getErrors()
+            ]);
+
+            return $isValid;
+        } catch (\Exception $e) {
+            $this->logger->error("OrderManager::validateAddRequest() error", [
+                'error' => $e->getMessage(),
+                'orderId' => $request->getId()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Lấy danh sách lỗi validation cho request thêm đơn hàng
+     *
+     * @param OrderAddRequest $request Request thêm đơn hàng
+     * @return array Mảng chứa các lỗi validation
+     */
+    public function getAddRequestErrors(OrderAddRequest $request): array
+    {
+        try {
+            return $request->getErrors();
+        } catch (\Exception $e) {
+            return ['general' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Kiểm tra đơn hàng có thể thêm được không
+     *
+     * @param OrderAddRequest $request Request thêm đơn hàng
+     * @return array Mảng chứa kết quả kiểm tra
+     */
+    public function canAddOrder(OrderAddRequest $request): array
+    {
+        $this->logger->debug("OrderManager::canAddOrder() called", [
+            'orderId' => $request->getId()
+        ]);
+
+        $result = [
+            'can_add' => true,
+            'warnings' => [],
+            'errors' => []
+        ];
+
+        try {
+            // Kiểm tra validation
+            if (!$this->validateAddRequest($request)) {
+                $result['can_add'] = false;
+                $result['errors'] = $this->getAddRequestErrors($request);
+                return $result;
+            }
+
+            // Kiểm tra business rules
+            if ($request->hasShipping()) {
+                if ($request->usesNhanhCarrierPricing()) {
+                    if (!$request->getCarrierId() || !$request->getCarrierServiceId()) {
+                        $result['warnings'][] = 'Khi sử dụng bảng giá vận chuyển của Nhanh.vn, carrierId và carrierServiceId là bắt buộc';
+                    }
+                } elseif ($request->usesSelfConnectCarrierPricing()) {
+                    if (!$request->getCarrierAccountId() || !$request->getCarrierServiceCode()) {
+                        $result['warnings'][] = 'Khi sử dụng bảng giá vận chuyển riêng, carrierAccountId và carrierServiceCode là bắt buộc';
+                    }
+                }
+            }
+
+            // Kiểm tra sản phẩm
+            if (!$request->hasProducts()) {
+                $result['warnings'][] = 'Đơn hàng không có sản phẩm nào';
+            }
+
+            $this->logger->info("OrderManager::canAddOrder() result", [
+                'orderId' => $request->getId(),
+                'can_add' => $result['can_add'],
+                'warnings' => $result['warnings'],
+                'errors' => $result['errors']
+            ]);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            $this->logger->error("OrderManager::canAddOrder() error", [
+                'error' => $e->getMessage(),
+                'orderId' => $request->getId()
+            ]);
+
+            $result['can_add'] = false;
+            $result['errors'][] = $e->getMessage();
+            return $result;
+        }
     }
 
     /**

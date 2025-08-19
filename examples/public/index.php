@@ -85,6 +85,11 @@
                     <p>Demo lấy danh sách đơn hàng với các bộ lọc và phân trang</p>
                     <a href="get_orders.php" class="btn btn-success">Lấy Đơn Hàng</a>
                 </div>
+                <div class="example-item">
+                    <h3>➕ Thêm Đơn Hàng</h3>
+                    <p>Demo thêm đơn hàng mới với đầy đủ tùy chọn vận chuyển và thanh toán</p>
+                    <a href="add_order.php" class="btn btn-primary">Thêm Đơn Hàng</a>
+                </div>
             </div>
         </div>
 
