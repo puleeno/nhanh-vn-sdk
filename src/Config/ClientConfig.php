@@ -53,11 +53,22 @@ class ClientConfig
      */
     private function validateRequiredConfig(array $config): void
     {
-        // API Request bắt buộc: version, appId, businessId, accessToken
+        // AppId luôn bắt buộc
         if (!isset($config['appId']) || empty($config['appId'])) {
             throw new ConfigurationException("Thiếu tham số bắt buộc: appId");
         }
 
+        // Kiểm tra xem có phải OAuth flow không
+        $isOAuthFlow = isset($config['secretKey']) && !empty($config['secretKey']) &&
+                      isset($config['returnLink']) && !empty($config['returnLink']);
+
+        if ($isOAuthFlow) {
+            // OAuth flow - chỉ cần appId, secretKey, returnLink
+            // Không cần businessId và accessToken
+            return;
+        }
+
+        // API calls - cần businessId và accessToken
         if (!isset($config['businessId']) || empty($config['businessId'])) {
             throw new ConfigurationException("Thiếu tham số bắt buộc: businessId");
         }
@@ -65,9 +76,6 @@ class ClientConfig
         if (!isset($config['accessToken']) || empty($config['accessToken'])) {
             throw new ConfigurationException("Thiếu tham số bắt buộc: accessToken");
         }
-
-        // version luôn bắt buộc (mặc định là 2.0)
-        // secretKey không bắt buộc cho API calls, chỉ cần cho OAuth flow
     }
 
     /**
@@ -184,6 +192,16 @@ class ClientConfig
      */
     public function isValid(): bool
     {
-        return !empty($this->appId) && !empty($this->businessId) && !empty($this->accessToken);
+        if (empty($this->appId)) {
+            return false;
+        }
+
+        // Kiểm tra OAuth flow
+        if (!empty($this->secretKey) && !empty($this->returnLink)) {
+            return true;
+        }
+
+        // Kiểm tra API calls
+        return !empty($this->businessId) && !empty($this->accessToken);
     }
 }

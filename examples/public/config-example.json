@@ -1,0 +1,7 @@
+{
+    "appId": "file_app_id",
+    "businessId": "file_business_id",
+    "accessToken": "file_access_token",
+    "enableLogging": true,
+    "logLevel": "INFO"
+}

@@ -100,6 +100,11 @@
                             <p>Demo tính phí vận chuyển cho đơn hàng từ Nhanh.vn (cả cổng Nhanh.vn và tự kết nối)</p>
                             <a href="calculate_shipping_fee.php" class="btn btn-success">Tính Phí Vận Chuyển</a>
                         </div>
+                        <div class="example-item">
+                            <h3>🚀 Nhanh Client Builder</h3>
+                            <p>Demo Nhanh Client Builder - Cách tạo client với syntax gọn gàng và trực quan</p>
+                            <a href="client_builder_demo.php" class="btn btn-warning">Client Builder Demo</a>
+                        </div>
                 <div class="example-item">
                     <h3>🔄 Cập Nhật Đơn Hàng</h3>
                     <p>Demo cập nhật đơn hàng: trạng thái, thanh toán, vận chuyển</p>
