@@ -32,7 +32,7 @@ class ClientConfig
 
         $this->appId = $config['appId'];
         $this->secretKey = $config['secretKey'];
-        $this->returnLink = $config['returnLink'];
+        $this->returnLink = $config['returnLink'] ?? null;
         $this->apiDomain = $config['apiDomain'] ?? self::DEFAULT_API_DOMAIN;
         $this->apiVersion = $config['apiVersion'] ?? self::DEFAULT_API_VERSION;
         $this->timeout = $config['timeout'] ?? self::DEFAULT_TIMEOUT;
@@ -49,7 +49,7 @@ class ClientConfig
      */
     private function validateRequiredConfig(array $config): void
     {
-        $required = ['appId', 'secretKey', 'returnLink'];
+        $required = ['appId', 'secretKey'];
 
         foreach ($required as $field) {
             if (!isset($config[$field]) || empty($config[$field])) {
@@ -59,11 +59,26 @@ class ClientConfig
     }
 
     /**
+     * Kiểm tra các tham số bắt buộc cho OAuth (bao gồm returnLink)
+     */
+    public function validateOAuthConfig(array $config): void
+    {
+        $required = ['appId', 'secretKey', 'returnLink'];
+
+        foreach ($required as $field) {
+            if (!isset($config[$field]) || empty($config[$field])) {
+                throw new ConfigurationException("Thiếu tham số bắt buộc cho OAuth: {$field}");
+            }
+        }
+    }
+
+    /**
      * Kiểm tra tính hợp lệ của cấu hình
      */
     private function validateConfig(): void
     {
-        if (!filter_var($this->returnLink, FILTER_VALIDATE_URL)) {
+        // Chỉ validate returnLink nếu nó được cung cấp
+        if ($this->returnLink !== null && !filter_var($this->returnLink, FILTER_VALIDATE_URL)) {
             throw new ConfigurationException('Return link không hợp lệ');
         }
 
@@ -87,7 +102,7 @@ class ClientConfig
     // Getters
     public function getAppId(): string { return $this->appId; }
     public function getSecretKey(): string { return $this->secretKey; }
-    public function getReturnLink(): string { return $this->returnLink; }
+    public function getReturnLink(): ?string { return $this->returnLink; }
     public function getApiDomain(): string { return $this->apiDomain; }
     public function getApiVersion(): string { return $this->apiVersion; }
     public function getTimeout(): int { return $this->timeout; }
@@ -109,6 +124,10 @@ class ClientConfig
      */
     public function getOAuthUrl(): string
     {
+        if ($this->returnLink === null) {
+            throw new ConfigurationException('Return link không được cung cấp. Không thể tạo OAuth URL.');
+        }
+
         $params = [
             'version' => $this->apiVersion,
             'appId' => $this->appId,
