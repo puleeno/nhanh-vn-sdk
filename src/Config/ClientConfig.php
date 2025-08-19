@@ -28,7 +28,7 @@ class ClientConfig
     private bool $enableLogging;
     private string $logLevel;
 
-    public function __construct(array $config = [])
+        public function __construct(array $config = [])
     {
         $this->validateRequiredConfig($config);
 

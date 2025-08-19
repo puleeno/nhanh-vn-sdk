@@ -50,7 +50,7 @@ class OAuthExample
         }
 
         // Validate required fields for OAuth initiation
-        $required = ['appId', 'secretKey', 'redirectUrl'];
+        $required = ['appId', 'secretKey', 'returnLink'];
         foreach ($required as $field) {
             if (empty($this->config[$field])) {
                 throw new \RuntimeException("Thiếu trường bắt buộc: {$field}");
@@ -93,7 +93,7 @@ class OAuthExample
         echo '<li><strong>App ID:</strong> ' . htmlspecialchars($this->config['appId']) . '</li>';
         echo '<li><strong>Business ID:</strong> ' . htmlspecialchars($this->config['businessId'] ?? 'Chưa có (sẽ có sau khi xác thực)') . '</li>';
         echo '<li><strong>Environment:</strong> ' . htmlspecialchars($this->config['environment']) . '</li>';
-        echo '<li><strong>Redirect URL:</strong> ' . htmlspecialchars($this->config['redirectUrl']) . '</li>';
+        echo '<li><strong>Redirect URL:</strong> ' . htmlspecialchars($this->config['returnLink']) . '</li>';
         echo '</ul>';
         echo '</div>';
     }
@@ -119,7 +119,7 @@ class OAuthExample
         echo '<p><small>Hoặc copy link này vào browser</small></p>';
         echo '</div>';
 
-        echo '<p><strong>Sau khi authorize, bạn sẽ được redirect về:</strong> ' . htmlspecialchars($this->config['redirectUrl']) . '</p>';
+        echo '<p><strong>Sau khi authorize, bạn sẽ được redirect về:</strong> ' . htmlspecialchars($this->config['returnLink']) . '</p>';
         echo '</div>';
     }
 
@@ -132,7 +132,7 @@ class OAuthExample
             $client = $this->initializeClient();
             if ($client) {
                 // Sử dụng SDK method
-                return $client->getOAuthUrl($this->config['redirectUrl']);
+                return $client->getOAuthUrl($this->config['returnLink']);
             }
         } catch (\Exception $e) {
             // Log error nhưng không throw
@@ -144,7 +144,7 @@ class OAuthExample
         $params = [
             'version' => '2.0',
             'appId' => $this->config['appId'],
-            'returnLink' => $this->config['redirectUrl']
+            'returnLink' => $this->config['returnLink']
         ];
 
         // Thêm businessId nếu có
@@ -293,45 +293,19 @@ class OAuthExample
     {
         // Sử dụng SDK để đổi access code lấy access token
         try {
-            // Debug: Log config trước khi tạo ClientConfig
+            // Tạo config tạm thời để khởi tạo client
             $configArray = [
                 'appId' => $this->config['appId'],
                 'secretKey' => $this->config['secretKey'],
-                'returnLink' => $this->config['redirectUrl'], // Thêm returnLink để được nhận diện là OAuth flow
+                'returnLink' => $this->config['returnLink'], // Thêm returnLink để được nhận diện là OAuth flow
                 'apiVersion' => '2.0'
             ];
-            
-            echo '<div class="section">';
-            echo '<h3>🔍 Debug Config Array:</h3>';
-            echo '<pre>' . htmlspecialchars(json_encode($configArray, JSON_PRETTY_PRINT)) . '</pre>';
-            echo '</div>';
-            
+
             // Tạo config tạm thời để khởi tạo client
             $tempConfig = new \Puleeno\NhanhVn\Config\ClientConfig($configArray);
-            
-            echo '<div class="section">';
-            echo '<h3>🔍 Debug ClientConfig Created:</h3>';
-            echo '<ul>';
-            echo '<li><strong>App ID:</strong> ' . htmlspecialchars($tempConfig->getAppId()) . '</li>';
-            echo '<li><strong>Secret Key:</strong> ' . (strlen($tempConfig->getSecretKey() ?? '') > 0 ? 'Set (' . strlen($tempConfig->getSecretKey()) . ' chars)' : 'Not set') . '</li>';
-            echo '<li><strong>Return Link:</strong> ' . htmlspecialchars($tempConfig->getReturnLink() ?? 'Not set') . '</li>';
-            echo '<li><strong>Business ID:</strong> ' . htmlspecialchars($tempConfig->getBusinessId() ?? 'Not set') . '</li>';
-            echo '<li><strong>API Version:</strong> ' . htmlspecialchars($tempConfig->getApiVersion()) . '</li>';
-            echo '<li><strong>Is Valid:</strong> ' . ($tempConfig->isValid() ? 'Yes' : 'No') . '</li>';
-            echo '</ul>';
-            echo '</div>';
 
             // Khởi tạo client tạm thời
             $tempClient = \Puleeno\NhanhVn\Client\NhanhVnClient::getInstance($tempConfig);
-            
-            echo '<div class="section">';
-            echo '<h3>🔍 Debug Client Created:</h3>';
-            echo '<ul>';
-            echo '<li><strong>Client Class:</strong> ' . get_class($tempClient) . '</li>';
-            echo '<li><strong>Is Configured:</strong> ' . ($tempClient->isConfigured() ? 'Yes' : 'No') . '</li>';
-            echo '<li><strong>OAuth Module Available:</strong> ' . (method_exists($tempClient, 'oauth') ? 'Yes' : 'No') . '</li>';
-            echo '</ul>';
-            echo '</div>';
 
             // Sử dụng OAuth service của SDK
             $result = $tempClient->oauth()->exchangeAccessCode($accessCode);

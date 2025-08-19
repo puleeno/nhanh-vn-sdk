@@ -56,7 +56,7 @@ class HttpService
             $this->logger->debug("HttpService::callApi() - Request data", $requestData);
 
 
-            $response = $this->httpClient->post($this->config->getBaseUrl() . $endpoint, [
+            $response = $this->httpClient->post($this->config->getBaseUrl() .'/api' . $endpoint, [
                 'multipart' => $this->arrayToMultipart($requestData)
             ]);
 
