@@ -32,7 +32,7 @@ class HttpService
     /**
      * Gọi API Nhanh.vn
      */
-    public function callApi(string $endpoint, array $data = []): array
+    public function callApi(string $endpoint, array|string|int $data = []): array
     {
         try {
             // Chuẩn bị request data theo format Nhanh.vn
@@ -44,7 +44,11 @@ class HttpService
             ];
 
             if (!empty($data)) {
-                $requestData['data'] = json_encode($data);
+                if (is_array($data)) {
+                    $requestData['data'] = json_encode($data);
+                } else {
+                    $requestData['data'] = $data;
+                }
             }
 
             // Debug log

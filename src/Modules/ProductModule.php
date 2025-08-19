@@ -26,14 +26,29 @@ use Illuminate\Support\Collection;
 use Exception;
 
 /**
- * Product Module
+ * Product Module - Quản lý các thao tác liên quan đến sản phẩm
+ *
+ * Module này cung cấp các method để tương tác với API sản phẩm của Nhanh.vn
+ * bao gồm: tìm kiếm, lấy chi tiết, quản lý cache và các thao tác khác
  */
 class ProductModule
 {
+    /** @var ProductManager Quản lý business logic sản phẩm */
     protected ProductManager $productManager;
+
+    /** @var HttpService Service gọi HTTP API */
     protected HttpService $httpService;
+
+    /** @var LoggerInterface Logger để ghi log */
     protected LoggerInterface $logger;
 
+    /**
+     * Constructor của ProductModule
+     *
+     * @param ProductManager $productManager Quản lý business logic sản phẩm
+     * @param HttpService $httpService Service gọi HTTP API
+     * @param LoggerInterface $logger Logger để ghi log
+     */
     public function __construct(ProductManager $productManager, HttpService $httpService, LoggerInterface $logger)
     {
         $this->productManager = $productManager;
@@ -42,7 +57,11 @@ class ProductModule
     }
 
         /**
-     * Tìm kiếm sản phẩm
+     * Tìm kiếm sản phẩm theo các tiêu chí
+     *
+     * @param array $criteria Các tiêu chí tìm kiếm
+     * @return Collection Collection các sản phẩm tìm được
+     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
      */
     public function search(array $criteria = []): Collection
     {
@@ -89,6 +108,9 @@ class ProductModule
 
     /**
      * Chuẩn bị search criteria theo format API Nhanh.vn
+     *
+     * @param array $criteria Các tiêu chí tìm kiếm từ người dùng
+     * @return array Các tiêu chí đã được format theo chuẩn API Nhanh.vn
      */
     private function prepareSearchCriteria(array $criteria): array
     {
@@ -163,16 +185,319 @@ class ProductModule
     }
 
     /**
-     * Lấy chi tiết sản phẩm
+     * Lấy chi tiết sản phẩm theo ID
+     *
+     * @param int $productId ID sản phẩm trên Nhanh.vn
+     * @return Product|null Sản phẩm chi tiết hoặc null nếu không tìm thấ
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Lấy chi tiết sản phẩm theo ID
+     *
+     * @param int $productId ID sản phẩm trên Nhanh.vn
+     * @return Product|null Sản phẩm chi tiết hoặc null nếu không tìm thấy
+     * @throws Exception Khi có lỗi xảy ra trong quá trình lấy chi tiết
      */
     public function detail(int $productId): ?Product
     {
-        // TODO: Implement API call to get product detail
-        return null;
+        $this->logger->debug("ProductModule::detail() called with productId", ['productId' => $productId]);
+
+        try {
+            // Gọi API Nhanh.vn để lấy chi tiết sản phẩm
+            $this->logger->info("ProductModule::detail() calling Nhanh.vn API", ['productId' => $productId]);
+
+            $response = $this->httpService->callApi('/product/detail', $productId);
+
+            // Parse response
+            if (!isset($response['data'])) {
+                $this->logger->warning("ProductModule::detail() - Response không có 'data' field", [
+                    'response_keys' => array_keys($response ?? []),
+                    'response' => $response
+                ]);
+                unset($response);
+                return null;
+            }
+
+            // Kiểm tra cấu trúc response
+            $this->logger->debug("ProductModule::detail() - Response structure", [
+                'data_type' => gettype($response['data']),
+                'data_content' => $response['data']
+            ]);
+
+            // API detail có thể trả về data trực tiếp hoặc trong array
+            $productData = null;
+            if (is_array($response['data'])) {
+                if (empty($response['data'])) {
+                    $this->logger->warning("ProductModule::detail() - Response data array rỗng");
+                    unset($response);
+                    return null;
+                }
+                // Nếu data là array, lấy phần tử đầu tiên một cách an toàn
+                $firstKey = array_key_first($response['data']);
+                if ($firstKey !== null) {
+                    $productData = $response['data'][$firstKey];
+                } else {
+                    $this->logger->warning("ProductModule::detail() - Không thể lấy key đầu tiên từ data array");
+                    unset($response);
+                    return null;
+                }
+            } else {
+                // Nếu data không phải array, có thể là object hoặc data trực tiếp
+                $productData = $response['data'];
+            }
+
+            // Kiểm tra productData có hợp lệ không
+            if ($productData === null) {
+                $this->logger->warning("ProductModule::detail() - Product data là null");
+                unset($response);
+                return null;
+            }
+
+            // Nếu productData không phải array, cố gắng convert
+            if (!is_array($productData)) {
+                if (is_object($productData)) {
+                    $productData = (array) $productData;
+                } else {
+                    $this->logger->warning("ProductModule::detail() - Product data không phải array hoặc object", [
+                        'productData' => $productData,
+                        'productData_type' => gettype($productData)
+                    ]);
+                    unset($response);
+                    return null;
+                }
+            }
+
+            $this->logger->info("ProductModule::detail() - Found product data", [
+                'productId' => $productId,
+                'data_keys' => array_keys($productData)
+            ]);
+
+            // Tạo Product entity
+            $product = $this->productManager->createProduct($productData);
+
+            $this->logger->info("ProductModule::detail() - Created product entity", ['productId' => $productId]);
+
+            // Giải phóng memory
+            unset($response, $productData);
+
+            return $product;
+
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::detail() error", ['error' => $e->getMessage(), 'productId' => $productId]);
+            // Giải phóng memory trong trường hợp lỗi
+            if (isset($response)) unset($response);
+            if (isset($productData)) unset($productData);
+            throw $e;
+        }
     }
 
     /**
      * Thêm sản phẩm mới
+     *
+     * @param array $productData Dữ liệu sản phẩm cần thêm
+     * @return Product Sản phẩm đã được tạo
      */
     public function add(array $productData): Product
     {
@@ -180,7 +505,11 @@ class ProductModule
     }
 
     /**
-     * Cập nhật sản phẩm
+     * Cập nhật sản phẩm theo ID
+     *
+     * @param int $productId ID sản phẩm cần cập nhật
+     * @param array $productData Dữ liệu mới của sản phẩm
+     * @return Product|null Sản phẩm đã được cập nhật hoặc null nếu không tìm thấy
      */
     public function update(int $productId, array $productData): ?Product
     {
@@ -189,7 +518,10 @@ class ProductModule
     }
 
     /**
-     * Xóa sản phẩm
+     * Xóa sản phẩm theo ID
+     *
+     * @param int $productId ID sản phẩm cần xóa
+     * @return bool True nếu xóa thành công, false nếu thất bại
      */
     public function delete(int $productId): bool
     {
@@ -199,6 +531,10 @@ class ProductModule
 
     /**
      * Lấy sản phẩm theo danh mục
+     *
+     * @param int $categoryId ID danh mục sản phẩm
+     * @param array $options Các tùy chọn bổ sung (limit, offset, sort...)
+     * @return Collection Collection các sản phẩm trong danh mục
      */
     public function getByCategory(int $categoryId, array $options = []): Collection
     {
@@ -207,6 +543,10 @@ class ProductModule
 
     /**
      * Lấy sản phẩm theo thương hiệu
+     *
+     * @param int $brandId ID thương hiệu sản phẩm
+     * @param array $options Các tùy chọn bổ sung (limit, offset, sort...)
+     * @return Collection Collection các sản phẩm của thương hiệu
      */
     public function getByBrand(int $brandId, array $options = []): Collection
     {
@@ -214,7 +554,10 @@ class ProductModule
     }
 
     /**
-     * Lấy sản phẩm nổi bật
+     * Lấy sản phẩm nổi bật (hot)
+     *
+     * @param int $limit Số lượng sản phẩm tối đa (mặc định: 10)
+     * @return Collection Collection các sản phẩm nổi bật
      */
     public function getHot(int $limit = 10): Collection
     {
@@ -223,6 +566,9 @@ class ProductModule
 
     /**
      * Lấy sản phẩm mới
+     *
+     * @param int $limit Số lượng sản phẩm tối đa (mặc định: 10)
+     * @return Collection Collection các sản phẩm mới
      */
     public function getNew(int $limit = 10): Collection
     {
@@ -230,7 +576,10 @@ class ProductModule
     }
 
     /**
-     * Lấy sản phẩm trang chủ
+     * Lấy sản phẩm hiển thị trên trang chủ
+     *
+     * @param int $limit Số lượng sản phẩm tối đa (mặc định: 20)
+     * @return Collection Collection các sản phẩm trang chủ
      */
     public function getHome(int $limit = 20): Collection
     {
@@ -238,7 +587,10 @@ class ProductModule
     }
 
     /**
-     * Lấy sản phẩm sắp hết hàng
+     * Lấy sản phẩm sắp hết hàng (tồn kho thấp)
+     *
+     * @param int $threshold Ngưỡng tồn kho tối thiểu (mặc định: 10)
+     * @return Collection Collection các sản phẩm sắp hết hàng
      */
     public function getLowStock(int $threshold = 10): Collection
     {
@@ -246,7 +598,9 @@ class ProductModule
     }
 
     /**
-     * Lấy sản phẩm hết hàng
+     * Lấy sản phẩm hết hàng (tồn kho = 0)
+     *
+     * @return Collection Collection các sản phẩm hết hàng
      */
     public function getOutOfStock(): Collection
     {
@@ -254,7 +608,11 @@ class ProductModule
     }
 
     /**
-     * Lấy sản phẩm liên quan
+     * Lấy sản phẩm liên quan đến sản phẩm hiện tại
+     *
+     * @param Product $product Sản phẩm gốc để tìm sản phẩm liên quan
+     * @param int $limit Số lượng sản phẩm liên quan tối đa (mặc định: 5)
+     * @return Collection Collection các sản phẩm liên quan
      */
     public function getRelated(Product $product, int $limit = 5): Collection
     {
@@ -262,7 +620,10 @@ class ProductModule
     }
 
     /**
-     * Lấy sản phẩm bán chạy
+     * Lấy sản phẩm bán chạy nhất
+     *
+     * @param int $limit Số lượng sản phẩm tối đa (mặc định: 10)
+     * @return Collection Collection các sản phẩm bán chạy
      */
     public function getBestSelling(int $limit = 10): Collection
     {
@@ -270,7 +631,10 @@ class ProductModule
     }
 
     /**
-     * Lấy sản phẩm giảm giá
+     * Lấy sản phẩm đang giảm giá
+     *
+     * @param int $limit Số lượng sản phẩm tối đa (mặc định: 10)
+     * @return Collection Collection các sản phẩm giảm giá
      */
     public function getDiscounted(int $limit = 10): Collection
     {
@@ -279,6 +643,11 @@ class ProductModule
 
     /**
      * Lấy sản phẩm theo khoảng giá
+     *
+     * @param float $minPrice Giá tối thiểu
+     * @param float $maxPrice Giá tối đa
+     * @param array $options Các tùy chọn bổ sung (limit, offset, sort...)
+     * @return Collection Collection các sản phẩm trong khoảng giá
      */
     public function getByPriceRange(float $minPrice, float $maxPrice, array $options = []): Collection
     {
@@ -286,15 +655,20 @@ class ProductModule
     }
 
     /**
-     * Lấy thống kê sản phẩm
+     * Lấy thống kê tổng quan về sản phẩm
+     *
+     * @return array Mảng chứa các thống kê sản phẩm
      */
     public function getStatistics(): array
     {
         return $this->productManager->getAllProductStatistics();
     }
 
-        /**
-     * Lấy danh mục sản phẩm
+    /**
+     * Lấy danh mục sản phẩm từ API Nhanh.vn
+     *
+     * @return array Mảng các danh mục sản phẩm
+     * @throws Exception Khi có lỗi xảy ra trong quá trình lấy danh mục
      */
     public function getCategories(): array
     {
@@ -343,7 +717,9 @@ class ProductModule
     }
 
     /**
-     * Lấy thương hiệu sản phẩm
+     * Lấy danh sách thương hiệu sản phẩm
+     *
+     * @return array Mảng các thương hiệu sản phẩm
      */
     public function getBrands(): array
     {
@@ -352,7 +728,9 @@ class ProductModule
     }
 
     /**
-     * Lấy loại sản phẩm
+     * Lấy danh sách loại sản phẩm
+     *
+     * @return array Mảng các loại sản phẩm
      */
     public function getTypes(): array
     {
@@ -361,7 +739,9 @@ class ProductModule
     }
 
     /**
-     * Lấy nhà cung cấp
+     * Lấy danh sách nhà cung cấp
+     *
+     * @return array Mảng các nhà cung cấp
      */
     public function getSuppliers(): array
     {
@@ -370,7 +750,9 @@ class ProductModule
     }
 
     /**
-     * Lấy kho hàng
+     * Lấy danh sách kho hàng
+     *
+     * @return array Mảng các kho hàng
      */
     public function getDepots(): array
     {
@@ -385,7 +767,9 @@ class ProductModule
     }
 
     /**
-     * Lấy kiểu nhập kho
+     * Lấy danh sách kiểu nhập kho
+     *
+     * @return array Mảng các kiểu nhập kho
      */
     public function getImportTypes(): array
     {
@@ -400,7 +784,9 @@ class ProductModule
     }
 
     /**
-     * Lấy thuộc tính sản phẩm
+     * Lấy danh sách thuộc tính sản phẩm
+     *
+     * @return array Mảng các thuộc tính sản phẩm
      */
     public function getAttributes(): array
     {
@@ -415,7 +801,9 @@ class ProductModule
     }
 
     /**
-     * Lấy đơn vị sản phẩm
+     * Lấy danh sách đơn vị sản phẩm
+     *
+     * @return array Mảng các đơn vị sản phẩm
      */
     public function getUnits(): array
     {
@@ -430,7 +818,9 @@ class ProductModule
     }
 
     /**
-     * Lấy quà tặng sản phẩm
+     * Lấy danh sách quà tặng sản phẩm
+     *
+     * @return array Mảng các quà tặng sản phẩm
      */
     public function getGifts(): array
     {
@@ -445,7 +835,9 @@ class ProductModule
     }
 
     /**
-     * Lấy IMEI sản phẩm
+     * Lấy danh sách IMEI sản phẩm
+     *
+     * @return array Mảng các IMEI sản phẩm
      */
     public function getImeis(): array
     {
@@ -460,7 +852,9 @@ class ProductModule
     }
 
     /**
-     * Lấy hạn sử dụng sản phẩm
+     * Lấy danh sách hạn sử dụng sản phẩm
+     *
+     * @return array Mảng các hạn sử dụng sản phẩm
      */
     public function getExpiries(): array
     {
@@ -475,7 +869,9 @@ class ProductModule
     }
 
     /**
-     * Lấy lịch sử IMEI
+     * Lấy danh sách lịch sử IMEI
+     *
+     * @return array Mảng các lịch sử IMEI
      */
     public function getImeiHistories(): array
     {
@@ -490,7 +886,9 @@ class ProductModule
     }
 
     /**
-     * Lấy IMEI đã bán
+     * Lấy danh sách IMEI đã bán
+     *
+     * @return array Mảng các IMEI đã bán
      */
     public function getImeiSolds(): array
     {
@@ -505,7 +903,9 @@ class ProductModule
     }
 
     /**
-     * Lấy danh mục nội bộ
+     * Lấy danh sách danh mục nội bộ
+     *
+     * @return array Mảng các danh mục nội bộ
      */
     public function getInternalCategories(): array
     {
@@ -520,7 +920,9 @@ class ProductModule
     }
 
     /**
-     * Lấy thông tin website
+     * Lấy danh sách thông tin website
+     *
+     * @return array Mảng các thông tin website
      */
     public function getWebsiteInfos(): array
     {
@@ -535,7 +937,9 @@ class ProductModule
     }
 
     /**
-     * Lấy bảo hành sản phẩm
+     * Lấy danh sách bảo hành sản phẩm
+     *
+     * @return array Mảng các bảo hành sản phẩm
      */
     public function getWarranties(): array
     {
@@ -550,7 +954,9 @@ class ProductModule
     }
 
     /**
-     * Lấy trạng thái cache
+     * Lấy trạng thái cache của sản phẩm
+     *
+     * @return array Mảng chứa thông tin trạng thái cache
      */
     public function getCacheStatus(): array
     {
@@ -558,7 +964,9 @@ class ProductModule
     }
 
     /**
-     * Xóa tất cả cache
+     * Xóa tất cả cache sản phẩm
+     *
+     * @return bool True nếu xóa thành công, false nếu thất bại
      */
     public function clearCache(): bool
     {
@@ -566,7 +974,9 @@ class ProductModule
     }
 
     /**
-     * Kiểm tra cache có sẵn không
+     * Kiểm tra cache sản phẩm có sẵn không
+     *
+     * @return bool True nếu cache có sẵn, false nếu không
      */
     public function isCacheAvailable(): bool
     {
@@ -574,7 +984,9 @@ class ProductModule
     }
 
     /**
-     * Lấy ProductManager instance
+     * Lấy instance của ProductManager
+     *
+     * @return ProductManager Instance của ProductManager
      */
     public function getManager(): ProductManager
     {
@@ -583,6 +995,10 @@ class ProductModule
 
     /**
      * Helper method để giải phóng memory cho cached data
+     *
+     * @param array $cachedData Dữ liệu cache cần xử lý
+     * @param string $methodName Tên method để tạo entities
+     * @return array Mảng các entities đã được tạo
      */
     private function createEntitiesWithMemoryManagement(array $cachedData, string $methodName): array
     {
@@ -604,6 +1020,11 @@ class ProductModule
 
     /**
      * Helper method để giải phóng memory cho API response data
+     *
+     * @param array $responseData Dữ liệu response từ API
+     * @param string $methodName Tên method để tạo entities
+     * @param string $dataKey Key chứa data trong response (mặc định: 'data')
+     * @return array Mảng các entities đã được tạo
      */
     private function createEntitiesFromApiResponse(array $responseData, string $methodName, string $dataKey = 'data'): array
     {

@@ -156,4 +156,175 @@ class Product extends AbstractEntity
 
         return substr($name, 0, $length) . '...';
     }
+
+    // Additional getters for product detail API
+    public function getOtherName(): ?string
+    {
+        return $this->getAttribute('otherName');
+    }
+
+    public function getBarcode(): ?string
+    {
+        return $this->getAttribute('barcode');
+    }
+
+    public function getImportPrice(): ?float
+    {
+        return $this->getAttribute('importPrice');
+    }
+
+    public function getOldPrice(): ?float
+    {
+        return $this->getAttribute('oldPrice');
+    }
+
+    public function getWholesalePrice(): ?float
+    {
+        return $this->getAttribute('wholesalePrice');
+    }
+
+    public function getVat(): ?int
+    {
+        return $this->getAttribute('vat');
+    }
+
+    public function getPreviewLink(): ?string
+    {
+        return $this->getAttribute('previewLink');
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->getAttribute('description');
+    }
+
+    public function getHighlight(): array
+    {
+        return $this->getAttribute('highlight', []);
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->getAttribute('content');
+    }
+
+    public function getShowHot(): bool
+    {
+        return (bool) $this->getAttribute('showHot');
+    }
+
+    public function getShowNew(): bool
+    {
+        return (bool) $this->getAttribute('showNew');
+    }
+
+    public function getShowHome(): bool
+    {
+        return (bool) $this->getAttribute('showHome');
+    }
+
+    public function getWidth(): ?int
+    {
+        return $this->getAttribute('width');
+    }
+
+    public function getHeight(): ?int
+    {
+        return $this->getAttribute('height');
+    }
+
+    public function getLength(): ?int
+    {
+        return $this->getAttribute('length');
+    }
+
+    public function getShippingWeight(): ?int
+    {
+        return $this->getAttribute('shippingWeight');
+    }
+
+    public function getWarranty(): ?int
+    {
+        return $this->getAttribute('warranty');
+    }
+
+    public function getWarrantyAddress(): ?string
+    {
+        return $this->getAttribute('warrantyAddress');
+    }
+
+    public function getWarrantyPhone(): ?string
+    {
+        return $this->getAttribute('warrantyPhone');
+    }
+
+    public function getWarrantyContent(): ?string
+    {
+        return $this->getAttribute('warrantyContent');
+    }
+
+    public function getTypeId(): ?int
+    {
+        return $this->getAttribute('typeId');
+    }
+
+    public function getTypeName(): ?string
+    {
+        return $this->getAttribute('typeName');
+    }
+
+    public function getCountryName(): ?string
+    {
+        return $this->getAttribute('countryName');
+    }
+
+    public function getUnit(): ?string
+    {
+        return $this->getAttribute('unit');
+    }
+
+    public function getParentId(): ?int
+    {
+        return $this->getAttribute('parentId');
+    }
+
+    public function getMerchantCategoryId(): ?int
+    {
+        return $this->getAttribute('merchantCategoryId');
+    }
+
+    public function getMerchantProductId(): ?int
+    {
+        return $this->getAttribute('merchantProductId');
+    }
+
+    public function getAvgCost(): ?float
+    {
+        return $this->getAttribute('avgCost');
+    }
+
+    public function getImportType(): ?int
+    {
+        return $this->getAttribute('importType');
+    }
+
+    public function getImportTypeLabel(): ?string
+    {
+        return $this->getAttribute('importTypeLabel');
+    }
+
+    public function getAttributes(): array
+    {
+        return $this->getAttribute('attributes', []);
+    }
+
+    public function getUnits(): array
+    {
+        return $this->getAttribute('units', []);
+    }
+
+    public function getWebsiteInfo(): array
+    {
+        return $this->getAttribute('websiteInfo', []);
+    }
 }
