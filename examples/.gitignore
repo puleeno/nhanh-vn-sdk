@@ -1,0 +1,27 @@
+# Dependencies
+/vendor/
+
+# Sensitive files
+tokens.json
+auth.json
+
+# Environment files
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Cache
+/cache/
+/tmp/

@@ -1,0 +1,49 @@
+# Text files
+*.php text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+
+# Documentation
+docs/** text eol=lf
+*.md text eol=lf
+
+# Source code
+src/** text eol=lf
+*.php text eol=lf
+
+# Examples directory - exclude from certain operations
+examples/** -text
+examples/** -diff
+examples/** -merge
+
+# Composer
+composer.json text eol=lf
+composer.lock text eol=lf
+
+# Git
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# IDE and editor files
+.vscode/** text eol=lf
+.idea/** text eol=lf
+*.swp -text
+*.swo -text
+
+# OS generated files
+.DS_Store -text
+Thumbs.db -text

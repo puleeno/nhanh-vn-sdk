@@ -1,0 +1,6 @@
+{
+    "appId": "YOUR_APP_ID",
+    "secretKey": "YOUR_SECRET_KEY",
+    "redirectUrl": "https://nhanh.localhost:8000/callback",
+    "environment": "sandbox"
+}
