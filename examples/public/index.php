@@ -80,6 +80,11 @@
                     <p>Demo thêm khách hàng mới và thêm nhiều khách hàng cùng lúc</p>
                     <a href="add_customer.php" class="btn btn-primary">Thêm Khách Hàng</a>
                 </div>
+                <div class="example-item">
+                    <h3>📦 Lấy Đơn Hàng</h3>
+                    <p>Demo lấy danh sách đơn hàng với các bộ lọc và phân trang</p>
+                    <a href="get_orders.php" class="btn btn-success">Lấy Đơn Hàng</a>
+                </div>
             </div>
         </div>
 

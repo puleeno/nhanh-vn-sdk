@@ -16,6 +16,7 @@ Nhanh.vn PHP SDK là thư viện PHP chính thức được phát triển để 
 - **🔐 Xác thực OAuth 2.0**: Hỗ trợ đầy đủ luồng xác thực OAuth với Nhanh.vn
 - **📦 Quản lý sản phẩm**: API đầy đủ cho việc quản lý sản phẩm, danh mục, thương hiệu
 - **👥 Quản lý khách hàng**: Tìm kiếm và quản lý thông tin khách hàng
+- **📋 Quản lý đơn hàng**: Tìm kiếm, lọc và phân tích đơn hàng với giới hạn 10 ngày
 - **📊 Cache thông minh**: Hệ thống cache tự động để tối ưu hiệu suất
 - **📝 Logging chi tiết**: Ghi log đầy đủ cho việc debug và theo dõi
 - **🔄 Xử lý lỗi tự động**: Xử lý và phục hồi lỗi một cách thông minh
@@ -193,13 +194,24 @@ docs/                 # Tài liệu API chi tiết
 
 ### 👥 Customer Module
 - ✅ **Danh sách khách hàng** - `$client->customers()->search()`
-- ⏳ **Thêm khách hàng** - `$client->customers()->create()`
+- ✅ **Thêm khách hàng** - `$client->customers()->add()`
+- ✅ **Thêm nhiều khách hàng** - `$client->customers()->addBatch()`
+
+### 📋 Order Module
+- ✅ **Danh sách đơn hàng** - `$client->orders()->search()`
+- ✅ **Tìm kiếm theo ID** - `$client->orders()->searchById()`
+- ✅ **Tìm kiếm theo khách hàng** - `$client->orders()->searchByCustomerId()`
+- ✅ **Tìm kiếm theo số điện thoại** - `$client->orders()->searchByCustomerMobile()`
+- ✅ **Lọc theo trạng thái** - `$client->orders()->getByStatuses()`
+- ✅ **Lọc theo loại đơn hàng** - `$client->orders()->getByType()`
+- ✅ **Lọc theo khoảng thời gian** - `$client->orders()->getByDateRange()`
+- ✅ **Lọc theo thời gian giao hàng** - `$client->orders()->getByDeliveryDateRange()`
+- ✅ **Lọc theo thời gian cập nhật** - `$client->orders()->getByUpdatedDateTimeRange()`
 
 ### 🔐 OAuth Module
 - ✅ **Xác thực OAuth 2.0** - `$client->oauth()->getAuthorizationUrl()`
 
 ### 📋 Các Module khác (Chưa implement)
-- ⏳ **Order Module** - Quản lý đơn hàng
 - ⏳ **Shipping Module** - Vận chuyển
 - ⏳ **Bill Module** - Xuất nhập kho
 - ⏳ **Website Module** - Tin tức, subscriber
@@ -282,9 +294,9 @@ Dự án này được cấp phép theo [MIT License](LICENSE).
 - ✅ Product Module (90% hoàn thành)
 - ✅ Customer Module (80% hoàn thành)
 - ✅ OAuth Module (100% hoàn thành)
+- ✅ Order Module (100% hoàn thành)
 
 ### Q2 2024 - Business Modules
-- 🎯 Order Module - Quản lý đơn hàng
 - 🎯 Shipping Module - Vận chuyển
 - 🎯 Bill Module - Xuất nhập kho
 

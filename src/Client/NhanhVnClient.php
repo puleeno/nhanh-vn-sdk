@@ -6,10 +6,13 @@ use Puleeno\NhanhVn\Config\ClientConfig;
 use Puleeno\NhanhVn\Modules\ProductModule;
 use Puleeno\NhanhVn\Modules\OAuthModule;
 use Puleeno\NhanhVn\Modules\CustomerModule;
+use Puleeno\NhanhVn\Modules\OrderModule;
 use Puleeno\NhanhVn\Managers\ProductManager;
 use Puleeno\NhanhVn\Managers\CustomerManager;
+use Puleeno\NhanhVn\Managers\OrderManager;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Repositories\CustomerRepository;
+use Puleeno\NhanhVn\Repositories\OrderRepository;
 use Puleeno\NhanhVn\Services\ProductService;
 use Puleeno\NhanhVn\Services\CustomerService;
 use Puleeno\NhanhVn\Services\OAuthService;
@@ -28,6 +31,7 @@ class NhanhVnClient
     private ProductModule $products;
     private OAuthModule $oauth;
     private CustomerModule $customers;
+    private OrderModule $orders;
     private LoggerInterface $logger;
 
     private function __construct(ClientConfig $config)
@@ -61,6 +65,7 @@ class NhanhVnClient
         // Initialize repositories
         $productRepository = new ProductRepository($cacheService);
         $customerRepository = new CustomerRepository();
+        $orderRepository = new OrderRepository();
 
         // Initialize services
         $productService = new ProductService($productRepository, $cacheService);
@@ -70,10 +75,12 @@ class NhanhVnClient
         // Initialize managers
         $productManager = new ProductManager($productRepository, $productService);
         $customerManager = new CustomerManager($customerService);
+        $orderManager = new OrderManager($orderRepository, $cacheService, $this->logger);
 
         // Initialize modules
         $this->products = new ProductModule($productManager, $httpService, $this->logger);
         $this->customers = new CustomerModule($customerManager, $httpService, $this->logger);
+        $this->orders = new OrderModule($orderManager, $httpService, $this->logger);
         $this->oauth = new OAuthModule($oauthService, $this->logger);
     }
 
@@ -99,6 +106,14 @@ class NhanhVnClient
     public function customers(): CustomerModule
     {
         return $this->customers;
+    }
+
+    /**
+     * Get orders module
+     */
+    public function orders(): OrderModule
+    {
+        return $this->orders;
     }
 
     /**
@@ -234,7 +249,10 @@ class NhanhVnClient
             'business_id' => $this->getBusinessId(),
             'configured' => $this->isConfigured(),
             'modules' => [
-                'products' => 'ProductModule'
+                'products' => 'ProductModule',
+                'customers' => 'CustomerModule',
+                'orders' => 'OrderModule',
+                'oauth' => 'OAuthModule'
             ]
         ];
     }
