@@ -608,4 +608,29 @@ class OrderManager
     {
         return $this->cacheService;
     }
+
+    /**
+     * Chuẩn bị search criteria cho API call
+     *
+     * @param array $searchParams Tham số tìm kiếm
+     * @return array Dữ liệu đã format cho API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function prepareSearchCriteria(array $searchParams): array
+    {
+        $this->logger->debug("OrderManager::prepareSearchCriteria() called", [
+            'searchParams' => $searchParams
+        ]);
+
+        try {
+            return $this->orderRepository->prepareSearchCriteria($searchParams);
+
+        } catch (Exception $e) {
+            $this->logger->error("OrderManager::prepareSearchCriteria() error", [
+                'error' => $e->getMessage(),
+                'searchParams' => $searchParams
+            ]);
+            throw $e;
+        }
+    }
 }
