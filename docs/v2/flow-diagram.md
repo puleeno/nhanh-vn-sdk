@@ -168,6 +168,7 @@ graph TB
 
 ## API Endpoints
 
+### Product APIs
 - **Product Search**: `/api/product/search`
 - **Product Detail**: `/api/product/detail`
 - **Product Add**: `/api/product/add`
@@ -177,6 +178,9 @@ graph TB
 - **Product Types**: `/api/product/type`
 - **Product Suppliers**: `/api/product/supplier`
 - **Product Depots**: `/api/product/depot`
+
+### Customer APIs
+- **Customer Search**: `/api/customer/search`
 
 ## Data Flow
 

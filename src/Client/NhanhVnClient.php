@@ -5,9 +5,13 @@ namespace Puleeno\NhanhVn\Client;
 use Puleeno\NhanhVn\Config\ClientConfig;
 use Puleeno\NhanhVn\Modules\ProductModule;
 use Puleeno\NhanhVn\Modules\OAuthModule;
+use Puleeno\NhanhVn\Modules\CustomerModule;
 use Puleeno\NhanhVn\Managers\ProductManager;
+use Puleeno\NhanhVn\Managers\CustomerManager;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
+use Puleeno\NhanhVn\Repositories\CustomerRepository;
 use Puleeno\NhanhVn\Services\ProductService;
+use Puleeno\NhanhVn\Services\CustomerService;
 use Puleeno\NhanhVn\Services\OAuthService;
 use Puleeno\NhanhVn\Services\CacheService;
 use Puleeno\NhanhVn\Contracts\LoggerInterface;
@@ -23,6 +27,7 @@ class NhanhVnClient
     private ClientConfig $config;
     private ProductModule $products;
     private OAuthModule $oauth;
+    private CustomerModule $customers;
     private LoggerInterface $logger;
 
     private function __construct(ClientConfig $config)
@@ -55,16 +60,20 @@ class NhanhVnClient
 
         // Initialize repositories
         $productRepository = new ProductRepository($cacheService);
+        $customerRepository = new CustomerRepository();
 
         // Initialize services
         $productService = new ProductService($productRepository, $cacheService);
+        $customerService = new CustomerService($customerRepository);
         $oauthService = new OAuthService($this->config, $this->logger);
 
         // Initialize managers
         $productManager = new ProductManager($productRepository, $productService);
+        $customerManager = new CustomerManager($customerService);
 
         // Initialize modules
         $this->products = new ProductModule($productManager, $httpService, $this->logger);
+        $this->customers = new CustomerModule($customerManager, $httpService, $this->logger);
         $this->oauth = new OAuthModule($oauthService, $this->logger);
     }
 
@@ -82,6 +91,14 @@ class NhanhVnClient
     public function products(): ProductModule
     {
         return $this->products;
+    }
+
+    /**
+     * Get customers module
+     */
+    public function customers(): CustomerModule
+    {
+        return $this->customers;
     }
 
     /**

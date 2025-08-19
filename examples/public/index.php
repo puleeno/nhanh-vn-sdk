@@ -70,6 +70,11 @@
                     <p>Kiểm tra việc khởi tạo NhanhVnClient qua boot file</p>
                     <a href="test_boot.php" class="btn btn-warning">Test Boot</a>
                 </div>
+                <div class="example-item">
+                    <h3>👥 Tìm Kiếm Khách Hàng</h3>
+                    <p>Demo tìm kiếm khách hàng với các bộ lọc khác nhau</p>
+                    <a href="search_customers.php" class="btn btn-success">Tìm Kiếm Khách Hàng</a>
+                </div>
             </div>
         </div>
 

@@ -11,10 +11,8 @@ class ProductDetail extends Product
 {
     protected function validate(): void
     {
-        parent::validate();
-
         // Additional validation cho product detail
-        if (!$this->getIdNhanh()) {
+        if (!$this->getAttribute('idNhanh')) {
             $this->addError('idNhanh', 'ID sản phẩm không được để trống');
         }
     }

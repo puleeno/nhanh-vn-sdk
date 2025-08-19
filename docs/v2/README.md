@@ -525,6 +525,9 @@ try {
 - `POST /api/product/internalcategory` - Quản lý danh mục nội bộ
 - `POST /api/product/gift` - Quản lý quà tặng
 
+### Customers
+- `POST /api/customer/search` - Tìm kiếm khách hàng với các tiêu chí khác nhau
+
 ### Inventory
 - `POST /api/product/expire` - Quản lý hạn sử dụng
 - `POST /api/product/imei` - Quản lý IMEI
@@ -557,4 +560,6 @@ try {
 - **Product Add API**: Hỗ trợ thêm/cập nhật sản phẩm với validation toàn diện
 - **Batch Operations**: Hỗ trợ thêm tối đa 300 sản phẩm cùng lúc
 - **ProductAddRequest/Response Entities**: DTO pattern cho API requests/responses
+- **Customer Module**: Tìm kiếm và quản lý khách hàng với validation toàn diện
+- **Customer Search API**: Hỗ trợ tìm kiếm theo ID, mobile, type, date range
 - Documentation đầy đủ với examples

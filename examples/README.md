@@ -76,7 +76,8 @@ examples/
 │   ├── get_categories.php # Categories demo
 │   ├── get_products_with_logger.php # Logging demo
 │   ├── add_product.php  # Product add demo
-│   └── add_product_images.php # Product external images demo
+│   ├── add_product_images.php # Product external images demo
+│   └── search_customers.php # Customer search demo
 ├── src/                 # Source code
 │   └── OAuthExample.php # Class chính xử lý OAuth
 └── tokens.json          # File lưu access token (tự động tạo)
