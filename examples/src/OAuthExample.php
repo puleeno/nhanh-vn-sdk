@@ -34,10 +34,19 @@ class OAuthExample
             throw new \RuntimeException("File cấu hình {$this->configFile} không tồn tại!");
         }
 
-        $this->config = json_decode(file_get_contents($this->configFile), true);
+        $configContent = file_get_contents($this->configFile);
+        if ($configContent === false) {
+            throw new \RuntimeException("Không thể đọc file cấu hình {$this->configFile}!");
+        }
+
+        $this->config = json_decode($configContent, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException("File cấu hình JSON không hợp lệ!");
+            throw new \RuntimeException("File cấu hình JSON không hợp lệ: " . json_last_error_msg());
+        }
+
+        if (!is_array($this->config)) {
+            throw new \RuntimeException("File cấu hình phải chứa một object JSON hợp lệ!");
         }
 
         // Validate required fields for OAuth initiation
@@ -50,7 +59,7 @@ class OAuthExample
 
         // businessId và environment có thể để trống ban đầu
         if (empty($this->config['businessId'])) {
-            $this->config['businessId'] = null;
+            $this->config['businessId'] = '';
         }
 
         if (empty($this->config['environment'])) {
@@ -284,13 +293,33 @@ class OAuthExample
     {
         // Sử dụng SDK để đổi access code lấy access token
         try {
-            // Tạo config tạm thời để khởi tạo client
-            $tempConfig = new \Puleeno\NhanhVn\Config\ClientConfig([
+            // Debug: Log config trước khi tạo ClientConfig
+            $configArray = [
                 'appId' => $this->config['appId'],
                 'secretKey' => $this->config['secretKey'],
-                'apiVersion' => '2.0',
-                'baseUrl' => 'https://pos.open.nhanh.vn'
-            ]);
+                'returnLink' => $this->config['redirectUrl'], // Thêm returnLink để được nhận diện là OAuth flow
+                'apiVersion' => '2.0'
+            ];
+            
+            echo '<div class="section">';
+            echo '<h3>🔍 Debug Config Array:</h3>';
+            echo '<pre>' . htmlspecialchars(json_encode($configArray, JSON_PRETTY_PRINT)) . '</pre>';
+            echo '</div>';
+            
+            // Tạo config tạm thời để khởi tạo client
+            $tempConfig = new \Puleeno\NhanhVn\Config\ClientConfig($configArray);
+            
+            echo '<div class="section">';
+            echo '<h3>🔍 Debug ClientConfig Created:</h3>';
+            echo '<ul>';
+            echo '<li><strong>App ID:</strong> ' . htmlspecialchars($tempConfig->getAppId()) . '</li>';
+            echo '<li><strong>Secret Key:</strong> ' . (strlen($tempConfig->getSecretKey() ?? '') > 0 ? 'Set (' . strlen($tempConfig->getSecretKey()) . ' chars)' : 'Not set') . '</li>';
+            echo '<li><strong>Return Link:</strong> ' . htmlspecialchars($tempConfig->getReturnLink() ?? 'Not set') . '</li>';
+            echo '<li><strong>Business ID:</strong> ' . htmlspecialchars($tempConfig->getBusinessId() ?? 'Not set') . '</li>';
+            echo '<li><strong>API Version:</strong> ' . htmlspecialchars($tempConfig->getApiVersion()) . '</li>';
+            echo '<li><strong>Is Valid:</strong> ' . ($tempConfig->isValid() ? 'Yes' : 'No') . '</li>';
+            echo '</ul>';
+            echo '</div>';
 
             // Khởi tạo client tạm thời
             $tempClient = \Puleeno\NhanhVn\Client\NhanhVnClient::getInstance($tempConfig);
