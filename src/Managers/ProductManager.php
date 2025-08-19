@@ -20,6 +20,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductImeiSold;
 use Puleeno\NhanhVn\Entities\Product\ProductInternalCategory;
 use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
+use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Services\ProductService;
 
@@ -333,6 +335,30 @@ class ProductManager
     public function createProductWarranties(array $data): array
     {
         return $this->productRepository->createProductWarranties($data);
+    }
+
+    /**
+     * Create ProductAddRequest entity
+     */
+    public function createProductAddRequest(array $data): ProductAddRequest
+    {
+        return $this->productRepository->createProductAddRequest($data);
+    }
+
+    /**
+     * Create multiple ProductAddRequest entities
+     */
+    public function createProductAddRequests(array $data): array
+    {
+        return $this->productRepository->createProductAddRequests($data);
+    }
+
+    /**
+     * Create ProductAddResponse entity
+     */
+    public function createProductAddResponse(array $data): ProductAddResponse
+    {
+        return $this->productRepository->createProductAddResponse($data);
     }
 
     /**

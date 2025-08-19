@@ -125,23 +125,73 @@ try {
 ```php
 try {
     $productData = [
-        'name' => 'iPhone 15 Pro Max',
+        'id' => 'PROD_' . time(), // ID hệ thống riêng (bắt buộc)
+        'name' => 'iPhone 15 Pro Max', // Tên sản phẩm (bắt buộc)
+        'price' => 45000000, // Giá sản phẩm (bắt buộc)
+        'code' => 'IPHONE15PM-256',
+        'barcode' => '1234567890123',
         'description' => 'Điện thoại iPhone mới nhất',
-        'price' => 45000000,
         'categoryId' => 1,
         'brandId' => 2,
-        'sku' => 'IPHONE15PM-256',
-        'weight' => 0.221,
-        'dimensions' => [
-            'length' => 159.9,
-            'width' => 76.7,
-            'height' => 8.25
+        'importPrice' => 40000000,
+        'wholesalePrice' => 42000000,
+        'shippingWeight' => 221, // Cân nặng vận chuyển (gram)
+        'vat' => 10, // Thuế VAT (%)
+        'status' => 'Active',
+        'externalImages' => [
+            'https://example.com/iphone15-1.jpg',
+            'https://example.com/iphone15-2.jpg'
         ]
     ];
 
-    $newProduct = $client->products()->add($productData);
+    // Validate data trước khi gửi
+    if ($client->products()->validateProductAddRequest($productData)) {
+        $response = $client->products()->add($productData);
 
-    echo "Đã tạo sản phẩm mới với ID: " . $newProduct->getId() . "\n";
+        echo "Đã tạo sản phẩm mới thành công!\n";
+        echo "ID hệ thống: " . $productData['id'] . "\n";
+        echo "ID Nhanh.vn: " . $response->getNhanhId($productData['id']) . "\n";
+        echo "Barcode: " . $response->getBarcode($productData['id']) . "\n";
+    } else {
+        echo "Dữ liệu sản phẩm không hợp lệ\n";
+    }
+
+} catch (Exception $e) {
+    echo "Lỗi: " . $e->getMessage();
+}
+```
+
+#### Thêm nhiều sản phẩm cùng lúc (Batch)
+
+```php
+try {
+    $batchProducts = [
+        [
+            'id' => 'PROD_1',
+            'name' => 'MacBook Pro 14" M3 Pro',
+            'price' => 55000000,
+            'code' => 'MBP14-M3PRO'
+        ],
+        [
+            'id' => 'PROD_2',
+            'name' => 'iPad Air 5 64GB',
+            'price' => 18000000,
+            'code' => 'IPADAIR5-64'
+        ]
+    ];
+
+    // Validate batch data
+    $errors = $client->products()->validateProductAddRequests($batchProducts);
+    if (empty($errors)) {
+        $response = $client->products()->addBatch($batchProducts);
+
+        echo "Batch thêm sản phẩm thành công!\n";
+        echo "Tổng số: " . $response->getTotalProducts() . "\n";
+        echo "Thành công: " . $response->getSuccessCount() . "\n";
+        echo "Tỷ lệ thành công: " . $response->getSuccessRate() . "%\n";
+    } else {
+        echo "Có lỗi validation trong batch data\n";
+    }
 
 } catch (Exception $e) {
     echo "Lỗi: " . $e->getMessage();
@@ -293,6 +343,77 @@ $category = $product->getCategory();
 $category->getId();          // int
 $category->getName();        // string
 $category->getSlug();        // string
+```
+
+### ProductAddRequest Entity
+
+```php
+$request = new ProductAddRequest([
+    'id' => 'PROD_123',
+    'name' => 'iPhone 15 Pro Max',
+    'price' => 45000000,
+    'code' => 'IPHONE15PM-256',
+    'barcode' => '1234567890123',
+    'description' => 'Điện thoại iPhone mới nhất',
+    'categoryId' => 1,
+    'brandId' => 2,
+    'importPrice' => 40000000,
+    'wholesalePrice' => 42000000,
+    'shippingWeight' => 221,
+    'vat' => 10,
+    'status' => 'Active',
+    'externalImages' => ['https://example.com/image1.jpg']
+]);
+
+// Validation
+if ($request->isValid()) {
+    echo "Dữ liệu hợp lệ\n";
+} else {
+    echo "Lỗi: " . json_encode($request->getErrors());
+}
+
+// Business logic
+$request->isNew();           // bool - Là sản phẩm mới
+$request->isUpdate();        // bool - Là cập nhật sản phẩm
+$request->hasDiscount();     // bool - Có giảm giá
+$request->getDiscountAmount(); // float - Số tiền giảm giá
+$request->getDiscountPercentage(); // float - Phần trăm giảm giá
+
+// Convert to API format
+$apiData = $request->toApiFormat();
+```
+
+### ProductAddResponse Entity
+
+```php
+$response = $client->products()->add($productData);
+
+// Basic info
+$response->getTotalProducts();    // int - Tổng số sản phẩm
+$response->getSuccessCount();     // int - Số sản phẩm thành công
+$response->getFailedCount();      // int - Số sản phẩm thất bại
+$response->getSuccessRate();      // float - Tỷ lệ thành công (%)
+
+// Status checks
+$response->isAllSuccess();        // bool - Tất cả đều thành công
+$response->hasFailures();         // bool - Có sản phẩm thất bại
+
+// ID mappings
+$response->getNhanhId('PROD_123');     // int - ID Nhanh.vn
+$response->getBarcode('PROD_123');     // string - Barcode
+$response->hasSystemId('PROD_123');    // bool - Kiểm tra ID tồn tại
+
+// Summary
+$summary = $response->getSummary();
+// [
+//     'total_products' => 3,
+//     'success_count' => 3,
+//     'failed_count' => 0,
+//     'success_rate' => 100.0,
+//     'is_all_success' => true,
+//     'has_failures' => false
+// ]
+```
 
 // Thông tin tồn kho
 $inventory = $product->getInventory();
@@ -397,7 +518,7 @@ try {
 ### Products
 - `POST /api/product/search` - Tìm kiếm sản phẩm
 - `POST /api/product/detail` - Lấy chi tiết sản phẩm
-- `POST /api/product/add` - Thêm sản phẩm mới
+- `POST /api/product/add` - Thêm/cập nhật sản phẩm (hỗ trợ batch tối đa 300 sản phẩm)
 - `POST /api/product/update` - Cập nhật sản phẩm
 - `POST /api/product/delete` - Xóa sản phẩm
 - `POST /api/product/category` - Quản lý danh mục
@@ -433,4 +554,7 @@ try {
 - Hệ thống cache thông minh
 - Error handling toàn diện với custom exceptions
 - OAuth flow hoàn chỉnh
+- **Product Add API**: Hỗ trợ thêm/cập nhật sản phẩm với validation toàn diện
+- **Batch Operations**: Hỗ trợ thêm tối đa 300 sản phẩm cùng lúc
+- **ProductAddRequest/Response Entities**: DTO pattern cho API requests/responses
 - Documentation đầy đủ với examples

@@ -22,6 +22,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductImeiSold;
 use Puleeno\NhanhVn\Entities\Product\ProductInternalCategory;
 use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
+use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
 use Illuminate\Support\Collection;
 use Exception;
 
@@ -494,14 +496,135 @@ class ProductModule
     }
 
     /**
-     * Thêm sản phẩm mới
+     * Thêm sản phẩm mới hoặc cập nhật sản phẩm hiện có
      *
-     * @param array $productData Dữ liệu sản phẩm cần thêm
-     * @return Product Sản phẩm đã được tạo
+     * @param array|ProductAddRequest $productData Dữ liệu sản phẩm hoặc ProductAddRequest object
+     * @return ProductAddResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra
      */
-    public function add(array $productData): Product
+    public function add($productData): ProductAddResponse
     {
-        return $this->productManager->createProduct($productData);
+        $this->logger->info("ProductModule::add() called", ['data' => $productData]);
+
+        try {
+            // Convert array to ProductAddRequest if needed
+            if (is_array($productData)) {
+                $productData = $this->productManager->createProductAddRequest($productData);
+            }
+
+            // Validate request data
+            if (!$productData->isValid()) {
+                $errors = $productData->getErrors();
+                $this->logger->error("ProductModule::add() - Validation failed", ['errors' => $errors]);
+                throw new Exception('Dữ liệu sản phẩm không hợp lệ: ' . json_encode($errors));
+            }
+
+            // Prepare API request data
+            $apiData = $productData->toApiFormat();
+            $this->logger->debug("ProductModule::add() - API request data", $apiData);
+
+            // Call Nhanh.vn API
+            $response = $this->httpService->callApi('/product/add', $apiData);
+
+            // Parse response
+            if (!isset($response['data'])) {
+                $this->logger->warning("ProductModule::add() - Response không có data");
+                throw new Exception('API response không hợp lệ');
+            }
+
+            // Create response entity
+            $addResponse = $this->productManager->createProductAddResponse($response['data']);
+
+            $this->logger->info("ProductModule::add() - Success", [
+                'system_id' => $productData->getId(),
+                'nhanh_id' => $addResponse->getNhanhId($productData->getId())
+            ]);
+
+            // Clear cache for this product
+            $this->clearProductCache($productData->getId());
+
+            return $addResponse;
+
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::add() error", ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Thêm nhiều sản phẩm cùng lúc (batch add)
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm
+     * @return ProductAddResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function addBatch(array $productsData): ProductAddResponse
+    {
+        $this->logger->info("ProductModule::addBatch() called", ['count' => count($productsData)]);
+
+        if (empty($productsData)) {
+            throw new Exception('Danh sách sản phẩm không được để trống');
+        }
+
+        if (count($productsData) > 300) {
+            throw new Exception('Chỉ được thêm tối đa 300 sản phẩm mỗi lần');
+        }
+
+        try {
+            // Validate all products
+            $requests = [];
+            foreach ($productsData as $index => $productData) {
+                $request = $this->productManager->createProductAddRequest($productData);
+
+                if (!$request->isValid()) {
+                    $errors = $request->getErrors();
+                    $this->logger->error("ProductModule::addBatch() - Product {$index} validation failed", ['errors' => $errors]);
+                    throw new Exception("Sản phẩm thứ {$index} không hợp lệ: " . json_encode($errors));
+                }
+
+                $requests[] = $request;
+            }
+
+            // Prepare batch API request data
+            $batchData = [];
+            foreach ($requests as $request) {
+                $batchData[] = $request->toApiFormat();
+            }
+
+            $this->logger->debug("ProductModule::addBatch() - Batch API request data", ['count' => count($batchData)]);
+
+            // Call Nhanh.vn batch API
+            $response = $this->httpService->callApi('/product/add', $batchData);
+
+            // Parse response
+            if (!isset($response['data'])) {
+                $this->logger->warning("ProductModule::addBatch() - Response không có data");
+                throw new Exception('API response không hợp lệ');
+            }
+
+            // Create response entity
+            $addResponse = $this->productManager->createProductAddResponse($response['data']);
+
+            $this->logger->info("ProductModule::addBatch() - Success", [
+                'total_products' => $addResponse->getTotalProducts(),
+                'success_count' => $addResponse->getSuccessCount(),
+                'success_rate' => $addResponse->getSuccessRate()
+            ]);
+
+            // Clear cache for all products
+            foreach ($requests as $request) {
+                $this->clearProductCache($request->getId());
+            }
+
+            // Clean up memory
+            unset($requests, $batchData);
+
+            return $addResponse;
+
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::addBatch() error", ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**

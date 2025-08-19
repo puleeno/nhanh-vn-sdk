@@ -21,6 +21,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductImeiSold;
 use Puleeno\NhanhVn\Entities\Product\ProductInternalCategory;
 use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
+use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Services\CacheService;
 
@@ -609,5 +611,123 @@ class ProductService
     {
         // TODO: Implement actual data retrieval from API or database
         return [];
+    }
+
+    /**
+     * Thêm sản phẩm mới hoặc cập nhật sản phẩm hiện có
+     *
+     * @param array|ProductAddRequest $productData Dữ liệu sản phẩm hoặc ProductAddRequest object
+     * @return ProductAddResponse Response từ API
+     * @throws \Exception Khi có lỗi xảy ra
+     */
+    public function addProduct($productData): ProductAddResponse
+    {
+        // Convert array to ProductAddRequest if needed
+        if (is_array($productData)) {
+            $productData = $this->productRepository->createProductAddRequest($productData);
+        }
+
+        // Validate request data
+        if (!$productData->isValid()) {
+            throw new \InvalidArgumentException('Dữ liệu sản phẩm không hợp lệ: ' . json_encode($productData->getErrors()));
+        }
+
+        // TODO: Implement actual API call to Nhanh.vn
+        // This is a placeholder implementation
+        $response = [
+            'ids' => [
+                $productData->getId() => rand(1000000, 9999999) // Mock Nhanh.vn ID
+            ],
+            'barcodes' => [
+                $productData->getId() => 'BAR' . rand(100000, 999999) // Mock barcode
+            ]
+        ];
+
+        return $this->productRepository->createProductAddResponse($response);
+    }
+
+    /**
+     * Thêm nhiều sản phẩm cùng lúc (batch add)
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm
+     * @return ProductAddResponse Response từ API
+     * @throws \InvalidArgumentException Khi có lỗi xảy ra
+     */
+    public function addProducts(array $productsData): ProductAddResponse
+    {
+        if (empty($productsData)) {
+            throw new \InvalidArgumentException('Danh sách sản phẩm không được để trống');
+        }
+
+        if (count($productsData) > 300) {
+            throw new \InvalidArgumentException('Chỉ được thêm tối đa 300 sản phẩm mỗi lần');
+        }
+
+        // Validate all products
+        $requests = [];
+        foreach ($productsData as $index => $productData) {
+            $request = $this->productRepository->createProductAddRequest($productData);
+
+            if (!$request->isValid()) {
+                throw new \InvalidArgumentException(
+                    "Sản phẩm thứ {$index} không hợp lệ: " . json_encode($request->getErrors())
+                );
+            }
+
+            $requests[] = $request;
+            unset($request); // Memory management
+        }
+
+        // TODO: Implement actual batch API call to Nhanh.vn
+        // This is a placeholder implementation
+        $response = [
+            'ids' => [],
+            'barcodes' => []
+        ];
+
+        foreach ($requests as $request) {
+            $response['ids'][$request->getId()] = rand(1000000, 9999999);
+            $response['barcodes'][$request->getId()] = 'BAR' . rand(100000, 999999);
+        }
+
+        // Clean up memory
+        unset($requests);
+
+        return $this->productRepository->createProductAddResponse($response);
+    }
+
+    /**
+     * Validate product add request data
+     *
+     * @param array $productData Dữ liệu sản phẩm
+     * @return bool True nếu hợp lệ
+     */
+    public function validateProductAddRequest(array $productData): bool
+    {
+        try {
+            $request = $this->productRepository->createProductAddRequest($productData);
+            return $request->isValid();
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Validate multiple product add requests
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm
+     * @return array Mảng lỗi validation (empty nếu tất cả đều hợp lệ)
+     */
+    public function validateProductAddRequests(array $productsData): array
+    {
+        $errors = [];
+
+        foreach ($productsData as $index => $productData) {
+            if (!$this->validateProductAddRequest($productData)) {
+                $errors[$index] = 'Dữ liệu sản phẩm không hợp lệ';
+            }
+        }
+
+        return $errors;
     }
 }

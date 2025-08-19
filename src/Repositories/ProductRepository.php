@@ -21,6 +21,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductImeiSold;
 use Puleeno\NhanhVn\Entities\Product\ProductInternalCategory;
 use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
+use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
 use Puleeno\NhanhVn\Services\CacheService;
 
 /**
@@ -78,6 +80,11 @@ class ProductRepository
     public function createProductWarranty(array $data): ProductWarranty { return new ProductWarranty($data); }
     public function createProductWarranties(array $data): array { return array_map([$this, 'createProductWarranty'], $data); }
 
+    // Product Add Request/Response methods
+    public function createProductAddRequest(array $data): ProductAddRequest { return new ProductAddRequest($data); }
+    public function createProductAddRequests(array $data): array { return array_map([$this, 'createProductAddRequest'], $data); }
+    public function createProductAddResponse(array $data): ProductAddResponse { return new ProductAddResponse($data); }
+
     // Validation methods
     public function validateProductData(array $data): bool { try { return $this->createProduct($data)->isValid(); } catch (\Exception $e) { return false; } }
     public function validateProductCategoryData(array $data): bool { try { return $this->createProductCategory($data)->isValid(); } catch (\Exception $e) { return false; } }
@@ -95,6 +102,7 @@ class ProductRepository
     public function validateProductInternalCategoryData(array $data): bool { try { return $this->createProductInternalCategory($data)->isValid(); } catch (\Exception $e) { return false; } }
     public function validateProductWebsiteInfoData(array $data): bool { try { return $this->createProductWebsiteInfo($data)->isValid(); } catch (\Exception $e) { return false; } }
     public function validateProductWarrantyData(array $data): bool { try { return $this->createProductWarranty($data)->isValid(); } catch (\Exception $e) { return false; } }
+    public function validateProductAddRequestData(array $data): bool { try { return $this->createProductAddRequest($data)->isValid(); } catch (\Exception $e) { return false; } }
 
     public function validateBatchProductData(array $products): bool {
         foreach ($products as $productData) { if (!$this->validateProductData($productData)) return false; } return true;

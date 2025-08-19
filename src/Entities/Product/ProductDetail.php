@@ -70,19 +70,19 @@ class ProductDetail extends Product
         return $this->getAttribute('previewLink');
     }
 
-    public function getShowHot(): ?int
+    public function getShowHot(): bool
     {
-        return $this->getAttribute('showHot');
+        return (bool) $this->getAttribute('showHot');
     }
 
-    public function getShowNew(): ?int
+    public function getShowNew(): bool
     {
-        return $this->getAttribute('showNew');
+        return (bool) $this->getAttribute('showNew');
     }
 
-    public function getShowHome(): ?int
+    public function getShowHome(): bool
     {
-        return $this->getAttribute('showHome');
+        return (bool) $this->getAttribute('showHome');
     }
 
     public function getWidth(): ?int
