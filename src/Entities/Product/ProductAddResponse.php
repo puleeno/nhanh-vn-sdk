@@ -6,10 +6,10 @@ use Puleeno\NhanhVn\Entities\AbstractEntity;
 
 /**
  * Product Add Response Entity
- * 
+ *
  * Entity này đại diện cho response khi thêm/sửa sản phẩm
  * theo API specification của Nhanh.vn
- * 
+ *
  * @package Puleeno\NhanhVn\Entities\Product
  * @author Puleeno Nguyen <puleeno@gmail.com>
  * @since 2.0.0
@@ -29,7 +29,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get product IDs mapping
-     * 
+     *
      * @return array Mapping từ ID hệ thống riêng sang ID Nhanh.vn
      */
     public function getIds(): array
@@ -39,7 +39,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get product barcodes mapping
-     * 
+     *
      * @return array Mapping từ ID hệ thống riêng sang barcode Nhanh.vn
      */
     public function getBarcodes(): array
@@ -49,7 +49,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get Nhanh.vn ID by system ID
-     * 
+     *
      * @param string $systemId ID sản phẩm trên hệ thống riêng
      * @return int|null ID sản phẩm trên Nhanh.vn
      */
@@ -61,7 +61,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get barcode by system ID
-     * 
+     *
      * @param string $systemId ID sản phẩm trên hệ thống riêng
      * @return string|null Barcode sản phẩm trên Nhanh.vn
      */
@@ -73,7 +73,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get all system IDs
-     * 
+     *
      * @return array Danh sách tất cả ID hệ thống riêng
      */
     public function getSystemIds(): array
@@ -83,7 +83,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get all Nhanh.vn IDs
-     * 
+     *
      * @return array Danh sách tất cả ID Nhanh.vn
      */
     public function getNhanhIds(): array
@@ -93,7 +93,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get all barcodes
-     * 
+     *
      * @return array Danh sách tất cả barcode
      */
     public function getAllBarcodes(): array
@@ -103,7 +103,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Check if system ID exists in response
-     * 
+     *
      * @param string $systemId ID sản phẩm trên hệ thống riêng
      * @return bool True nếu ID tồn tại
      */
@@ -114,7 +114,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Check if Nhanh.vn ID exists in response
-     * 
+     *
      * @param int $nhanhId ID sản phẩm trên Nhanh.vn
      * @return bool True nếu ID tồn tại
      */
@@ -125,14 +125,14 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get system ID by Nhanh.vn ID
-     * 
+     *
      * @param int $nhanhId ID sản phẩm trên Nhanh.vn
      * @return string|null ID sản phẩm trên hệ thống riêng
      */
     public function getSystemIdByNhanhId(int $nhanhId): ?string
     {
         $ids = $this->getIds();
-        
+
         foreach ($ids as $systemId => $nhanhIdValue) {
             if ($nhanhIdValue == $nhanhId) {
                 return $systemId;
@@ -144,7 +144,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get total products processed
-     * 
+     *
      * @return int Tổng số sản phẩm đã xử lý
      */
     public function getTotalProducts(): int
@@ -154,7 +154,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get successful products count
-     * 
+     *
      * @return int Số sản phẩm xử lý thành công
      */
     public function getSuccessCount(): int
@@ -164,19 +164,19 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get failed products count
-     * 
+     *
      * @return int Số sản phẩm xử lý thất bại
      */
     public function getFailedCount(): int
     {
-        return count(array_filter($this->getIds(), function($value) {
+        return count(array_filter($this->getIds(), function ($value) {
             return empty($value);
         }));
     }
 
     /**
      * Check if all products were processed successfully
-     * 
+     *
      * @return bool True nếu tất cả sản phẩm đều thành công
      */
     public function isAllSuccess(): bool
@@ -186,7 +186,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Check if any product failed
-     * 
+     *
      * @return bool True nếu có ít nhất một sản phẩm thất bại
      */
     public function hasFailures(): bool
@@ -196,13 +196,13 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get success rate percentage
-     * 
+     *
      * @return float Tỷ lệ thành công (0-100)
      */
     public function getSuccessRate(): float
     {
         $total = $this->getTotalProducts();
-        
+
         if ($total === 0) {
             return 0.0;
         }
@@ -212,7 +212,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Get summary information
-     * 
+     *
      * @return array Thông tin tổng quan về response
      */
     public function getSummary(): array
@@ -229,7 +229,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Create from API response
-     * 
+     *
      * @param array $response API response từ Nhanh.vn
      * @return self
      */
@@ -240,7 +240,7 @@ class ProductAddResponse extends AbstractEntity
 
     /**
      * Create empty response
-     * 
+     *
      * @return self
      */
     public static function createEmpty(): self

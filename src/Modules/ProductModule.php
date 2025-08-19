@@ -100,12 +100,15 @@ class ProductModule
             unset($response, $searchData);
 
             return new Collection($productEntities);
-
         } catch (Exception $e) {
             $this->logger->error("ProductModule::search() error", ['error' => $e->getMessage()]);
             // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) unset($response);
-            if (isset($searchData)) unset($searchData);
+            if (isset($response)) {
+                unset($response);
+            }
+            if (isset($searchData)) {
+                unset($searchData);
+            }
             throw $e;
         }
     }
@@ -487,12 +490,15 @@ class ProductModule
             unset($response, $productData);
 
             return $product;
-
         } catch (Exception $e) {
             $this->logger->error("ProductModule::detail() error", ['error' => $e->getMessage(), 'productId' => $productId]);
             // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) unset($response);
-            if (isset($productData)) unset($productData);
+            if (isset($response)) {
+                unset($response);
+            }
+            if (isset($productData)) {
+                unset($productData);
+            }
             throw $e;
         }
     }
@@ -546,7 +552,6 @@ class ProductModule
             $this->clearProductCache($productData->getId());
 
             return $addResponse;
-
         } catch (Exception $e) {
             $this->logger->error("ProductModule::add() error", ['error' => $e->getMessage()]);
             throw $e;
@@ -622,7 +627,6 @@ class ProductModule
             unset($requests, $batchData);
 
             return $addResponse;
-
         } catch (Exception $e) {
             $this->logger->error("ProductModule::addBatch() error", ['error' => $e->getMessage()]);
             throw $e;
@@ -828,7 +832,6 @@ class ProductModule
             $this->logger->info("ProductModule::getCategories() - Created " . count($categoryEntities) . " category entities");
 
             return $categoryEntities;
-
         } catch (Exception $e) {
             $this->logger->error("ProductModule::getCategories() error", ['error' => $e->getMessage()]);
             // Fallback to cached data if available

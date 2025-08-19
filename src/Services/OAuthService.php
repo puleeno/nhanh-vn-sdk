@@ -76,7 +76,6 @@ class OAuthService
             $this->logger->info('Successfully exchanged access code for token');
 
             return $result;
-
         } catch (RequestException $e) {
             $this->logger->error('Request failed when exchanging access code', [
                 'error' => $e->getMessage(),
@@ -113,7 +112,6 @@ class OAuthService
             ]);
 
             return 'https://nhanh.vn/oauth?' . http_build_query($params);
-
         } catch (\Exception $e) {
             $this->logger->error('Error generating OAuth URL', [
                 'error' => $e->getMessage()

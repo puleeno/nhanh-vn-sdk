@@ -318,71 +318,266 @@ class Order extends AbstractEntity
     }
 
     // Getters
-    public function getId(): ?int { return $this->id; }
-    public function getShopOrderId(): ?string { return $this->shopOrderId; }
-    public function getMerchantTrackingNumber(): ?string { return $this->merchantTrackingNumber; }
-    public function getHandoverId(): ?int { return $this->handoverId; }
-    public function getDepotId(): ?int { return $this->depotId; }
-    public function getDepotName(): ?string { return $this->depotName; }
-    public function getTypeId(): ?int { return $this->typeId; }
-    public function getType(): ?string { return $this->type; }
-    public function getMoneyDiscount(): ?float { return $this->moneyDiscount; }
-    public function getMoneyDeposit(): ?float { return $this->moneyDeposit; }
-    public function getMoneyTransfer(): ?float { return $this->moneyTransfer; }
-    public function getUsedPoints(): ?int { return $this->usedPoints; }
-    public function getMoneyUsedPoints(): ?float { return $this->moneyUsedPoints; }
-    public function getUsedPointAmount(): ?int { return $this->usedPointAmount; }
-    public function getServiceId(): ?int { return $this->serviceId; }
-    public function getCarrierId(): ?int { return $this->carrierId; }
-    public function getCarrierServiceType(): ?int { return $this->carrierServiceType; }
-    public function getCarrierServiceTypeName(): ?string { return $this->carrierServiceTypeName; }
-    public function getCarrierCode(): ?string { return $this->carrierCode; }
-    public function getCarrierName(): ?string { return $this->carrierName; }
-    public function getCarrierServiceName(): ?string { return $this->carrierServiceName; }
-    public function getShipFee(): ?float { return $this->shipFee; }
-    public function getCodFee(): ?float { return $this->codFee; }
-    public function getDeclaredFee(): ?float { return $this->declaredFee; }
-    public function getCustomerShipFee(): ?float { return $this->customerShipFee; }
-    public function getReturnFee(): ?float { return $this->returnFee; }
-    public function getOverWeightShipFee(): ?float { return $this->overWeightShipFee; }
-    public function getDescription(): ?string { return $this->description; }
-    public function getPrivateDescription(): ?string { return $this->privateDescription; }
-    public function getCustomerId(): ?int { return $this->customerId; }
-    public function getCustomerName(): ?string { return $this->customerName; }
-    public function getCustomerMobile(): ?string { return $this->customerMobile; }
-    public function getCustomerEmail(): ?string { return $this->customerEmail; }
-    public function getCustomerAddress(): ?string { return $this->customerAddress; }
-    public function getCustomerCityId(): ?int { return $this->customerCityId; }
-    public function getCustomerCity(): ?string { return $this->customerCity; }
-    public function getCustomerDistrictId(): ?int { return $this->customerDistrictId; }
-    public function getCustomerDistrict(): ?string { return $this->customerDistrict; }
-    public function getCreatedById(): ?int { return $this->createdById; }
-    public function getCreatedByName(): ?string { return $this->createdByName; }
-    public function getCreatedDateTime(): ?string { return $this->createdDateTime; }
-    public function getDeliveryDate(): ?string { return $this->deliveryDate; }
-    public function getStatusCode(): ?string { return $this->statusCode; }
-    public function getStatusName(): ?string { return $this->statusName; }
-    public function getCalcTotalMoney(): ?float { return $this->calcTotalMoney; }
-    public function getTrafficSourceId(): ?int { return $this->trafficSourceId; }
-    public function getTrafficSourceName(): ?string { return $this->trafficSourceName; }
-    public function getSaleId(): ?int { return $this->saleId; }
-    public function getSaleName(): ?string { return $this->saleName; }
-    public function getReturnFromOrderId(): ?string { return $this->returnFromOrderId; }
-    public function getAffiliateCode(): ?string { return $this->affiliateCode; }
-    public function getAffiliateBonusCash(): ?string { return $this->affiliateBonusCash; }
-    public function getAffiliateBonusPercent(): ?int { return $this->affiliateBonusPercent; }
-    public function getTags(): ?array { return $this->tags; }
-    public function getSaleChannel(): ?int { return $this->saleChannel; }
-    public function getEcomShopId(): ?string { return $this->ecomShopId; }
-    public function getCouponCode(): ?string { return $this->couponCode; }
-    public function getProducts(): ?array { return $this->products; }
-    public function getUtmSource(): ?string { return $this->utmSource; }
-    public function getUtmMedium(): ?string { return $this->utmMedium; }
-    public function getUtmCampaign(): ?string { return $this->utmCampaign; }
-    public function getFacebook(): ?array { return $this->facebook; }
-    public function getUpdatedAt(): ?int { return $this->updatedAt; }
-    public function getPacked(): ?array { return $this->packed; }
-    public function getVat(): ?array { return $this->vat; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+    public function getShopOrderId(): ?string
+    {
+        return $this->shopOrderId;
+    }
+    public function getMerchantTrackingNumber(): ?string
+    {
+        return $this->merchantTrackingNumber;
+    }
+    public function getHandoverId(): ?int
+    {
+        return $this->handoverId;
+    }
+    public function getDepotId(): ?int
+    {
+        return $this->depotId;
+    }
+    public function getDepotName(): ?string
+    {
+        return $this->depotName;
+    }
+    public function getTypeId(): ?int
+    {
+        return $this->typeId;
+    }
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+    public function getMoneyDiscount(): ?float
+    {
+        return $this->moneyDiscount;
+    }
+    public function getMoneyDeposit(): ?float
+    {
+        return $this->moneyDeposit;
+    }
+    public function getMoneyTransfer(): ?float
+    {
+        return $this->moneyTransfer;
+    }
+    public function getUsedPoints(): ?int
+    {
+        return $this->usedPoints;
+    }
+    public function getMoneyUsedPoints(): ?float
+    {
+        return $this->moneyUsedPoints;
+    }
+    public function getUsedPointAmount(): ?int
+    {
+        return $this->usedPointAmount;
+    }
+    public function getServiceId(): ?int
+    {
+        return $this->serviceId;
+    }
+    public function getCarrierId(): ?int
+    {
+        return $this->carrierId;
+    }
+    public function getCarrierServiceType(): ?int
+    {
+        return $this->carrierServiceType;
+    }
+    public function getCarrierServiceTypeName(): ?string
+    {
+        return $this->carrierServiceTypeName;
+    }
+    public function getCarrierCode(): ?string
+    {
+        return $this->carrierCode;
+    }
+    public function getCarrierName(): ?string
+    {
+        return $this->carrierName;
+    }
+    public function getCarrierServiceName(): ?string
+    {
+        return $this->carrierServiceName;
+    }
+    public function getShipFee(): ?float
+    {
+        return $this->shipFee;
+    }
+    public function getCodFee(): ?float
+    {
+        return $this->codFee;
+    }
+    public function getDeclaredFee(): ?float
+    {
+        return $this->declaredFee;
+    }
+    public function getCustomerShipFee(): ?float
+    {
+        return $this->customerShipFee;
+    }
+    public function getReturnFee(): ?float
+    {
+        return $this->returnFee;
+    }
+    public function getOverWeightShipFee(): ?float
+    {
+        return $this->overWeightShipFee;
+    }
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+    public function getPrivateDescription(): ?string
+    {
+        return $this->privateDescription;
+    }
+    public function getCustomerId(): ?int
+    {
+        return $this->customerId;
+    }
+    public function getCustomerName(): ?string
+    {
+        return $this->customerName;
+    }
+    public function getCustomerMobile(): ?string
+    {
+        return $this->customerMobile;
+    }
+    public function getCustomerEmail(): ?string
+    {
+        return $this->customerEmail;
+    }
+    public function getCustomerAddress(): ?string
+    {
+        return $this->customerAddress;
+    }
+    public function getCustomerCityId(): ?int
+    {
+        return $this->customerCityId;
+    }
+    public function getCustomerCity(): ?string
+    {
+        return $this->customerCity;
+    }
+    public function getCustomerDistrictId(): ?int
+    {
+        return $this->customerDistrictId;
+    }
+    public function getCustomerDistrict(): ?string
+    {
+        return $this->customerDistrict;
+    }
+    public function getCreatedById(): ?int
+    {
+        return $this->createdById;
+    }
+    public function getCreatedByName(): ?string
+    {
+        return $this->createdByName;
+    }
+    public function getCreatedDateTime(): ?string
+    {
+        return $this->createdDateTime;
+    }
+    public function getDeliveryDate(): ?string
+    {
+        return $this->deliveryDate;
+    }
+    public function getStatusCode(): ?string
+    {
+        return $this->statusCode;
+    }
+    public function getStatusName(): ?string
+    {
+        return $this->statusName;
+    }
+    public function getCalcTotalMoney(): ?float
+    {
+        return $this->calcTotalMoney;
+    }
+    public function getTrafficSourceId(): ?int
+    {
+        return $this->trafficSourceId;
+    }
+    public function getTrafficSourceName(): ?string
+    {
+        return $this->trafficSourceName;
+    }
+    public function getSaleId(): ?int
+    {
+        return $this->saleId;
+    }
+    public function getSaleName(): ?string
+    {
+        return $this->saleName;
+    }
+    public function getReturnFromOrderId(): ?string
+    {
+        return $this->returnFromOrderId;
+    }
+    public function getAffiliateCode(): ?string
+    {
+        return $this->affiliateCode;
+    }
+    public function getAffiliateBonusCash(): ?string
+    {
+        return $this->affiliateBonusCash;
+    }
+    public function getAffiliateBonusPercent(): ?int
+    {
+        return $this->affiliateBonusPercent;
+    }
+    public function getTags(): ?array
+    {
+        return $this->tags;
+    }
+    public function getSaleChannel(): ?int
+    {
+        return $this->saleChannel;
+    }
+    public function getEcomShopId(): ?string
+    {
+        return $this->ecomShopId;
+    }
+    public function getCouponCode(): ?string
+    {
+        return $this->couponCode;
+    }
+    public function getProducts(): ?array
+    {
+        return $this->products;
+    }
+    public function getUtmSource(): ?string
+    {
+        return $this->utmSource;
+    }
+    public function getUtmMedium(): ?string
+    {
+        return $this->utmMedium;
+    }
+    public function getUtmCampaign(): ?string
+    {
+        return $this->utmCampaign;
+    }
+    public function getFacebook(): ?array
+    {
+        return $this->facebook;
+    }
+    public function getUpdatedAt(): ?int
+    {
+        return $this->updatedAt;
+    }
+    public function getPacked(): ?array
+    {
+        return $this->packed;
+    }
+    public function getVat(): ?array
+    {
+        return $this->vat;
+    }
 
     /**
      * Lấy tổng phí vận chuyển

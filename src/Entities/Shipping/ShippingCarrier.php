@@ -6,7 +6,7 @@ use Puleeno\NhanhVn\Entities\AbstractEntity;
 
 /**
  * Shipping Carrier Entity
- * 
+ *
  * Entity này đại diện cho hãng vận chuyển trong Nhanh.vn API
  * Chứa thông tin về hãng vận chuyển và các dịch vụ của họ
  */
@@ -141,10 +141,22 @@ class ShippingCarrier extends AbstractEntity
     }
 
     // Getters
-    public function getId(): int { return $this->get('id'); }
-    public function getName(): string { return $this->get('name'); }
-    public function getLogo(): ?string { return $this->get('logo'); }
-    public function getServices(): ?array { return $this->get('services'); }
+    public function getId(): int
+    {
+        return $this->get('id');
+    }
+    public function getName(): string
+    {
+        return $this->get('name');
+    }
+    public function getLogo(): ?string
+    {
+        return $this->get('logo');
+    }
+    public function getServices(): ?array
+    {
+        return $this->get('services');
+    }
 
     /**
      * Lấy danh sách tên dịch vụ

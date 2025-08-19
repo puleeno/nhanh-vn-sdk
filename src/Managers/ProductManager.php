@@ -640,7 +640,7 @@ class ProductManager
      */
     public function searchProducts(Collection $collection, string $term): Collection
     {
-        return $collection->filter(function($product) use ($term) {
+        return $collection->filter(function ($product) use ($term) {
             return stripos($product->getName(), $term) !== false;
         });
     }

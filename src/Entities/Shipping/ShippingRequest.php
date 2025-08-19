@@ -143,15 +143,15 @@ class ShippingRequest extends AbstractEntity
         $length = $this->getLength() ?? 0;
         $width = $this->getWidth() ?? 0;
         $height = $this->getHeight() ?? 0;
-        
+
         return $length * $width * $height;
     }
 
     public function isOversized(): bool
     {
         $maxDimension = 150; // cm
-        return $this->getLength() > $maxDimension || 
-               $this->getWidth() > $maxDimension || 
+        return $this->getLength() > $maxDimension ||
+               $this->getWidth() > $maxDimension ||
                $this->getHeight() > $maxDimension;
     }
 

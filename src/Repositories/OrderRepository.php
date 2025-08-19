@@ -223,7 +223,6 @@ class OrderRepository
             $apiData = $searchRequest->toApiFormat();
 
             return $apiData;
-
         } catch (Exception $e) {
             throw $e;
         }

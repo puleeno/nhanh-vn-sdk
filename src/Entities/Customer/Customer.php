@@ -43,18 +43,22 @@ class Customer extends AbstractEntity
     protected function validate(): void
     {
         // Validate customer type
-        if ($this->hasAttribute('type') && !in_array($this->getAttribute('type'), [
+        if (
+            $this->hasAttribute('type') && !in_array($this->getAttribute('type'), [
             self::TYPE_RETAIL, self::TYPE_WHOLESALE, self::TYPE_AGENT
-        ])) {
+            ])
+        ) {
             throw new \Puleeno\NhanhVn\Exceptions\InvalidDataException(
                 'Loại khách hàng không hợp lệ'
             );
         }
 
         // Validate gender
-        if ($this->hasAttribute('gender') && !in_array($this->getAttribute('gender'), [
+        if (
+            $this->hasAttribute('gender') && !in_array($this->getAttribute('gender'), [
             self::GENDER_MALE, self::GENDER_FEMALE, self::GENDER_UNKNOWN
-        ])) {
+            ])
+        ) {
             throw new \Puleeno\NhanhVn\Exceptions\InvalidDataException(
                 'Giới tính không hợp lệ'
             );

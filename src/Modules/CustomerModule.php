@@ -89,12 +89,15 @@ class CustomerModule
             unset($response, $searchData);
 
             return $searchResponse;
-
         } catch (Exception $e) {
             $this->logger->error("CustomerModule::search() error", ['error' => $e->getMessage()]);
             // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) unset($response);
-            if (isset($searchData)) unset($searchData);
+            if (isset($response)) {
+                unset($response);
+            }
+            if (isset($searchData)) {
+                unset($searchData);
+            }
             throw $e;
         }
     }
@@ -421,7 +424,7 @@ class CustomerModule
             if (!$this->customerManager->validateAddRequest($customerData)) {
                 $errors = $this->getAddRequestErrors($customerData);
                 $this->logger->warning("CustomerModule::add() - Validation failed", ['errors' => $errors]);
-                
+
                 throw new Exception('Dữ liệu khách hàng không hợp lệ: ' . json_encode($errors));
             }
 
@@ -456,12 +459,15 @@ class CustomerModule
             unset($response, $apiData);
 
             return $addResponse;
-
         } catch (Exception $e) {
             $this->logger->error("CustomerModule::add() error", ['error' => $e->getMessage()]);
             // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) unset($response);
-            if (isset($apiData)) unset($apiData);
+            if (isset($response)) {
+                unset($response);
+            }
+            if (isset($apiData)) {
+                unset($apiData);
+            }
             throw $e;
         }
     }
@@ -489,7 +495,7 @@ class CustomerModule
             if (!$this->customerManager->validateBatchAddRequest($customersData)) {
                 $errors = $this->getBatchAddRequestErrors($customersData);
                 $this->logger->warning("CustomerModule::addBatch() - Validation failed", ['errors' => $errors]);
-                
+
                 throw new Exception('Dữ liệu khách hàng không hợp lệ: ' . json_encode($errors));
             }
 
@@ -527,12 +533,15 @@ class CustomerModule
             unset($response, $apiData);
 
             return $addResponse;
-
         } catch (Exception $e) {
             $this->logger->error("CustomerModule::addBatch() error", ['error' => $e->getMessage()]);
             // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) unset($response);
-            if (isset($apiData)) unset($apiData);
+            if (isset($response)) {
+                unset($response);
+            }
+            if (isset($apiData)) {
+                unset($apiData);
+            }
             throw $e;
         }
     }

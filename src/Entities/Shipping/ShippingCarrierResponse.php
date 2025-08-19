@@ -157,36 +157,44 @@ class ShippingCarrierResponse extends AbstractEntity
     }
 
     // Getters
-    public function getCarriers(): array { 
+    public function getCarriers(): array
+    {
         $carriers = $this->getAttribute('carriers');
         if (is_array($carriers)) {
             return $carriers;
         }
-        
+
         // Fallback: try to get from 'data' field (API response structure)
         $data = $this->getAttribute('data');
         if (is_array($data)) {
             return $data;
         }
-        
+
         return [];
     }
-    public function getTotalCarriers(): int { 
+    public function getTotalCarriers(): int
+    {
         $total = $this->getAttribute('totalCarriers');
         if (is_numeric($total)) {
             return (int)$total;
         }
-        
+
         // Fallback: count from data field
         $data = $this->getAttribute('data');
         if (is_array($data)) {
             return count($data);
         }
-        
+
         return 0;
     }
-    public function isCached(): bool { return (bool)$this->getAttribute('cached'); }
-    public function getCacheExpiry(): ?string { return $this->getAttribute('cacheExpiry'); }
+    public function isCached(): bool
+    {
+        return (bool)$this->getAttribute('cached');
+    }
+    public function getCacheExpiry(): ?string
+    {
+        return $this->getAttribute('cacheExpiry');
+    }
 
     /**
      * Lấy danh sách hãng vận chuyển dưới dạng Collection

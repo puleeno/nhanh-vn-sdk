@@ -57,7 +57,7 @@ class ShippingRepository
 
         try {
             $cachedData = $this->cacheService->get(self::CACHE_KEY_CARRIERS);
-            
+
             if (empty($cachedData)) {
                 $this->logger->debug("ShippingRepository::getCarriersFromCache() - No cached data found");
                 return null;
@@ -69,7 +69,6 @@ class ShippingRepository
             ]);
 
             return new ShippingCarrierResponse($cachedData);
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::getCarriersFromCache() error", [
                 'error' => $e->getMessage(),
@@ -121,7 +120,6 @@ class ShippingRepository
             }
 
             return $success;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::saveCarriersToCache() error", [
                 'error' => $e->getMessage(),
@@ -155,7 +153,6 @@ class ShippingRepository
             }
 
             return $success;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::clearCarriersCache() error", [
                 'error' => $e->getMessage(),
@@ -177,7 +174,7 @@ class ShippingRepository
 
         try {
             $cachedData = $this->cacheService->get(self::CACHE_KEY_CARRIERS);
-            
+
             if (empty($cachedData)) {
                 $this->logger->debug("ShippingRepository::isCarriersCacheExpired() - No cached data, considered expired");
                 return true;
@@ -197,7 +194,6 @@ class ShippingRepository
             ]);
 
             return $isExpired;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::isCarriersCacheExpired() error", [
                 'error' => $e->getMessage()
@@ -218,7 +214,7 @@ class ShippingRepository
 
         try {
             $cachedData = $this->cacheService->get(self::CACHE_KEY_CARRIERS);
-            
+
             if (empty($cachedData) || !isset($cachedData['cacheExpiry'])) {
                 $this->logger->debug("ShippingRepository::getCarriersCacheTimeLeft() - No cache or expiry info");
                 return 0;
@@ -238,7 +234,6 @@ class ShippingRepository
             ]);
 
             return $timeLeft;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::getCarriersCacheTimeLeft() error", [
                 'error' => $e->getMessage()
@@ -298,7 +293,7 @@ class ShippingRepository
 
         try {
             $cachedData = $this->cacheService->get(self::CACHE_KEY_CARRIERS);
-            
+
             if (empty($cachedData)) {
                 return [
                     'hasCache' => false,
@@ -319,7 +314,6 @@ class ShippingRepository
                 'cacheExpiry' => $cachedData['cacheExpiry'] ?? null,
                 'timeLeft' => $timeLeft
             ];
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::getCacheInfo() error", [
                 'error' => $e->getMessage()
@@ -345,7 +339,7 @@ class ShippingRepository
 
         try {
             $request = new LocationSearchRequest($data);
-            
+
             if (!$request->isValid()) {
                 $errors = $request->getValidationErrors();
                 $this->logger->warning("ShippingRepository::createLocationSearchRequest() - Validation failed", [
@@ -360,7 +354,6 @@ class ShippingRepository
             ]);
 
             return $request;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::createLocationSearchRequest() error", [
                 'error' => $e->getMessage(),
@@ -403,7 +396,6 @@ class ShippingRepository
             ]);
 
             return LocationSearchResponse::createSuccess($locations);
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::createLocationSearchResponse() error", [
                 'error' => $e->getMessage(),
@@ -436,7 +428,6 @@ class ShippingRepository
             ]);
 
             return $isValid;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::validateLocationSearchData() error", [
                 'error' => $e->getMessage(),
@@ -468,7 +459,6 @@ class ShippingRepository
             ]);
 
             return $errors;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::getLocationSearchValidationErrors() error", [
                 'error' => $e->getMessage(),
@@ -493,7 +483,7 @@ class ShippingRepository
 
         try {
             $request = new LocationSearchRequest($data);
-            
+
             if (!$request->isValid()) {
                 $errors = $request->getValidationErrors();
                 $this->logger->warning("ShippingRepository::prepareLocationSearchData() - Validation failed", [
@@ -509,7 +499,6 @@ class ShippingRepository
             ]);
 
             return $preparedData;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingRepository::prepareLocationSearchData() error", [
                 'error' => $e->getMessage(),

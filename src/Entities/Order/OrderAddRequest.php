@@ -6,7 +6,7 @@ use Puleeno\NhanhVn\Entities\AbstractEntity;
 
 /**
  * Order Add Request Entity
- * 
+ *
  * Entity này đại diện cho request thêm đơn hàng mới trong Nhanh.vn API
  * Hỗ trợ đầy đủ các tham số theo tài liệu API /api/order/add
  */
@@ -297,47 +297,170 @@ class OrderAddRequest extends AbstractEntity
     }
 
     // Getters cho các field chính
-    public function getId(): string { return $this->get('id'); }
-    public function getDepotId(): ?int { return $this->get('depotId'); }
-    public function getType(): string { return $this->get('type') ?: 'Shipping'; }
-    public function getCustomerName(): string { return $this->get('customerName'); }
-    public function getCustomerMobile(): string { return $this->get('customerMobile'); }
-    public function getCustomerEmail(): ?string { return $this->get('customerEmail'); }
-    public function getCustomerAddress(): ?string { return $this->get('customerAddress'); }
-    public function getCustomerCityName(): ?string { return $this->get('customerCityName'); }
-    public function getCustomerDistrictName(): ?string { return $this->get('customerDistrictName'); }
-    public function getCustomerWardLocationName(): ?string { return $this->get('customerWardLocationName'); }
-    public function getMoneyDiscount(): ?float { return $this->get('moneyDiscount'); }
-    public function getMoneyTransfer(): ?float { return $this->get('moneyTransfer'); }
-    public function getMoneyTransferAccountId(): ?int { return $this->get('moneyTransferAccountId'); }
-    public function getMoneyDeposit(): ?float { return $this->get('moneyDeposit'); }
-    public function getMoneyDepositAccountId(): ?int { return $this->get('moneyDepositAccountId'); }
-    public function getPaymentMethod(): ?string { return $this->get('paymentMethod'); }
-    public function getPaymentCode(): ?string { return $this->get('paymentCode'); }
-    public function getPaymentGateway(): ?string { return $this->get('paymentGateway'); }
-    public function getCarrierId(): ?int { return $this->get('carrierId'); }
-    public function getCarrierServiceId(): ?int { return $this->get('carrierServiceId'); }
-    public function getCustomerShipFee(): ?int { return $this->get('customerShipFee'); }
-    public function getDeliveryDate(): ?string { return $this->get('deliveryDate'); }
-    public function getStatus(): string { return $this->get('status') ?: 'New'; }
-    public function getDescription(): ?string { return $this->get('description'); }
-    public function getPrivateDescription(): ?string { return $this->get('privateDescription'); }
-    public function getTrafficSource(): ?string { return $this->get('trafficSource'); }
-    public function getProductList(): ?array { return $this->get('productList'); }
-    public function getCouponCode(): ?string { return $this->get('couponCode'); }
-    public function getAllowTest(): ?int { return $this->get('allowTest'); }
-    public function getSaleId(): ?int { return $this->get('saleId'); }
-    public function getAutoSend(): ?int { return $this->get('autoSend'); }
-    public function getSendCarrierType(): ?int { return $this->get('sendCarrierType'); }
-    public function getCarrierAccountId(): ?int { return $this->get('carrierAccountId'); }
-    public function getCarrierShopId(): ?int { return $this->get('carrierShopId'); }
-    public function getCarrierServiceCode(): ?string { return $this->get('carrierServiceCode'); }
-    public function getUtmCampaign(): ?string { return $this->get('utmCampaign'); }
-    public function getUtmSource(): ?string { return $this->get('utmSource'); }
-    public function getUtmMedium(): ?string { return $this->get('utmMedium'); }
-    public function getAffiliate(): ?array { return $this->get('affiliate'); }
-    public function getUsedPoints(): ?int { return $this->get('usedPoints'); }
-    public function getIsPartDelivery(): ?int { return $this->get('isPartDelivery'); }
+    public function getId(): string
+    {
+        return $this->get('id');
+    }
+    public function getDepotId(): ?int
+    {
+        return $this->get('depotId');
+    }
+    public function getType(): string
+    {
+        return $this->get('type') ?: 'Shipping';
+    }
+    public function getCustomerName(): string
+    {
+        return $this->get('customerName');
+    }
+    public function getCustomerMobile(): string
+    {
+        return $this->get('customerMobile');
+    }
+    public function getCustomerEmail(): ?string
+    {
+        return $this->get('customerEmail');
+    }
+    public function getCustomerAddress(): ?string
+    {
+        return $this->get('customerAddress');
+    }
+    public function getCustomerCityName(): ?string
+    {
+        return $this->get('customerCityName');
+    }
+    public function getCustomerDistrictName(): ?string
+    {
+        return $this->get('customerDistrictName');
+    }
+    public function getCustomerWardLocationName(): ?string
+    {
+        return $this->get('customerWardLocationName');
+    }
+    public function getMoneyDiscount(): ?float
+    {
+        return $this->get('moneyDiscount');
+    }
+    public function getMoneyTransfer(): ?float
+    {
+        return $this->get('moneyTransfer');
+    }
+    public function getMoneyTransferAccountId(): ?int
+    {
+        return $this->get('moneyTransferAccountId');
+    }
+    public function getMoneyDeposit(): ?float
+    {
+        return $this->get('moneyDeposit');
+    }
+    public function getMoneyDepositAccountId(): ?int
+    {
+        return $this->get('moneyDepositAccountId');
+    }
+    public function getPaymentMethod(): ?string
+    {
+        return $this->get('paymentMethod');
+    }
+    public function getPaymentCode(): ?string
+    {
+        return $this->get('paymentCode');
+    }
+    public function getPaymentGateway(): ?string
+    {
+        return $this->get('paymentGateway');
+    }
+    public function getCarrierId(): ?int
+    {
+        return $this->get('carrierId');
+    }
+    public function getCarrierServiceId(): ?int
+    {
+        return $this->get('carrierServiceId');
+    }
+    public function getCustomerShipFee(): ?int
+    {
+        return $this->get('customerShipFee');
+    }
+    public function getDeliveryDate(): ?string
+    {
+        return $this->get('deliveryDate');
+    }
+    public function getStatus(): string
+    {
+        return $this->get('status') ?: 'New';
+    }
+    public function getDescription(): ?string
+    {
+        return $this->get('description');
+    }
+    public function getPrivateDescription(): ?string
+    {
+        return $this->get('privateDescription');
+    }
+    public function getTrafficSource(): ?string
+    {
+        return $this->get('trafficSource');
+    }
+    public function getProductList(): ?array
+    {
+        return $this->get('productList');
+    }
+    public function getCouponCode(): ?string
+    {
+        return $this->get('couponCode');
+    }
+    public function getAllowTest(): ?int
+    {
+        return $this->get('allowTest');
+    }
+    public function getSaleId(): ?int
+    {
+        return $this->get('saleId');
+    }
+    public function getAutoSend(): ?int
+    {
+        return $this->get('autoSend');
+    }
+    public function getSendCarrierType(): ?int
+    {
+        return $this->get('sendCarrierType');
+    }
+    public function getCarrierAccountId(): ?int
+    {
+        return $this->get('carrierAccountId');
+    }
+    public function getCarrierShopId(): ?int
+    {
+        return $this->get('carrierShopId');
+    }
+    public function getCarrierServiceCode(): ?string
+    {
+        return $this->get('carrierServiceCode');
+    }
+    public function getUtmCampaign(): ?string
+    {
+        return $this->get('utmCampaign');
+    }
+    public function getUtmSource(): ?string
+    {
+        return $this->get('utmSource');
+    }
+    public function getUtmMedium(): ?string
+    {
+        return $this->get('utmMedium');
+    }
+    public function getAffiliate(): ?array
+    {
+        return $this->get('affiliate');
+    }
+    public function getUsedPoints(): ?int
+    {
+        return $this->get('usedPoints');
+    }
+    public function getIsPartDelivery(): ?int
+    {
+        return $this->get('isPartDelivery');
+    }
 
     /**
      * Kiểm tra có sử dụng vận chuyển không
@@ -426,7 +549,7 @@ class OrderAddRequest extends AbstractEntity
     public function toApiFormat(): array
     {
         $data = [];
-        
+
         // Chỉ gửi các field có giá trị
         foreach ($this->fillable as $field) {
             if ($this->has($field)) {

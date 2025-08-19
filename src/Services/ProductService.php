@@ -316,7 +316,7 @@ class ProductService
         }
 
         // Sắp xếp theo điểm số
-        usort($relatedProducts, function($a, $b) {
+        usort($relatedProducts, function ($a, $b) {
             return $b['score'] <=> $a['score'];
         });
 
@@ -358,7 +358,7 @@ class ProductService
         }
 
         // Sắp xếp theo mức giảm giá
-        usort($discountedProducts, function($a, $b) {
+        usort($discountedProducts, function ($a, $b) {
             return $b->getDiscountPercentage() <=> $a->getDiscountPercentage();
         });
 
@@ -413,10 +413,12 @@ class ProductService
             $barcode = strtolower($product->getBarcode() ?? '');
             $description = strtolower($product->getDescription() ?? '');
 
-            if (strpos($name, $keyword) !== false ||
+            if (
+                strpos($name, $keyword) !== false ||
                 strpos($code, $keyword) !== false ||
                 strpos($barcode, $keyword) !== false ||
-                strpos($description, $keyword) !== false) {
+                strpos($description, $keyword) !== false
+            ) {
                 $results[] = $product;
             }
         }
@@ -429,7 +431,7 @@ class ProductService
      */
     public function filterByCategory(array $products, int $categoryId): array
     {
-        return array_filter($products, function($product) use ($categoryId) {
+        return array_filter($products, function ($product) use ($categoryId) {
             return $product->getCategoryId() === $categoryId;
         });
     }
@@ -439,7 +441,7 @@ class ProductService
      */
     public function filterByBrand(array $products, int $brandId): array
     {
-        return array_filter($products, function($product) use ($brandId) {
+        return array_filter($products, function ($product) use ($brandId) {
             return $product->getBrandId() === $brandId;
         });
     }
@@ -449,7 +451,7 @@ class ProductService
      */
     public function filterByStatus(array $products, string $status): array
     {
-        return array_filter($products, function($product) use ($status) {
+        return array_filter($products, function ($product) use ($status) {
             return $product->getStatus() === $status;
         });
     }
@@ -459,7 +461,7 @@ class ProductService
      */
     public function filterActiveProducts(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isActive();
         });
     }
@@ -469,7 +471,7 @@ class ProductService
      */
     public function filterInactiveProducts(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isInactive();
         });
     }
@@ -479,7 +481,7 @@ class ProductService
      */
     public function filterOutOfStock(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isOutOfStock();
         });
     }
@@ -489,7 +491,7 @@ class ProductService
      */
     public function filterInStock(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isInStock();
         });
     }
@@ -499,7 +501,7 @@ class ProductService
      */
     public function filterLowStockProducts(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isLowStock();
         });
     }
@@ -509,7 +511,7 @@ class ProductService
      */
     public function filterHotProducts(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isHot();
         });
     }
@@ -519,7 +521,7 @@ class ProductService
      */
     public function filterNewProducts(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isNew();
         });
     }
@@ -529,7 +531,7 @@ class ProductService
      */
     public function filterHomeProducts(array $products): array
     {
-        return array_filter($products, function($product) {
+        return array_filter($products, function ($product) {
             return $product->isHome();
         });
     }
@@ -539,7 +541,7 @@ class ProductService
      */
     public function filterByPriceRange(array $products, float $minPrice, float $maxPrice): array
     {
-        return array_filter($products, function($product) use ($minPrice, $maxPrice) {
+        return array_filter($products, function ($product) use ($minPrice, $maxPrice) {
             $price = $product->getPrice();
             return $price >= $minPrice && $price <= $maxPrice;
         });
@@ -550,7 +552,7 @@ class ProductService
      */
     public function sortProducts(array $products, string $field, bool $ascending = true): array
     {
-        usort($products, function($a, $b) use ($field, $ascending) {
+        usort($products, function ($a, $b) use ($field, $ascending) {
             $valueA = $a->getAttribute($field);
             $valueB = $b->getAttribute($field);
 

@@ -158,8 +158,10 @@ class LocationSearchResponse extends AbstractEntity
         $searchName = strtolower(trim($name));
 
         foreach ($this->data as $location) {
-            if ($location instanceof Location &&
-                str_contains(strtolower($location->getName()), $searchName)) {
+            if (
+                $location instanceof Location &&
+                str_contains(strtolower($location->getName()), $searchName)
+            ) {
                 $filtered[] = $location;
             }
         }

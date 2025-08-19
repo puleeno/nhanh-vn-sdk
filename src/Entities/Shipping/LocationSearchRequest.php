@@ -8,7 +8,7 @@ use Puleeno\NhanhVn\Entities\AbstractEntity;
 
 /**
  * Entity đại diện cho request tìm kiếm địa điểm (thành phố, quận huyện, phường xã)
- * 
+ *
  * @package NhanhVn\Sdk\Entities\Shipping
  * @author Nhanh.vn SDK Team
  */

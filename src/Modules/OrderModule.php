@@ -101,7 +101,6 @@ class OrderModule
             }
 
             return $addResponse;
-
         } catch (Exception $e) {
             $this->logger->error("OrderModule::add() - Error adding order", [
                 'error' => $e->getMessage(),
@@ -176,7 +175,6 @@ class OrderModule
             }
 
             return $updateResponse;
-
         } catch (Exception $e) {
             $this->logger->error("OrderModule::update() - Error updating order", [
                 'error' => $e->getMessage(),
@@ -211,7 +209,6 @@ class OrderModule
 
             // Gọi method update chính
             return $this->update($request);
-
         } catch (Exception $e) {
             $this->logger->error("OrderModule::updateFromArray() - Error", ['error' => $e->getMessage()]);
             throw $e;
@@ -238,7 +235,6 @@ class OrderModule
         try {
             $request = OrderUpdateRequest::createStatusUpdate($orderId, $status, $description, $privateDescription);
             return $this->update($request);
-
         } catch (Exception $e) {
             $this->logger->error("OrderModule::updateStatus() - Error", [
                 'error' => $e->getMessage(),
@@ -272,7 +268,6 @@ class OrderModule
         try {
             $request = OrderUpdateRequest::createPaymentUpdate($orderId, $moneyTransfer, $paymentCode, $paymentGateway, $accountId);
             return $this->update($request);
-
         } catch (Exception $e) {
             $this->logger->error("OrderModule::updatePayment() - Error", [
                 'error' => $e->getMessage(),
@@ -300,7 +295,6 @@ class OrderModule
         try {
             $request = OrderUpdateRequest::createShippingUpdate($orderId, $customerShipFee);
             return $this->update($request);
-
         } catch (Exception $e) {
             $this->logger->error("OrderModule::sendToCarrier() - Error", [
                 'error' => $e->getMessage(),
@@ -368,12 +362,15 @@ class OrderModule
             unset($response, $searchData);
 
             return $searchResponse;
-
         } catch (Exception $e) {
             $this->logger->error("OrderModule::search() error", ['error' => $e->getMessage()]);
             // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) unset($response);
-            if (isset($searchData)) unset($searchData);
+            if (isset($response)) {
+                unset($response);
+            }
+            if (isset($searchData)) {
+                unset($searchData);
+            }
             throw $e;
         }
     }

@@ -102,13 +102,34 @@ class OrderAddResponse extends AbstractEntity
     }
 
     // Getters
-    public function getCode(): int { return $this->get('code'); }
-    public function getMessage(): string { return $this->get('message'); }
-    public function getData(): ?array { return $this->get('data'); }
-    public function getOrderId(): ?int { return $this->get('orderId'); }
-    public function getOrderCode(): ?string { return $this->get('orderCode'); }
-    public function getStatus(): ?string { return $this->get('status'); }
-    public function getCreatedAt(): ?string { return $this->get('createdAt'); }
+    public function getCode(): int
+    {
+        return $this->get('code');
+    }
+    public function getMessage(): string
+    {
+        return $this->get('message');
+    }
+    public function getData(): ?array
+    {
+        return $this->get('data');
+    }
+    public function getOrderId(): ?int
+    {
+        return $this->get('orderId');
+    }
+    public function getOrderCode(): ?string
+    {
+        return $this->get('orderCode');
+    }
+    public function getStatus(): ?string
+    {
+        return $this->get('status');
+    }
+    public function getCreatedAt(): ?string
+    {
+        return $this->get('createdAt');
+    }
 
     /**
      * Kiểm tra API call có thành công không

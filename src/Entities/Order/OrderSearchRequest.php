@@ -101,7 +101,7 @@ class OrderSearchRequest extends AbstractEntity
         if (!empty($this->fromDate) && !empty($this->toDate)) {
             $fromDate = \DateTime::createFromFormat('Y-m-d', $this->fromDate);
             $toDate = \DateTime::createFromFormat('Y-m-d', $this->toDate);
-            
+
             if ($fromDate && $toDate) {
                 $interval = $fromDate->diff($toDate);
                 if ($interval->days > 10) {
@@ -114,7 +114,7 @@ class OrderSearchRequest extends AbstractEntity
         if (!empty($this->updatedDateTimeFrom) && !empty($this->updatedDateTimeTo)) {
             $fromDateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $this->updatedDateTimeFrom);
             $toDateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $this->updatedDateTimeTo);
-            
+
             if ($fromDateTime && $toDateTime) {
                 $interval = $fromDateTime->diff($toDateTime);
                 if ($interval->days > 10) {
@@ -127,7 +127,7 @@ class OrderSearchRequest extends AbstractEntity
         if (!empty($this->fromDeliveryDate) && !empty($this->toDeliveryDate)) {
             $fromDelivery = \DateTime::createFromFormat('Y-m-d', $this->fromDeliveryDate);
             $toDelivery = \DateTime::createFromFormat('Y-m-d', $this->toDeliveryDate);
-            
+
             if ($fromDelivery && $toDelivery) {
                 $interval = $fromDelivery->diff($toDelivery);
                 if ($interval->days > 10) {
@@ -138,26 +138,86 @@ class OrderSearchRequest extends AbstractEntity
     }
 
     // Getters
-    public function getPage(): int { return $this->page; }
-    public function getIcpp(): int { return $this->icpp; }
-    public function getFromDate(): string { return $this->fromDate; }
-    public function getToDate(): string { return $this->toDate; }
-    public function getId(): int { return $this->id; }
-    public function getCustomerMobile(): string { return $this->customerMobile; }
-    public function getCustomerId(): int { return $this->customerId; }
-    public function getStatuses(): array { return $this->statuses; }
-    public function getFromDeliveryDate(): string { return $this->fromDeliveryDate; }
-    public function getToDeliveryDate(): string { return $this->toDeliveryDate; }
-    public function getCarrierId(): int { return $this->carrierId; }
-    public function getCarrierCode(): string { return $this->carrierCode; }
-    public function getType(): int { return $this->type; }
-    public function getCustomerCityId(): int { return $this->customerCityId; }
-    public function getCustomerDistrictId(): int { return $this->customerDistrictId; }
-    public function getHandoverId(): int { return $this->handoverId; }
-    public function getDepotId(): int { return $this->depotId; }
-    public function getUpdatedDateTimeFrom(): string { return $this->updatedDateTimeFrom; }
-    public function getUpdatedDateTimeTo(): string { return $this->updatedDateTimeTo; }
-    public function getDataOptions(): array { return $this->dataOptions; }
+    public function getPage(): int
+    {
+        return $this->page;
+    }
+    public function getIcpp(): int
+    {
+        return $this->icpp;
+    }
+    public function getFromDate(): string
+    {
+        return $this->fromDate;
+    }
+    public function getToDate(): string
+    {
+        return $this->toDate;
+    }
+    public function getId(): int
+    {
+        return $this->id;
+    }
+    public function getCustomerMobile(): string
+    {
+        return $this->customerMobile;
+    }
+    public function getCustomerId(): int
+    {
+        return $this->customerId;
+    }
+    public function getStatuses(): array
+    {
+        return $this->statuses;
+    }
+    public function getFromDeliveryDate(): string
+    {
+        return $this->fromDeliveryDate;
+    }
+    public function getToDeliveryDate(): string
+    {
+        return $this->toDeliveryDate;
+    }
+    public function getCarrierId(): int
+    {
+        return $this->carrierId;
+    }
+    public function getCarrierCode(): string
+    {
+        return $this->carrierCode;
+    }
+    public function getType(): int
+    {
+        return $this->type;
+    }
+    public function getCustomerCityId(): int
+    {
+        return $this->customerCityId;
+    }
+    public function getCustomerDistrictId(): int
+    {
+        return $this->customerDistrictId;
+    }
+    public function getHandoverId(): int
+    {
+        return $this->handoverId;
+    }
+    public function getDepotId(): int
+    {
+        return $this->depotId;
+    }
+    public function getUpdatedDateTimeFrom(): string
+    {
+        return $this->updatedDateTimeFrom;
+    }
+    public function getUpdatedDateTimeTo(): string
+    {
+        return $this->updatedDateTimeTo;
+    }
+    public function getDataOptions(): array
+    {
+        return $this->dataOptions;
+    }
 
     /**
      * Chuyển đổi thành format API Nhanh.vn

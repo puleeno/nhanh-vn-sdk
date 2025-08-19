@@ -6,7 +6,7 @@ use Puleeno\NhanhVn\Entities\AbstractEntity;
 
 /**
  * Entity cho phản hồi cập nhật đơn hàng
- * 
+ *
  * @package Puleeno\NhanhVn\Entities\Order
  * @author Puleeno
  * @since 2.0.0
@@ -15,7 +15,7 @@ class OrderUpdateResponse extends AbstractEntity
 {
     /**
      * Validate response structure
-     * 
+     *
      * @throws \InvalidArgumentException Khi response không hợp lệ
      */
     protected function validate(): void
@@ -97,7 +97,7 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->isSuccess()) {
             return null;
         }
-        
+
         $data = $this->getAttribute('data');
         $orderId = $data['orderId'] ?? null;
         return $orderId !== null ? (int) $orderId : null;
@@ -108,7 +108,7 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->isSuccess()) {
             return null;
         }
-        
+
         $data = $this->getAttribute('data');
         return $data['status'] ?? null;
     }
@@ -118,7 +118,7 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->isSuccess()) {
             return null;
         }
-        
+
         $data = $this->getAttribute('data');
         $fee = $data['shipFee'] ?? null;
         return $fee !== null ? (float) $fee : null;
@@ -129,7 +129,7 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->isSuccess()) {
             return null;
         }
-        
+
         $data = $this->getAttribute('data');
         $fee = $data['codFee'] ?? null;
         return $fee !== null ? (float) $fee : null;
@@ -140,7 +140,7 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->isSuccess()) {
             return null;
         }
-        
+
         $data = $this->getAttribute('data');
         $discount = $data['shipFeeDiscount'] ?? null;
         return $discount !== null ? (float) $discount : null;
@@ -151,7 +151,7 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->isSuccess()) {
             return null;
         }
-        
+
         $data = $this->getAttribute('data');
         $discount = $data['codFeeDiscount'] ?? null;
         return $discount !== null ? (float) $discount : null;
@@ -162,7 +162,7 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->isSuccess()) {
             return null;
         }
-        
+
         $data = $this->getAttribute('data');
         return $data['carrierCode'] ?? null;
     }
@@ -203,10 +203,10 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->hasShipFee()) {
             return null;
         }
-        
+
         $shipFee = $this->getShipFee();
         $discount = $this->getShipFeeDiscount() ?? 0;
-        
+
         return max(0, $shipFee - $discount);
     }
 
@@ -215,10 +215,10 @@ class OrderUpdateResponse extends AbstractEntity
         if (!$this->hasCodFee()) {
             return null;
         }
-        
+
         $codFee = $this->getCodFee();
         $discount = $this->getCodFeeDiscount() ?? 0;
-        
+
         return max(0, $codFee - $discount);
     }
 
@@ -226,7 +226,7 @@ class OrderUpdateResponse extends AbstractEntity
     {
         $actualShipFee = $this->getActualShipFee() ?? 0;
         $actualCodFee = $this->getActualCodFee() ?? 0;
-        
+
         return $actualShipFee + $actualCodFee;
     }
 
@@ -234,7 +234,7 @@ class OrderUpdateResponse extends AbstractEntity
     {
         $shipDiscount = $this->getShipFeeDiscount() ?? 0;
         $codDiscount = $this->getCodFeeDiscount() ?? 0;
-        
+
         return $shipDiscount + $codDiscount;
     }
 
@@ -272,7 +272,7 @@ class OrderUpdateResponse extends AbstractEntity
 
     /**
      * Xác định loại cập nhật dựa trên response data
-     * 
+     *
      * @return string
      */
     private function getUpdateType(): string

@@ -188,34 +188,125 @@ class ShippingFeeSelfConnectRequest extends AbstractEntity
     }
 
     // Getters
-    public function getCarrierId(): int { return $this->getAttribute('carrierId', 0); }
-    public function getFromMobile(): ?string { return $this->getAttribute('fromMobile'); }
-    public function getFromCityName(): string { return $this->getAttribute('fromCityName', ''); }
-    public function getFromDistrictName(): string { return $this->getAttribute('fromDistrictName', ''); }
-    public function getFromWardName(): ?string { return $this->getAttribute('fromWardName'); }
-    public function getFromAddress(): ?string { return $this->getAttribute('fromAddress'); }
-    public function getToCityName(): string { return $this->getAttribute('toCityName', ''); }
-    public function getToDistrictName(): string { return $this->getAttribute('toDistrictName', ''); }
-    public function getToWardName(): ?string { return $this->getAttribute('toWardName'); }
-    public function getToAddress(): ?string { return $this->getAttribute('toAddress'); }
-    public function getCodMoney(): int { return $this->getAttribute('codMoney', 0); }
-    public function getShippingWeight(): ?int { return $this->getAttribute('shippingWeight'); }
-    public function getProductIds(): ?array { return $this->getAttribute('productIds'); }
+    public function getCarrierId(): int
+    {
+        return $this->getAttribute('carrierId', 0);
+    }
+    public function getFromMobile(): ?string
+    {
+        return $this->getAttribute('fromMobile');
+    }
+    public function getFromCityName(): string
+    {
+        return $this->getAttribute('fromCityName', '');
+    }
+    public function getFromDistrictName(): string
+    {
+        return $this->getAttribute('fromDistrictName', '');
+    }
+    public function getFromWardName(): ?string
+    {
+        return $this->getAttribute('fromWardName');
+    }
+    public function getFromAddress(): ?string
+    {
+        return $this->getAttribute('fromAddress');
+    }
+    public function getToCityName(): string
+    {
+        return $this->getAttribute('toCityName', '');
+    }
+    public function getToDistrictName(): string
+    {
+        return $this->getAttribute('toDistrictName', '');
+    }
+    public function getToWardName(): ?string
+    {
+        return $this->getAttribute('toWardName');
+    }
+    public function getToAddress(): ?string
+    {
+        return $this->getAttribute('toAddress');
+    }
+    public function getCodMoney(): int
+    {
+        return $this->getAttribute('codMoney', 0);
+    }
+    public function getShippingWeight(): ?int
+    {
+        return $this->getAttribute('shippingWeight');
+    }
+    public function getProductIds(): ?array
+    {
+        return $this->getAttribute('productIds');
+    }
 
     // Setters
-    public function setCarrierId(int $value): self { $this->setAttribute('carrierId', $value); return $this; }
-    public function setFromMobile(?string $value): self { $this->setAttribute('fromMobile', $value); return $this; }
-    public function setFromCityName(string $value): self { $this->setAttribute('fromCityName', $value); return $this; }
-    public function setFromDistrictName(string $value): self { $this->setAttribute('fromDistrictName', $value); return $this; }
-    public function setFromWardName(?string $value): self { $this->setAttribute('fromWardName', $value); return $this; }
-    public function setFromAddress(?string $value): self { $this->setAttribute('fromAddress', $value); return $this; }
-    public function setToCityName(string $value): self { $this->setAttribute('toCityName', $value); return $this; }
-    public function setToDistrictName(string $value): self { $this->setAttribute('toDistrictName', $value); return $this; }
-    public function setToWardName(?string $value): self { $this->setAttribute('toWardName', $value); return $this; }
-    public function setToAddress(?string $value): self { $this->setAttribute('toAddress', $value); return $this; }
-    public function setCodMoney(int $value): self { $this->setAttribute('codMoney', $value); return $this; }
-    public function setShippingWeight(?int $value): self { $this->setAttribute('shippingWeight', $value); return $this; }
-    public function setProductIds(?array $value): self { $this->setAttribute('productIds', $value); return $this; }
+    public function setCarrierId(int $value): self
+    {
+        $this->setAttribute('carrierId', $value);
+        return $this;
+    }
+    public function setFromMobile(?string $value): self
+    {
+        $this->setAttribute('fromMobile', $value);
+        return $this;
+    }
+    public function setFromCityName(string $value): self
+    {
+        $this->setAttribute('fromCityName', $value);
+        return $this;
+    }
+    public function setFromDistrictName(string $value): self
+    {
+        $this->setAttribute('fromDistrictName', $value);
+        return $this;
+    }
+    public function setFromWardName(?string $value): self
+    {
+        $this->setAttribute('fromWardName', $value);
+        return $this;
+    }
+    public function setFromAddress(?string $value): self
+    {
+        $this->setAttribute('fromAddress', $value);
+        return $this;
+    }
+    public function setToCityName(string $value): self
+    {
+        $this->setAttribute('toCityName', $value);
+        return $this;
+    }
+    public function setToDistrictName(string $value): self
+    {
+        $this->setAttribute('toDistrictName', $value);
+        return $this;
+    }
+    public function setToWardName(?string $value): self
+    {
+        $this->setAttribute('toWardName', $value);
+        return $this;
+    }
+    public function setToAddress(?string $value): self
+    {
+        $this->setAttribute('toAddress', $value);
+        return $this;
+    }
+    public function setCodMoney(int $value): self
+    {
+        $this->setAttribute('codMoney', $value);
+        return $this;
+    }
+    public function setShippingWeight(?int $value): self
+    {
+        $this->setAttribute('shippingWeight', $value);
+        return $this;
+    }
+    public function setProductIds(?array $value): self
+    {
+        $this->setAttribute('productIds', $value);
+        return $this;
+    }
 
     /**
      * Check if using product IDs

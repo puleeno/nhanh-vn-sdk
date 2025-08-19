@@ -556,14 +556,30 @@ class ProductCollection extends AbstractEntity
 
         return [
             'total' => $products->count(),
-            'active' => $products->filter(function (Product $p) { return $p->isActive(); })->count(),
-            'inactive' => $products->filter(function (Product $p) { return $p->isInactive(); })->count(),
-            'outOfStock' => $products->filter(function (Product $p) { return $p->isOutOfStock(); })->count(),
-            'inStock' => $products->filter(function (Product $p) { return $p->isInStock(); })->count(),
-            'lowStock' => $products->filter(function (Product $p) { return $p->isLowStock(); })->count(),
-            'hot' => $products->filter(function (Product $p) { return $p->isHot(); })->count(),
-            'new' => $products->filter(function (Product $p) { return $p->isNew(); })->count(),
-            'home' => $products->filter(function (Product $p) { return $p->isHome(); })->count(),
+            'active' => $products->filter(function (Product $p) {
+                return $p->isActive();
+            })->count(),
+            'inactive' => $products->filter(function (Product $p) {
+                return $p->isInactive();
+            })->count(),
+            'outOfStock' => $products->filter(function (Product $p) {
+                return $p->isOutOfStock();
+            })->count(),
+            'inStock' => $products->filter(function (Product $p) {
+                return $p->isInStock();
+            })->count(),
+            'lowStock' => $products->filter(function (Product $p) {
+                return $p->isLowStock();
+            })->count(),
+            'hot' => $products->filter(function (Product $p) {
+                return $p->isHot();
+            })->count(),
+            'new' => $products->filter(function (Product $p) {
+                return $p->isNew();
+            })->count(),
+            'home' => $products->filter(function (Product $p) {
+                return $p->isHome();
+            })->count(),
             'totalValue' => $this->getTotalValue(),
             'averagePrice' => $this->getAveragePrice(),
             'minPrice' => $this->getMinPrice(),

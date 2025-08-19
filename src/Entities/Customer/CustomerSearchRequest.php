@@ -57,9 +57,11 @@ class CustomerSearchRequest extends AbstractEntity
         }
 
         // Validate customer type
-        if ($this->hasAttribute('type') && !in_array($this->getAttribute('type'), [
+        if (
+            $this->hasAttribute('type') && !in_array($this->getAttribute('type'), [
             self::TYPE_RETAIL, self::TYPE_WHOLESALE, self::TYPE_AGENT
-        ])) {
+            ])
+        ) {
             throw new InvalidDataException('Loại khách hàng không hợp lệ');
         }
 

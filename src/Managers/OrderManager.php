@@ -342,7 +342,7 @@ class OrderManager
 
         try {
             $keys = $this->cacheService->getKeys();
-            $orderKeys = array_filter($keys, function($key) {
+            $orderKeys = array_filter($keys, function ($key) {
                 return strpos($key, 'orders:') === 0;
             });
 
@@ -375,7 +375,7 @@ class OrderManager
 
         try {
             $keys = $this->cacheService->getKeys();
-            $orderKeys = array_filter($keys, function($key) {
+            $orderKeys = array_filter($keys, function ($key) {
                 return strpos($key, 'orders:') === 0;
             });
 
@@ -412,7 +412,7 @@ class OrderManager
     public function isOrderCacheAvailable(): bool
     {
         $keys = $this->cacheService->getKeys();
-        $orderKeys = array_filter($keys, function($key) {
+        $orderKeys = array_filter($keys, function ($key) {
             return strpos($key, 'orders:') === 0;
         });
 
@@ -586,7 +586,6 @@ class OrderManager
             ]);
 
             return $result;
-
         } catch (\Exception $e) {
             $this->logger->error("OrderManager::canAddOrder() error", [
                 'error' => $e->getMessage(),
@@ -624,7 +623,6 @@ class OrderManager
 
         try {
             return $this->orderRepository->prepareSearchCriteria($searchParams);
-
         } catch (Exception $e) {
             $this->logger->error("OrderManager::prepareSearchCriteria() error", [
                 'error' => $e->getMessage(),

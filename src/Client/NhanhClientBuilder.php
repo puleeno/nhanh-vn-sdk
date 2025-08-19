@@ -113,7 +113,7 @@ class NhanhClientBuilder
     /**
      * Tạo builder từ environment variables
      */
-        public static function fromEnvironment(): self
+    public static function fromEnvironment(): self
     {
         $builder = new self();
 
@@ -127,13 +127,13 @@ class NhanhClientBuilder
         $logLevel = $_ENV['NHANH_LOG_LEVEL'] ?? $_SERVER['NHANH_LOG_LEVEL'] ?? 'INFO';
 
         $builder = $builder
-            ->withAppId($appId)
-            ->withBusinessId($businessId)
-            ->withAccessToken($accessToken)
-            ->withApiVersion($apiVersion)
-            ->withEnvironment($environment)
-            ->withTimeout($timeout)
-            ->withLogLevel($logLevel);
+        ->withAppId($appId)
+        ->withBusinessId($businessId)
+        ->withAccessToken($accessToken)
+        ->withApiVersion($apiVersion)
+        ->withEnvironment($environment)
+        ->withTimeout($timeout)
+        ->withLogLevel($logLevel);
 
         // Chỉ gọi withSecretKey nếu có giá trị
         if ($secretKey !== null) {
@@ -326,24 +326,60 @@ class NhanhClientBuilder
      */
     public function withConfigArray(array $config): self
     {
-        if (isset($config['appId'])) $this->appId = $config['appId'];
-        if (isset($config['businessId'])) $this->businessId = $config['businessId'];
-        if (isset($config['accessToken'])) $this->accessToken = $config['accessToken'];
-        if (isset($config['secretKey'])) $this->secretKey = $config['secretKey'];
-        if (isset($config['redirectUrl'])) $this->redirectUrl = $config['redirectUrl'];
-        if (isset($config['apiVersion'])) $this->apiVersion = $config['apiVersion'];
-        if (isset($config['apiDomain'])) $this->apiDomain = $config['apiDomain'];
-        if (isset($config['timeout'])) $this->timeout = $config['timeout'];
-        if (isset($config['retryAttempts'])) $this->retryAttempts = $config['retryAttempts'];
-        if (isset($config['rateLimit'])) $this->rateLimit = $config['rateLimit'];
-        if (isset($config['environment'])) $this->environment = $config['environment'];
-        if (isset($config['enableLogging'])) $this->enableLogging = $config['enableLogging'];
-        if (isset($config['logLevel'])) $this->logLevel = $config['logLevel'];
-        if (isset($config['logFile'])) $this->logFile = $config['logFile'];
-        if (isset($config['logToConsole'])) $this->logToConsole = $config['logToConsole'];
-        if (isset($config['logToFile'])) $this->logToFile = $config['logToFile'];
-        if (isset($config['logRotationDays'])) $this->logRotationDays = $config['logRotationDays'];
-        if (isset($config['validateSSL'])) $this->validateSSL = $config['validateSSL'];
+        if (isset($config['appId'])) {
+            $this->appId = $config['appId'];
+        }
+        if (isset($config['businessId'])) {
+            $this->businessId = $config['businessId'];
+        }
+        if (isset($config['accessToken'])) {
+            $this->accessToken = $config['accessToken'];
+        }
+        if (isset($config['secretKey'])) {
+            $this->secretKey = $config['secretKey'];
+        }
+        if (isset($config['redirectUrl'])) {
+            $this->redirectUrl = $config['redirectUrl'];
+        }
+        if (isset($config['apiVersion'])) {
+            $this->apiVersion = $config['apiVersion'];
+        }
+        if (isset($config['apiDomain'])) {
+            $this->apiDomain = $config['apiDomain'];
+        }
+        if (isset($config['timeout'])) {
+            $this->timeout = $config['timeout'];
+        }
+        if (isset($config['retryAttempts'])) {
+            $this->retryAttempts = $config['retryAttempts'];
+        }
+        if (isset($config['rateLimit'])) {
+            $this->rateLimit = $config['rateLimit'];
+        }
+        if (isset($config['environment'])) {
+            $this->environment = $config['environment'];
+        }
+        if (isset($config['enableLogging'])) {
+            $this->enableLogging = $config['enableLogging'];
+        }
+        if (isset($config['logLevel'])) {
+            $this->logLevel = $config['logLevel'];
+        }
+        if (isset($config['logFile'])) {
+            $this->logFile = $config['logFile'];
+        }
+        if (isset($config['logToConsole'])) {
+            $this->logToConsole = $config['logToConsole'];
+        }
+        if (isset($config['logToFile'])) {
+            $this->logToFile = $config['logToFile'];
+        }
+        if (isset($config['logRotationDays'])) {
+            $this->logRotationDays = $config['logRotationDays'];
+        }
+        if (isset($config['validateSSL'])) {
+            $this->validateSSL = $config['validateSSL'];
+        }
 
         return $this;
     }

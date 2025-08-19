@@ -87,10 +87,22 @@ class OrderSearchResponse extends AbstractEntity
     }
 
     // Getters
-    public function getTotalPages(): int { return $this->totalPages; }
-    public function getTotalRecords(): int { return $this->totalRecords; }
-    public function getPage(): int { return $this->page; }
-    public function getOrders(): Collection { return $this->orders; }
+    public function getTotalPages(): int
+    {
+        return $this->totalPages;
+    }
+    public function getTotalRecords(): int
+    {
+        return $this->totalRecords;
+    }
+    public function getPage(): int
+    {
+        return $this->page;
+    }
+    public function getOrders(): Collection
+    {
+        return $this->orders;
+    }
 
     /**
      * Lấy số lượng đơn hàng trong trang hiện tại

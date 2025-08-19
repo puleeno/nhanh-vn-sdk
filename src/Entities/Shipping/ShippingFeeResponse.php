@@ -160,7 +160,8 @@ class ShippingFeeResponse extends AbstractEntity
     }
 
     // Getters
-    public function getServices(): array {
+    public function getServices(): array
+    {
         $services = $this->getAttribute('services');
         if (is_array($services)) {
             return $services;
@@ -175,7 +176,8 @@ class ShippingFeeResponse extends AbstractEntity
         return [];
     }
 
-    public function getTotalServices(): int {
+    public function getTotalServices(): int
+    {
         $total = $this->getAttribute('totalServices');
         if (is_numeric($total)) {
             return (int)$total;
@@ -186,8 +188,14 @@ class ShippingFeeResponse extends AbstractEntity
         return count($services);
     }
 
-    public function isCached(): bool { return (bool)$this->getAttribute('cached', false); }
-    public function getCacheExpiry(): ?string { return $this->getAttribute('cacheExpiry'); }
+    public function isCached(): bool
+    {
+        return (bool)$this->getAttribute('cached', false);
+    }
+    public function getCacheExpiry(): ?string
+    {
+        return $this->getAttribute('cacheExpiry');
+    }
 
     /**
      * Get services as Collection

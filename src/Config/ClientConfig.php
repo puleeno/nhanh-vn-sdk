@@ -28,7 +28,7 @@ class ClientConfig
     private bool $enableLogging;
     private string $logLevel;
 
-        public function __construct(array $config = [])
+    public function __construct(array $config = [])
     {
         $this->validateRequiredConfig($config);
 
@@ -148,18 +148,54 @@ class ClientConfig
     }
 
     // Getters
-    public function getAppId(): string { return $this->appId; }
-    public function getSecretKey(): ?string { return $this->secretKey; }
-    public function getReturnLink(): ?string { return $this->returnLink; }
-    public function getBusinessId(): ?string { return $this->businessId; }
-    public function getAccessToken(): ?string { return $this->accessToken; }
-    public function getApiDomain(): string { return $this->apiDomain; }
-    public function getApiVersion(): string { return $this->apiVersion; }
-    public function getTimeout(): int { return $this->timeout; }
-    public function getRetryAttempts(): int { return $this->retryAttempts; }
-    public function getRateLimit(): int { return $this->rateLimit; }
-    public function isLoggingEnabled(): bool { return $this->enableLogging; }
-    public function getLogLevel(): string { return $this->logLevel; }
+    public function getAppId(): string
+    {
+        return $this->appId;
+    }
+    public function getSecretKey(): ?string
+    {
+        return $this->secretKey;
+    }
+    public function getReturnLink(): ?string
+    {
+        return $this->returnLink;
+    }
+    public function getBusinessId(): ?string
+    {
+        return $this->businessId;
+    }
+    public function getAccessToken(): ?string
+    {
+        return $this->accessToken;
+    }
+    public function getApiDomain(): string
+    {
+        return $this->apiDomain;
+    }
+    public function getApiVersion(): string
+    {
+        return $this->apiVersion;
+    }
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+    public function getRetryAttempts(): int
+    {
+        return $this->retryAttempts;
+    }
+    public function getRateLimit(): int
+    {
+        return $this->rateLimit;
+    }
+    public function isLoggingEnabled(): bool
+    {
+        return $this->enableLogging;
+    }
+    public function getLogLevel(): string
+    {
+        return $this->logLevel;
+    }
 
     /**
      * Lấy base URL cho API

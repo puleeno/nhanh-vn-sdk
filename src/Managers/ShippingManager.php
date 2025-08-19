@@ -70,7 +70,6 @@ class ShippingManager
             ]);
 
             return $isValid;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingManager::validateLocationSearchData() error", [
                 'error' => $e->getMessage(),
@@ -101,7 +100,6 @@ class ShippingManager
                 ]);
 
             return $errors;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingManager::getLocationSearchValidationErrors() error", [
                 'error' => $e->getMessage(),
@@ -133,7 +131,6 @@ class ShippingManager
             ]);
 
             return $request;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingManager::createLocationSearchRequest() error", [
                 'error' => $e->getMessage(),
@@ -167,7 +164,6 @@ class ShippingManager
             ]);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingManager::createLocationSearchResponse() error", [
                 'error' => $e->getMessage(),
@@ -226,7 +222,6 @@ class ShippingManager
             ]);
 
             return $preparedData;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingManager::prepareLocationSearchData() error", [
                 'error' => $e->getMessage(),
@@ -286,7 +281,6 @@ class ShippingManager
             ]);
 
             return $locationResponse;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingManager::searchLocations() error", [
                 'error' => $e->getMessage(),

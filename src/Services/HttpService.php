@@ -56,7 +56,7 @@ class HttpService
             $this->logger->debug("HttpService::callApi() - Request data", $requestData);
 
 
-            $response = $this->httpClient->post($this->config->getBaseUrl() .'/api' . $endpoint, [
+            $response = $this->httpClient->post($this->config->getBaseUrl() . '/api' . $endpoint, [
                 'multipart' => $this->arrayToMultipart($requestData)
             ]);
 
@@ -101,7 +101,6 @@ class HttpService
             }
 
             return $responseData;
-
         } catch (GuzzleException $e) {
             throw new NetworkException("Network error: " . $e->getMessage(), 0, $e);
         } catch (Exception $e) {

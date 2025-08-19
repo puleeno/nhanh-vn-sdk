@@ -77,7 +77,6 @@ class ShippingModule
             ]);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::search() error", [
                 'error' => $e->getMessage(),
@@ -111,7 +110,6 @@ class ShippingModule
             ]);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::searchFromRequest() error", [
                 'error' => $e->getMessage(),
@@ -141,7 +139,6 @@ class ShippingModule
             ]);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::searchCities() error", [
                 'error' => $e->getMessage()
@@ -172,7 +169,6 @@ class ShippingModule
             ]);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::searchDistricts() error", [
                 'error' => $e->getMessage(),
@@ -204,7 +200,6 @@ class ShippingModule
             ]);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::searchWards() error", [
                 'error' => $e->getMessage(),
@@ -259,7 +254,6 @@ class ShippingModule
             ]);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::searchByName() error", [
                 'error' => $e->getMessage(),
@@ -326,7 +320,6 @@ class ShippingModule
             ]);
 
             return null;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::findById() error", [
                 'error' => $e->getMessage(),
@@ -358,7 +351,6 @@ class ShippingModule
             ]);
 
             return $isValid;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::validateSearchData() error", [
                 'error' => $e->getMessage(),
@@ -389,7 +381,6 @@ class ShippingModule
             ]);
 
             return $errors;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::getValidationErrors() error", [
                 'error' => $e->getMessage(),
@@ -421,7 +412,6 @@ class ShippingModule
             ]);
 
             return $request;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::createSearchRequest() error", [
                 'error' => $e->getMessage(),
@@ -483,7 +473,6 @@ class ShippingModule
 
             // Tạo response entity từ dữ liệu API
             return new ShippingCarrierResponse($response);
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::getCarriers() error", [
                 'error' => $e->getMessage(),
@@ -513,7 +502,6 @@ class ShippingModule
             $this->createEntitiesWithMemoryManagement($response);
 
             return $response;
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::getCarriersWithMemoryManagement() error", [
                 'error' => $e->getMessage(),
@@ -582,7 +570,6 @@ class ShippingModule
 
             // Tạo response entity từ dữ liệu API
             return new ShippingFeeResponse($response);
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::calculateFee() error", [
                 'error' => $e->getMessage(),
@@ -675,7 +662,6 @@ class ShippingModule
 
             // Tạo response entity từ dữ liệu API
             return new ShippingFeeSelfConnectResponse($response);
-
         } catch (Exception $e) {
             $this->logger->error("ShippingModule::calculateFeeSelfConnect() error", [
                 'error' => $e->getMessage(),

@@ -6,12 +6,12 @@ use Puleeno\NhanhVn\Entities\AbstractEntity;
 
 /**
  * Entity cho yêu cầu cập nhật đơn hàng
- * 
+ *
  * Sử dụng để cập nhật thông tin đơn hàng khi:
  * - Khách hàng thực hiện chuyển khoản online
  * - Khách hàng hủy đơn hàng
  * - Gửi đơn hàng qua các hãng vận chuyển
- * 
+ *
  * @package Puleeno\NhanhVn\Entities\Order
  * @author Puleeno
  * @since 2.0.0
@@ -20,7 +20,7 @@ class OrderUpdateRequest extends AbstractEntity
 {
     /**
      * Validate dữ liệu đầu vào
-     * 
+     *
      * @throws \InvalidArgumentException Khi dữ liệu không hợp lệ
      */
     protected function validate(): void
@@ -28,7 +28,7 @@ class OrderUpdateRequest extends AbstractEntity
         // Kiểm tra ít nhất một trong hai trường id hoặc orderId
         $id = $this->getAttribute('id');
         $orderId = $this->getAttribute('orderId');
-        
+
         if (empty($id) && empty($orderId)) {
             $this->addError('identification', 'Phải cung cấp ít nhất một trong hai giá trị: id hoặc orderId');
         }
@@ -181,58 +181,58 @@ class OrderUpdateRequest extends AbstractEntity
     public function toApiFormat(): array
     {
         $data = [];
-        
+
         // Chỉ thêm các trường có giá trị
         if ($this->hasId()) {
             $data['id'] = $this->getId();
         }
-        
+
         if ($this->hasOrderId()) {
             $data['orderId'] = $this->getOrderId();
         }
-        
+
         if ($this->getAutoSend() !== null) {
             $data['autoSend'] = $this->getAutoSend();
         }
-        
+
         if ($this->getMoneyTransfer() !== null) {
             $data['moneyTransfer'] = $this->getMoneyTransfer();
         }
-        
+
         if ($this->getMoneyTransferAccountId() !== null) {
             $data['moneyTransferAccountId'] = $this->getMoneyTransferAccountId();
         }
-        
+
         if ($this->getPaymentCode() !== null) {
             $data['paymentCode'] = $this->getPaymentCode();
         }
-        
+
         if ($this->getPaymentGateway() !== null) {
             $data['paymentGateway'] = $this->getPaymentGateway();
         }
-        
+
         if ($this->getStatus() !== null) {
             $data['status'] = $this->getStatus();
         }
-        
+
         if ($this->getDescription() !== null) {
             $data['description'] = $this->getDescription();
         }
-        
+
         if ($this->getPrivateDescription() !== null) {
             $data['privateDescription'] = $this->getPrivateDescription();
         }
-        
+
         if ($this->getCustomerShipFee() !== null) {
             $data['customerShipFee'] = $this->getCustomerShipFee();
         }
-        
+
         return $data;
     }
 
     /**
      * Tạo request cập nhật trạng thái đơn hàng
-     * 
+     *
      * @param string $orderId ID đơn hàng Nhanh.vn
      * @param string $status Trạng thái mới
      * @param string|null $description Ghi chú khách hàng
@@ -251,7 +251,7 @@ class OrderUpdateRequest extends AbstractEntity
 
     /**
      * Tạo request cập nhật thông tin thanh toán
-     * 
+     *
      * @param string $orderId ID đơn hàng Nhanh.vn
      * @param float $moneyTransfer Số tiền chuyển khoản
      * @param string $paymentCode Mã giao dịch
@@ -272,7 +272,7 @@ class OrderUpdateRequest extends AbstractEntity
 
     /**
      * Tạo request gửi đơn hàng sang hãng vận chuyển
-     * 
+     *
      * @param string $orderId ID đơn hàng Nhanh.vn
      * @param float|null $customerShipFee Phí ship báo khách
      * @return self
