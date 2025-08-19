@@ -46,15 +46,17 @@ $clientInfo = getClientInfo();
             </nav>
         </div>
 
-        <div class="section">
-            <h2>📋 Thông tin Debug</h2>
-            <div class="debug-info">
-                <p><strong>Client Status:</strong> <?php echo $clientInfo['status']; ?></p>
-                <p><strong>API Version:</strong> <?php echo $clientInfo['api_version']; ?></p>
-                <p><strong>Business ID:</strong> <?php echo $clientInfo['business_id']; ?></p>
-                <p><strong>Access Token:</strong> <?php echo $clientInfo['access_token'] ? '✅ Có' : '❌ Không có'; ?></p>
-            </div>
-        </div>
+                       <div class="section">
+                   <h2>📋 Thông tin Debug</h2>
+                   <div class="debug-info">
+                       <p><strong>Client Status:</strong> <?php echo $clientInfo['hasAccessToken'] ? '✅ Sẵn sàng' : '❌ Chưa sẵn sàng'; ?></p>
+                       <p><strong>API Version:</strong> <?php echo $clientInfo['apiVersion']; ?></p>
+                       <p><strong>Business ID:</strong> <?php echo $clientInfo['businessId']; ?></p>
+                       <p><strong>Access Token:</strong> <?php echo $clientInfo['hasAccessToken'] ? '✅ Có' : '❌ Không có'; ?></p>
+                       <p><strong>App ID:</strong> <?php echo $clientInfo['appId']; ?></p>
+                       <p><strong>Timestamp:</strong> <?php echo $clientInfo['timestamp']; ?></p>
+                   </div>
+               </div>
 
         <div class="section">
             <h2>➕ Thêm một khách hàng</h2>
