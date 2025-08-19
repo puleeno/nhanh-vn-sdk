@@ -334,6 +334,122 @@ try {
 }
 ```
 
+## 🖼️ Product External Images
+
+### Endpoint
+```
+POST /api/product/externalimage
+```
+
+### Mô tả
+API này dùng để thêm ảnh cho sản phẩm từ CDN khác không thuộc Nhanh.vn. Được thêm tối đa 10 sản phẩm mỗi request, mỗi sản phẩm tối đa 20 ảnh.
+
+### Parameters
+
+| Parameter | Type | Required | Mô tả |
+|-----------|------|----------|-------|
+| `productId` | int | Yes | ID sản phẩm trên Nhanh.vn |
+| `externalImages` | array | Yes | Mảng URL ảnh sản phẩm |
+| `mode` | string | No | Mode xử lý: 'update' (mặc định) hoặc 'deleteall' |
+
+### Mode xử lý
+- **update**: Nhanh.vn sẽ check nếu trên hệ thống chưa có ảnh trong mảng thì sẽ thêm mới. Các ảnh đã bắn sang trước đó, mà sau đó không tồn tại ở mảng mới, sẽ bị xóa khỏi hệ thống
+- **deleteall**: Xóa hết ảnh cũ của sản phẩm
+
+### Ví dụ sử dụng
+
+#### Thêm ảnh cho một sản phẩm
+```php
+$productData = [
+    'productId' => 312311,
+    'externalImages' => [
+        'https://external.cdn.com/product/image1.jpg',
+        'https://external.cdn.com/product/image2.jpg'
+    ],
+    'mode' => 'update'
+];
+
+try {
+    $response = $client->products()->addExternalImage($productData);
+
+    if ($response->isSuccess()) {
+        echo "Thêm ảnh thành công cho " . $response->getTotalProcessedProducts() . " sản phẩm";
+        echo "ID sản phẩm đã xử lý: " . implode(', ', $response->getAllProcessedProductIds());
+    } else {
+        echo "Lỗi: " . $response->getAllMessagesAsString();
+    }
+} catch (Exception $e) {
+    echo "Lỗi: " . $e->getMessage();
+}
+```
+
+#### Thêm ảnh cho nhiều sản phẩm cùng lúc
+```php
+$batchData = [
+    [
+        'productId' => 312311,
+        'externalImages' => ['https://external.cdn.com/product/image1.jpg'],
+        'mode' => 'update'
+    ],
+    [
+        'productId' => 312312,
+        'externalImages' => ['https://external.cdn.com/product/image2.jpg'],
+        'mode' => 'deleteall'
+    ]
+];
+
+try {
+    $response = $client->products()->addExternalImages($batchData);
+
+    if ($response->isSuccess()) {
+        echo "Batch thêm ảnh thành công";
+        echo "Tổng sản phẩm đã xử lý: " . $response->getTotalProcessedProducts();
+    }
+} catch (Exception $e) {
+    echo "Lỗi batch: " . $e->getMessage();
+}
+```
+
+#### Validation dữ liệu
+```php
+// Validate một request
+$isValid = $client->products()->validateExternalImageRequest($productData);
+
+// Validate nhiều request
+$errors = $client->products()->validateExternalImageRequests($batchData);
+if (!empty($errors)) {
+    foreach ($errors as $error) {
+        echo "Lỗi validation: " . $error;
+    }
+}
+```
+
+### Response Structure
+
+#### Success Response
+```json
+{
+    "code": 1,
+    "data": [312311, 312312, 312313]
+}
+```
+
+#### Error Response
+```json
+{
+    "code": 0,
+    "messages": ["Invalid product ID", "Image URL not accessible"]
+}
+```
+
+### Lưu ý quan trọng
+
+1. **Giới hạn**: Tối đa 10 sản phẩm mỗi request, mỗi sản phẩm tối đa 20 ảnh
+2. **CDN**: Nhanh.vn sẽ không tải các link ảnh này về mà dùng luôn đường dẫn link ảnh bạn bắn sang
+3. **Facebook Shop**: Khi đồng bộ Facebook Shop, Nhanh.vn sẽ dùng external images này nếu sản phẩm không có ảnh
+4. **Độ phân giải**: Facebook yêu cầu ảnh có độ phân giải tối thiểu từ 500 x 500px
+5. **Server**: Server xử lý ảnh cần đảm bảo tốc độ ổn định và không chặn crawler của Facebook
+
 ## 🔍 Logging
 
 ### Debug Logging

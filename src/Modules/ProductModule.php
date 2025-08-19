@@ -24,6 +24,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
 use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
 use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageResponse;
 use Illuminate\Support\Collection;
 use Exception;
 
@@ -1176,5 +1178,99 @@ class ProductModule
         unset($responseData, $data);
 
         return $entities;
+    }
+
+    /**
+     * Thêm ảnh sản phẩm từ CDN bên ngoài
+     *
+     * @param array $productData Dữ liệu sản phẩm và ảnh
+     * @return ProductExternalImageResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function addExternalImage(array $productData): ProductExternalImageResponse
+    {
+        $this->logger->info("ProductModule::addExternalImage() called", ['productData' => $productData]);
+
+        try {
+            $response = $this->productManager->addProductExternalImage($productData);
+
+            $this->logger->info("ProductModule::addExternalImage() - Success", [
+                'productId' => $response->getFirstProcessedProductId(),
+                'totalProcessed' => $response->getTotalProcessedProducts()
+            ]);
+
+            return $response;
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::addExternalImage() - Error", ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Thêm ảnh cho nhiều sản phẩm cùng lúc (batch add)
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm và ảnh
+     * @return ProductExternalImageResponse Response từ API
+     * @throws Exception Khi có lỗi xảy ra
+     */
+    public function addExternalImages(array $productsData): ProductExternalImageResponse
+    {
+        $this->logger->info("ProductModule::addExternalImages() called", [
+            'totalProducts' => count($productsData)
+        ]);
+
+        try {
+            // Validate batch size
+            if (count($productsData) > 10) {
+                throw new \InvalidArgumentException('Chỉ được thêm ảnh cho tối đa 10 sản phẩm mỗi lần');
+            }
+
+            $response = $this->productManager->addProductExternalImages($productsData);
+
+            $this->logger->info("ProductModule::addExternalImages() - Success", [
+                'totalProcessed' => $response->getTotalProcessedProducts(),
+                'processedIds' => $response->getAllProcessedProductIds()
+            ]);
+
+            return $response;
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::addExternalImages() - Error", ['error' => $e->getMessage()]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Validate product external image request data
+     *
+     * @param array $productData Dữ liệu sản phẩm và ảnh
+     * @return bool True nếu hợp lệ
+     */
+    public function validateExternalImageRequest(array $productData): bool
+    {
+        try {
+            return $this->productManager->validateProductExternalImageRequest($productData);
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::validateExternalImageRequest() - Error", ['error' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    /**
+     * Validate multiple product external image requests
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm và ảnh
+     * @return array Mảng lỗi validation (empty nếu tất cả đều hợp lệ)
+     */
+    public function validateExternalImageRequests(array $productsData): array
+    {
+        $errors = [];
+
+        foreach ($productsData as $index => $productData) {
+            if (!$this->validateExternalImageRequest($productData)) {
+                $errors[] = "Dữ liệu sản phẩm thứ {$index} không hợp lệ";
+            }
+        }
+
+        return $errors;
     }
 }

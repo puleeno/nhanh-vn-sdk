@@ -70,7 +70,13 @@ examples/
 ├── README.md             # Hướng dẫn này
 ├── public/               # Web root
 │   ├── index.php        # Trang chính
-│   └── callback.php     # OAuth callback handler
+│   ├── callback.php     # OAuth callback handler
+│   ├── get_products.php # Product search demo
+│   ├── get_product_detail.php # Product detail demo
+│   ├── get_categories.php # Categories demo
+│   ├── get_products_with_logger.php # Logging demo
+│   ├── add_product.php  # Product add demo
+│   └── add_product_images.php # Product external images demo
 ├── src/                 # Source code
 │   └── OAuthExample.php # Class chính xử lý OAuth
 └── tokens.json          # File lưu access token (tự động tạo)

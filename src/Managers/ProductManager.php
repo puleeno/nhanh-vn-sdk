@@ -22,6 +22,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
 use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
 use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageResponse;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Services\ProductService;
 
@@ -1371,5 +1373,49 @@ class ProductManager
             'websiteInfos' => $this->getCachedProductWebsiteInfos() !== null,
             'warranties' => $this->getCachedProductWarranties() !== null
         ];
+    }
+
+    /**
+     * Thêm ảnh sản phẩm từ CDN bên ngoài
+     *
+     * @param array $productData Dữ liệu sản phẩm và ảnh
+     * @return ProductExternalImageResponse Response từ API
+     */
+    public function addProductExternalImage(array $productData): ProductExternalImageResponse
+    {
+        return $this->productService->addProductExternalImage($productData);
+    }
+
+    /**
+     * Thêm ảnh cho nhiều sản phẩm cùng lúc (batch add)
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm và ảnh
+     * @return ProductExternalImageResponse Response từ API
+     */
+    public function addProductExternalImages(array $productsData): ProductExternalImageResponse
+    {
+        return $this->productService->addProductExternalImages($productsData);
+    }
+
+    /**
+     * Validate product external image request data
+     *
+     * @param array $productData Dữ liệu sản phẩm và ảnh
+     * @return bool True nếu hợp lệ
+     */
+    public function validateProductExternalImageRequest(array $productData): bool
+    {
+        return $this->productService->validateProductExternalImageRequest($productData);
+    }
+
+    /**
+     * Validate multiple product external image requests
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm và ảnh
+     * @return bool True nếu hợp lệ
+     */
+    public function validateProductExternalImageRequests(array $productsData): bool
+    {
+        return $this->productService->validateProductExternalImageRequests($productsData);
     }
 }

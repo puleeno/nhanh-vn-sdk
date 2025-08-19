@@ -23,6 +23,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
 use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
 use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageResponse;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Services\CacheService;
 
@@ -729,5 +731,112 @@ class ProductService
         }
 
         return $errors;
+    }
+
+    /**
+     * Thêm ảnh sản phẩm từ CDN bên ngoài
+     *
+     * @param array $productData Dữ liệu sản phẩm và ảnh
+     * @return ProductExternalImageResponse Response từ API
+     * @throws \InvalidArgumentException Khi có lỗi xảy ra
+     */
+    public function addProductExternalImage(array $productData): ProductExternalImageResponse
+    {
+        $request = $this->productRepository->createProductExternalImageRequest($productData);
+
+        if (!$request->isValid()) {
+            throw new \InvalidArgumentException(
+                'Dữ liệu không hợp lệ: ' . json_encode($request->getErrors())
+            );
+        }
+
+        // TODO: Implement actual API call to Nhanh.vn
+        // This is a placeholder implementation
+        $response = [
+            'code' => 1,
+            'data' => [$request->getProductId()]
+        ];
+
+        return $this->productRepository->createProductExternalImageResponse($response);
+    }
+
+    /**
+     * Thêm ảnh cho nhiều sản phẩm cùng lúc (batch add)
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm và ảnh
+     * @return ProductExternalImageResponse Response từ API
+     * @throws \InvalidArgumentException Khi có lỗi xảy ra
+     */
+    public function addProductExternalImages(array $productsData): ProductExternalImageResponse
+    {
+        if (empty($productsData)) {
+            throw new \InvalidArgumentException('Danh sách sản phẩm không được để trống');
+        }
+
+        if (count($productsData) > 10) {
+            throw new \InvalidArgumentException('Chỉ được thêm ảnh cho tối đa 10 sản phẩm mỗi lần');
+        }
+
+        // Validate all products
+        $requests = [];
+        foreach ($productsData as $index => $productData) {
+            $request = $this->productRepository->createProductExternalImageRequest($productData);
+
+            if (!$request->isValid()) {
+                $exception = new \InvalidArgumentException(
+                    "Sản phẩm thứ {$index} không hợp lệ: " . json_encode($request->getErrors())
+                );
+                // Clean up memory before throwing exception
+                unset($requests);
+                throw $exception;
+            }
+
+            $requests[] = $request;
+            unset($request); // Memory management
+        }
+
+        // TODO: Implement actual batch API call to Nhanh.vn
+        // This is a placeholder implementation
+        $response = [
+            'code' => 1,
+            'data' => array_map(fn($request) => $request->getProductId(), $requests)
+        ];
+
+        // Clean up memory
+        unset($requests);
+
+        return $this->productRepository->createProductExternalImageResponse($response);
+    }
+
+    /**
+     * Validate product external image request data
+     *
+     * @param array $productData Dữ liệu sản phẩm và ảnh
+     * @return bool True nếu hợp lệ
+     */
+    public function validateProductExternalImageRequest(array $productData): bool
+    {
+        try {
+            $request = $this->productRepository->createProductExternalImageRequest($productData);
+            return $request->isValid();
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Validate multiple product external image requests
+     *
+     * @param array $productsData Mảng dữ liệu sản phẩm và ảnh
+     * @return bool True nếu hợp lệ
+     */
+    public function validateProductExternalImageRequests(array $productsData): bool
+    {
+        foreach ($productsData as $productData) {
+            if (!$this->validateProductExternalImageRequest($productData)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

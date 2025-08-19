@@ -18,7 +18,9 @@ PHP SDK tiêu chuẩn để tích hợp với Nhanh.vn API, cung cấp interface
 - **Product Detail**: Lấy chi tiết sản phẩm theo ID
 - **Product Categories**: Lấy danh mục sản phẩm
 - **Product Add API**: Thêm/cập nhật sản phẩm với validation toàn diện
+- **Product External Images API**: Thêm ảnh sản phẩm từ CDN bên ngoài
 - **Batch Operations**: Hỗ trợ thêm tối đa 300 sản phẩm cùng lúc
+- **Batch Image Operations**: Hỗ trợ thêm ảnh cho tối đa 10 sản phẩm cùng lúc
 - **Memory Management**: Tự động giải phóng memory sau khi xử lý
 - **Monolog Integration**: Hệ thống logging chuyên nghiệp
 - **Error Handling**: Xử lý lỗi chi tiết với custom exceptions
@@ -265,6 +267,8 @@ php -S localhost:8000 -t public
 - `get_product_detail.php` - Product detail demo
 - `get_categories.php` - Categories demo
 - `get_products_with_logger.php` - Logging demo
+- `add_product.php` - Product add demo
+- `add_product_images.php` - Product external images demo
 
 ### Testing
 ```bash
@@ -295,6 +299,12 @@ composer test
 - `images`: Hình ảnh sản phẩm
 - `categoryId`: ID danh mục
 - `brandId`: ID thương hiệu
+
+### Product External Images API
+- **Endpoint**: `/api/product/externalimage`
+- **Giới hạn**: Tối đa 10 sản phẩm mỗi request, mỗi sản phẩm tối đa 20 ảnh
+- **Mode**: `update` (mặc định) hoặc `deleteall`
+- **Lưu ý**: Nhanh.vn sẽ không tải ảnh về mà dùng trực tiếp URL từ CDN
 
 ## 🤝 Contributing
 

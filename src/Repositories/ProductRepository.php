@@ -23,6 +23,8 @@ use Puleeno\NhanhVn\Entities\Product\ProductWebsiteInfo;
 use Puleeno\NhanhVn\Entities\Product\ProductWarranty;
 use Puleeno\NhanhVn\Entities\Product\ProductAddRequest;
 use Puleeno\NhanhVn\Entities\Product\ProductAddResponse;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageRequest;
+use Puleeno\NhanhVn\Entities\Product\ProductExternalImageResponse;
 use Puleeno\NhanhVn\Services\CacheService;
 
 /**
@@ -84,6 +86,11 @@ class ProductRepository
     public function createProductAddRequest(array $data): ProductAddRequest { return new ProductAddRequest($data); }
     public function createProductAddRequests(array $data): array { return array_map([$this, 'createProductAddRequest'], $data); }
     public function createProductAddResponse(array $data): ProductAddResponse { return new ProductAddResponse($data); }
+
+    // Product External Image Request/Response methods
+    public function createProductExternalImageRequest(array $data): ProductExternalImageRequest { return new ProductExternalImageRequest($data); }
+    public function createProductExternalImageRequests(array $data): array { return array_map([$this, 'createProductExternalImageRequest'], $data); }
+    public function createProductExternalImageResponse(array $data): ProductExternalImageResponse { return new ProductExternalImageResponse($data); }
 
     // Validation methods
     public function validateProductData(array $data): bool { try { return $this->createProduct($data)->isValid(); } catch (\Exception $e) { return false; } }

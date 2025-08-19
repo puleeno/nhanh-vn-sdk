@@ -166,6 +166,18 @@ graph TB
     H --> J
 ```
 
+## API Endpoints
+
+- **Product Search**: `/api/product/search`
+- **Product Detail**: `/api/product/detail`
+- **Product Add**: `/api/product/add`
+- **Product External Images**: `/api/product/externalimage`
+- **Product Categories**: `/api/product/category`
+- **Product Brands**: `/api/product/brand`
+- **Product Types**: `/api/product/type`
+- **Product Suppliers**: `/api/product/supplier`
+- **Product Depots**: `/api/product/depot`
+
 ## Data Flow
 
 ```mermaid
