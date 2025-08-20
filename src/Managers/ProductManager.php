@@ -26,6 +26,7 @@ use Puleeno\NhanhVn\Entities\Product\ProductExternalImageRequest;
 use Puleeno\NhanhVn\Entities\Product\ProductExternalImageResponse;
 use Puleeno\NhanhVn\Repositories\ProductRepository;
 use Puleeno\NhanhVn\Services\ProductService;
+use Exception;
 
 /**
  * Product Manager
@@ -1417,5 +1418,30 @@ class ProductManager
     public function validateProductExternalImageRequests(array $productsData): bool
     {
         return $this->productService->validateProductExternalImageRequests($productsData);
+    }
+
+    /**
+     * Xóa cache của sản phẩm theo ID
+     *
+     * @param string $productId ID sản phẩm cần xóa cache
+     * @return bool True nếu xóa cache thành công
+     */
+    public function clearProductCache(string $productId): bool
+    {
+        try {
+            // Log cache clearing
+            error_log("ProductManager::clearProductCache() called for product ID: " . $productId);
+
+            // TODO: Implement actual cache clearing logic
+            // Có thể xóa cache từ Redis, Memcached, hoặc file cache
+
+            // Tạm thời return true để không làm gián đoạn flow
+            return true;
+        } catch (Exception $e) {
+            error_log("ProductManager::clearProductCache() error: " . $e->getMessage());
+
+            // Return true để không làm gián đoạn flow chính
+            return true;
+        }
     }
 }

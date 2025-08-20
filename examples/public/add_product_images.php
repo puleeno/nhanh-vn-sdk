@@ -10,42 +10,129 @@
  * @since 1.0.0
  */
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../boot/client.php';
 
-use Puleeno\NhanhVn\Client\NhanhVnClient;
-use Puleeno\NhanhVn\Config\ClientConfig;
-use Puleeno\NhanhVn\Services\Logger\MonologAdapter;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
+// HTML header
+?>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖼️ Thêm ảnh sản phẩm từ Nhanh.vn API</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Thêm ảnh sản phẩm từ Nhanh.vn API sử dụng SDK</h1>
+        <hr>
 
-// Cấu hình logging
-$logger = new Logger('nhanh-vn-sdk');
-$logger->pushHandler(new StreamHandler(__DIR__ . '/../../logs/nhanh-vn-sdk.log', Logger::DEBUG));
+        <!-- Navigation Bar -->
+        <div class="navigation-bar">
+            <nav>
+                <a href="index.php" class="nav-link">🏠 Trang chủ</a>
+                <a href="get_products.php" class="nav-link">📦 Sản phẩm</a>
+                <a href="get_categories.php" class="nav-link">📂 Danh mục</a>
+                <a href="add_product.php" class="nav-link">➕ Thêm sản phẩm</a>
+                <a href="add_product_images.php" class="nav-link active">🖼️ Thêm ảnh sản phẩm</a>
+                <a href="search_customers.php" class="nav-link">👥 Khách hàng</a>
+            </nav>
+        </div>
 
-// Cấu hình client
-$config = new ClientConfig([
-    'appId' => 'your_app_id',
-    'businessId' => 'your_business_id',
-    'accessToken' => 'your_access_token',
-    'apiVersion' => '2.0',
-    'baseUrl' => 'https://pos.open.nhanh.vn',
-    'timeout' => 30,
-    'retryAttempts' => 3,
-    'retryDelay' => 1000,
-]);
+        <div class="section">
+            <h2>📋 Thông tin Debug</h2>
+            <div class="debug-info">
+                <p><strong>Script:</strong> <?php echo htmlspecialchars(__FILE__); ?></p>
+                <p><strong>Time:</strong> <?php echo date('Y-m-d H:i:s'); ?></p>
+                <p><strong>PHP Version:</strong> <?php echo PHP_VERSION; ?></p>
+            </div>
+        </div>
 
-// Khởi tạo client
-$client = new NhanhVnClient($config, new MonologAdapter($logger));
-
-// Lấy product module
-$productModule = $client->products();
-
-echo "<h1>Demo: Thêm ảnh sản phẩm từ CDN bên ngoài</h1>\n";
-echo "<hr>\n";
+<?php
 
 try {
+    // Kiểm tra xem client có sẵn sàng không
+    if (!isClientReady()) {
+        echo '<div class="status error">';
+        echo '<h3>❌ Chưa có access token</h3>';
+        echo '<p>Hãy chạy OAuth flow trước!</p>';
+        echo '<p><a href="index.php" class="btn btn-primary">🔐 Chạy OAuth Flow</a></p>';
+        echo '</div>';
+        echo '</div></body></html>';
+        exit(1);
+    }
+
+    // Hiển thị thông tin client
+    $clientInfo = getClientInfo();
+    echo '<div class="status success">';
+    echo '<h3>✅ Đã có access token</h3>';
+    echo '<p><strong>Token:</strong> ' . htmlspecialchars($clientInfo['accessTokenPreview']) . '</p>';
+    echo '</div>';
+
+    // Khởi tạo SDK client
+    echo '<div class="section">';
+    echo '<h3>🚀 Khởi tạo SDK Client</h3>';
+
+    try {
+        // Sử dụng boot file để khởi tạo client
+        $client = bootNhanhVnClientSilent();
+
+        echo '<div class="status success">';
+        echo '<h4>✅ SDK client đã sẵn sàng!</h4>';
+        echo '<p><strong>Logger:</strong> NullLogger (không log)</p>';
+        echo '</div>';
+
+    } catch (Exception $e) {
+        echo '<div class="status error">';
+        echo '<h4>❌ Lỗi khởi tạo SDK</h4>';
+        echo '<p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+        echo '<p><strong>Stack trace:</strong></p>';
+        echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+        echo '</div>';
+        echo '</div></body></html>';
+        exit(1);
+    }
+    echo '</div>';
+
+    // Lấy product module
+    echo '<div class="section">';
+    echo '<h3>📦 Khởi tạo Product Module</h3>';
+
+    try {
+        $productModule = $client->products();
+
+        // DEBUG: Kiểm tra Product module
+        echo '<div class="debug-info">';
+        echo '<h4>🔍 Debug Product Module:</h4>';
+        echo '<p><strong>Product Module Class:</strong> ' . get_class($productModule) . '</p>';
+        echo '<p><strong>Product Module Methods:</strong></p>';
+        echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($productModule))) . '</pre>';
+        echo '</div>';
+
+        echo '<div class="status success">';
+        echo '<h4>✅ Product module đã sẵn sàng!</h4>';
+        echo '<p><strong>Module:</strong> ' . get_class($productModule) . '</p>';
+        echo '</div>';
+
+    } catch (Exception $e) {
+        echo '<div class="status error">';
+        echo '<h4>❌ Lỗi khởi tạo Product Module</h4>';
+        echo '<p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+        echo '<p><strong>Stack trace:</strong></p>';
+        echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+        echo '</div>';
+        echo '</div></body></html>';
+        exit(1);
+    }
+    echo '</div>';
+
+    // Bắt đầu các example
+    echo '<div class="section">';
+    echo '<h3>🖼️ Product Image Examples</h3>';
+
     // Example 1: Thêm ảnh cho một sản phẩm
-    echo "<h2>1. Thêm ảnh cho một sản phẩm</h2>\n";
+    echo '<div class="example info">';
+    echo '<h4>Example 1: Thêm ảnh cho một sản phẩm</h4>';
 
     $singleProductData = [
         'productId' => 312311,
@@ -57,38 +144,54 @@ try {
         'mode' => 'update' // Có thể là 'update' hoặc 'deleteall'
     ];
 
-    echo "<h3>Dữ liệu sản phẩm:</h3>\n";
-    echo "<pre>" . json_encode($singleProductData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>\n";
+    echo '<h5>Dữ liệu sản phẩm:</h5>';
+    echo '<pre>' . json_encode($singleProductData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
 
     // Validate dữ liệu trước khi gửi
     if ($productModule->validateExternalImageRequest($singleProductData)) {
-        echo "<p style='color: green;'>✅ Dữ liệu hợp lệ</p>\n";
+        echo '<div class="success">✅ Dữ liệu hợp lệ</div>';
 
         // Gọi API thêm ảnh
         $response = $productModule->addExternalImage($singleProductData);
 
-        echo "<h3>Kết quả:</h3>\n";
-        echo "<p><strong>Thành công:</strong> " . ($response->isSuccess() ? 'Có' : 'Không') . "</p>\n";
-        echo "<p><strong>Mã kết quả:</strong> " . $response->getCode() . "</p>\n";
-        echo "<p><strong>Số sản phẩm đã xử lý:</strong> " . $response->getTotalProcessedProducts() . "</p>\n";
+        // DEBUG: Kiểm tra kết quả trả về
+        echo '<div class="debug-info">';
+        echo '<h6>🔍 Debug API Response:</h6>';
+        echo '<p><strong>Response Type:</strong> ' . gettype($response) . '</p>';
+        echo '<p><strong>Response Class:</strong> ' . (is_object($response) ? get_class($response) : 'N/A') . '</p>';
+        echo '<p><strong>Response Null:</strong> ' . (is_null($response) ? 'Yes' : 'No') . '</p>';
 
-        if ($response->isSuccess()) {
-            echo "<p><strong>ID sản phẩm đã xử lý:</strong> " . implode(', ', $response->getAllProcessedProductIds()) . "</p>\n";
-        } else {
-            echo "<p><strong>Lỗi:</strong> " . $response->getAllMessagesAsString() . "</p>\n";
+        if (is_object($response)) {
+            echo '<p><strong>Response Methods:</strong></p>';
+            echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($response))) . '</pre>';
         }
 
-        echo "<h3>Thông tin tóm tắt:</h3>\n";
-        echo "<pre>" . json_encode($response->getSummary(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>\n";
+        echo '<p><strong>Raw Response:</strong></p>';
+        echo '<pre>' . htmlspecialchars(print_r($response, true)) . '</pre>';
+        echo '</div>';
+
+        echo '<h5>Kết quả:</h5>';
+        echo '<p><strong>Thành công:</strong> ' . ($response->isSuccess() ? 'Có' : 'Không') . '</p>';
+        echo '<p><strong>Mã kết quả:</strong> ' . $response->getCode() . '</p>';
+        echo '<p><strong>Số sản phẩm đã xử lý:</strong> ' . $response->getTotalProcessedProducts() . '</p>';
+
+        if ($response->isSuccess()) {
+            echo '<p><strong>ID sản phẩm đã xử lý:</strong> ' . implode(', ', $response->getAllProcessedProductIds()) . '</p>';
+        } else {
+            echo '<p><strong>Lỗi:</strong> ' . $response->getAllMessagesAsString() . '</p>';
+        }
+
+        echo '<h5>Thông tin tóm tắt:</h5>';
+        echo '<pre>' . json_encode($response->getSummary(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
 
     } else {
-        echo "<p style='color: red;'>❌ Dữ liệu không hợp lệ</p>\n";
+        echo '<div class="error">❌ Dữ liệu không hợp lệ</div>';
     }
-
-    echo "<hr>\n";
+    echo '</div>';
 
     // Example 2: Thêm ảnh cho nhiều sản phẩm cùng lúc (batch)
-    echo "<h2>2. Thêm ảnh cho nhiều sản phẩm cùng lúc (Batch)</h2>\n";
+    echo '<div class="example info">';
+    echo '<h4>Example 2: Thêm ảnh cho nhiều sản phẩm cùng lúc (Batch)</h4>';
 
     $batchProductsData = [
         [
@@ -117,45 +220,61 @@ try {
         ]
     ];
 
-    echo "<h3>Dữ liệu batch:</h3>\n";
-    echo "<pre>" . json_encode($batchProductsData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>\n";
+    echo '<h5>Dữ liệu batch:</h5>';
+    echo '<pre>' . json_encode($batchProductsData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
 
     // Validate dữ liệu batch
     $validationErrors = $productModule->validateExternalImageRequests($batchProductsData);
 
     if (empty($validationErrors)) {
-        echo "<p style='color: green;'>✅ Tất cả dữ liệu đều hợp lệ</p>\n";
+        echo '<div class="success">✅ Tất cả dữ liệu đều hợp lệ</div>';
 
         // Gọi API thêm ảnh batch
         $batchResponse = $productModule->addExternalImages($batchProductsData);
 
-        echo "<h3>Kết quả batch:</h3>\n";
-        echo "<p><strong>Thành công:</strong> " . ($batchResponse->isSuccess() ? 'Có' : 'Không') . "</p>\n";
-        echo "<p><strong>Mã kết quả:</strong> " . $batchResponse->getCode() . "</p>\n";
-        echo "<p><strong>Số sản phẩm đã xử lý:</strong> " . $batchResponse->getTotalProcessedProducts() . "</p>\n";
+        // DEBUG: Kiểm tra kết quả trả về
+        echo '<div class="debug-info">';
+        echo '<h6>🔍 Debug Batch API Response:</h6>';
+        echo '<p><strong>Response Type:</strong> ' . gettype($batchResponse) . '</p>';
+        echo '<p><strong>Response Class:</strong> ' . (is_object($batchResponse) ? get_class($batchResponse) : 'N/A') . '</p>';
+        echo '<p><strong>Response Null:</strong> ' . (is_null($batchResponse) ? 'Yes' : 'No') . '</p>';
+
+        if (is_object($batchResponse)) {
+            echo '<p><strong>Response Methods:</strong></p>';
+            echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($batchResponse))) . '</pre>';
+        }
+
+        echo '<p><strong>Raw Response:</strong></p>';
+        echo '<pre>' . htmlspecialchars(print_r($batchResponse, true)) . '</pre>';
+        echo '</div>';
+
+        echo '<h5>Kết quả batch:</h5>';
+        echo '<p><strong>Thành công:</strong> ' . ($batchResponse->isSuccess() ? 'Có' : 'Không') . '</p>';
+        echo '<p><strong>Mã kết quả:</strong> ' . $batchResponse->getCode() . '</p>';
+        echo '<p><strong>Số sản phẩm đã xử lý:</strong> ' . $batchResponse->getTotalProcessedProducts() . '</p>';
 
         if ($batchResponse->isSuccess()) {
-            echo "<p><strong>ID sản phẩm đã xử lý:</strong> " . implode(', ', $batchResponse->getAllProcessedProductIds()) . "</p>\n";
+            echo '<p><strong>ID sản phẩm đã xử lý:</strong> ' . implode(', ', $batchResponse->getAllProcessedProductIds()) . '</p>';
         } else {
-            echo "<p><strong>Lỗi:</strong> " . $batchResponse->getAllMessagesAsString() . "</p>\n";
+            echo '<p><strong>Lỗi:</strong> ' . $batchResponse->getAllMessagesAsString() . '</p>';
         }
 
-        echo "<h3>Thông tin tóm tắt batch:</h3>\n";
-        echo "<pre>" . json_encode($batchResponse->getSummary(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>\n";
+        echo '<h5>Thông tin tóm tắt batch:</h5>';
+        echo '<pre>' . json_encode($batchResponse->getSummary(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
 
     } else {
-        echo "<p style='color: red;'>❌ Có lỗi validation:</p>\n";
-        echo "<ul>\n";
+        echo '<div class="error">❌ Có lỗi validation:</div>';
+        echo '<ul>';
         foreach ($validationErrors as $error) {
-            echo "<li style='color: red;'>{$error}</li>\n";
+            echo '<li style="color: red;">' . htmlspecialchars($error) . '</li>';
         }
-        echo "</ul>\n";
+        echo '</ul>';
     }
-
-    echo "<hr>\n";
+    echo '</div>';
 
     // Example 3: Demo các trường hợp lỗi validation
-    echo "<h2>3. Demo các trường hợp lỗi validation</h2>\n";
+    echo '<div class="example info">';
+    echo '<h4>Example 3: Demo các trường hợp lỗi validation</h4>';
 
     $invalidDataExamples = [
         [
@@ -202,58 +321,59 @@ try {
     ];
 
     foreach ($invalidDataExamples as $example) {
-        echo "<h4>{$example['name']}:</h4>\n";
-        echo "<pre>" . json_encode($example['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>\n";
+        echo '<h5>' . htmlspecialchars($example['name']) . ':</h5>';
+        echo '<pre>' . json_encode($example['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
 
         $isValid = $productModule->validateExternalImageRequest($example['data']);
-        echo "<p style='color: " . ($isValid ? 'green' : 'red') . ";'>" .
-             ($isValid ? '✅ Hợp lệ' : '❌ Không hợp lệ') . "</p>\n";
-        echo "<br>\n";
+        echo '<p style="color: ' . ($isValid ? 'green' : 'red') . ';">' .
+             ($isValid ? '✅ Hợp lệ' : '❌ Không hợp lệ') . '</p>';
+        echo '<br>';
     }
-
-    echo "<hr>\n";
+    echo '</div>';
 
     // Example 4: Demo giới hạn batch size
-    echo "<h2>4. Demo giới hạn batch size (tối đa 10 sản phẩm)</h2>\n";
+    echo '<div class="example info">';
+    echo '<h4>Example 4: Demo giới hạn batch size (tối đa 10 sản phẩm)</h4>';
 
     $largeBatchData = array_fill(0, 12, [
         'productId' => rand(100000, 999999),
         'externalImages' => ['https://example.com/image.jpg']
     ]);
 
-    echo "<p><strong>Số sản phẩm trong batch:</strong> " . count($largeBatchData) . "</p>\n";
+    echo '<p><strong>Số sản phẩm trong batch:</strong> ' . count($largeBatchData) . '</p>';
 
     try {
         $largeBatchResponse = $productModule->addExternalImages($largeBatchData);
-        echo "<p style='color: green;'>✅ Batch xử lý thành công</p>\n";
+        echo '<div class="success">✅ Batch xử lý thành công</div>';
     } catch (\InvalidArgumentException $e) {
-        echo "<p style='color: red;'>❌ Lỗi: " . htmlspecialchars($e->getMessage()) . "</p>\n";
+        echo '<div class="error">❌ Lỗi: ' . htmlspecialchars($e->getMessage()) . '</div>';
     }
+    echo '</div>';
+
+    echo '<div class="example info">';
+    echo '<h4>Summary</h4>';
+    echo '<p>This example demonstrates the Product Image module functionality including:</p>';
+    echo '<ul>';
+    echo '<li>Adding external images to single products</li>';
+    echo '<li>Batch processing multiple products</li>';
+    echo '<li>Request validation and error handling</li>';
+    echo '<li>Batch size limitations</li>';
+    echo '</ul>';
+    echo '<p>The module provides a clean API for managing product images from external CDNs.</p>';
+    echo '</div>';
+
+    echo '</div>'; // End of examples section
 
 } catch (Exception $e) {
-    echo "<h2>❌ Lỗi xảy ra:</h2>\n";
-    echo "<p style='color: red;'><strong>Message:</strong> " . htmlspecialchars($e->getMessage()) . "</p>\n";
-    echo "<p style='color: red;'><strong>File:</strong> " . htmlspecialchars($e->getFile()) . "</p>\n";
-    echo "<p style='color: red;'><strong>Line:</strong> " . $e->getLine() . "</p>\n";
-
-    if ($logger) {
-        $logger->error('Error in add_product_images example', [
-            'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => $e->getTraceAsString()
-        ]);
-    }
+    echo '<div class="status error">';
+    echo '<h3>❌ Lỗi chung</h3>';
+    echo '<p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+    echo '<p><strong>Stack trace:</strong></p>';
+    echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+    echo '</div>';
 }
 
-echo "<hr>\n";
-echo "<h2>📚 Tài liệu tham khảo:</h2>\n";
-echo "<ul>\n";
-echo "<li><strong>API Endpoint:</strong> /api/product/externalimage</li>\n";
-echo "<li><strong>Giới hạn:</strong> Tối đa 10 sản phẩm mỗi request, mỗi sản phẩm tối đa 20 ảnh</li>\n";
-echo "<li><strong>Mode:</strong> 'update' (mặc định) hoặc 'deleteall'</li>\n";
-echo "<li><strong>Lưu ý:</strong> Nhanh.vn sẽ không tải ảnh về mà dùng trực tiếp URL từ CDN</li>\n";
-echo "</ul>\n";
-
-// Giải phóng memory
-unset($client, $productModule, $config, $logger);
+echo '</div>'; // End of container
+echo '</body>';
+echo '</html>';
+?>

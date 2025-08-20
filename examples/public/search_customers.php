@@ -95,6 +95,15 @@ try {
         // Sử dụng Customer module từ singleton client
         $customerModule = $client->customers();
 
+        // DEBUG: Kiểm tra Customer module
+        echo '<div class="debug-info">';
+        echo '<h4>🔍 Debug Customer Module:</h4>';
+        echo '<p><strong>Customer Module Class:</strong> ' . get_class($customerModule) . '</p>';
+        echo '<p><strong>Customer Module Methods:</strong></p>';
+        echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($customerModule))) . '</pre>';
+        echo '<p><strong>Client Instance:</strong> ' . get_class($client) . '</p>';
+        echo '</div>';
+
         echo '<div class="status success">';
         echo '<h4>✅ Customer module đã sẵn sàng!</h4>';
         echo '<p><strong>Module:</strong> ' . get_class($customerModule) . '</p>';
@@ -123,6 +132,22 @@ try {
 
     try {
         $response = $customerModule->getAll(1, 10);
+
+        // DEBUG: Kiểm tra kết quả trả về
+        echo '<div class="debug-info">';
+        echo '<h5>🔍 Debug API Response:</h5>';
+        echo '<p><strong>Response Type:</strong> ' . gettype($response) . '</p>';
+        echo '<p><strong>Response Class:</strong> ' . (is_object($response) ? get_class($response) : 'N/A') . '</p>';
+        echo '<p><strong>Response Null:</strong> ' . (is_null($response) ? 'Yes' : 'No') . '</p>';
+
+        if (is_object($response)) {
+            echo '<p><strong>Response Methods:</strong></p>';
+            echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($response))) . '</pre>';
+        }
+
+        echo '<p><strong>Raw Response:</strong></p>';
+        echo '<pre>' . htmlspecialchars(print_r($response, true)) . '</pre>';
+        echo '</div>';
 
         if ($response->isSuccess()) {
             echo '<div class="success">✅ Search successful!</div>';
@@ -167,6 +192,22 @@ try {
     try {
         $response = $customerModule->searchById(1);
 
+        // DEBUG: Kiểm tra kết quả trả về
+        echo '<div class="debug-info">';
+        echo '<h5>🔍 Debug API Response:</h5>';
+        echo '<p><strong>Response Type:</strong> ' . gettype($response) . '</p>';
+        echo '<p><strong>Response Class:</strong> ' . (is_object($response) ? get_class($response) : 'N/A') . '</p>';
+        echo '<p><strong>Response Null:</strong> ' . (is_null($response) ? 'Yes' : 'No') . '</p>';
+
+        if (is_object($response)) {
+            echo '<p><strong>Response Methods:</strong></p>';
+            echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($response))) . '</pre>';
+        }
+
+        echo '<p><strong>Raw Response:</strong></p>';
+        echo '<pre>' . htmlspecialchars(print_r($response, true)) . '</pre>';
+        echo '</div>';
+
         if ($response->isSuccess()) {
             echo '<div class="success">✅ Search successful!</div>';
             echo '<p><strong>Total Customers Found:</strong> ' . $response->getTotalCustomers() . '</p>';
@@ -204,6 +245,22 @@ try {
     try {
         $response = $customerModule->searchByMobile('0981234567');
 
+        // DEBUG: Kiểm tra kết quả trả về
+        echo '<div class="debug-info">';
+        echo '<h5>🔍 Debug API Response:</h5>';
+        echo '<p><strong>Response Type:</strong> ' . gettype($response) . '</p>';
+        echo '<p><strong>Response Class:</strong> ' . (is_object($response) ? get_class($response) : 'N/A') . '</p>';
+        echo '<p><strong>Response Null:</strong> ' . (is_null($response) ? 'Yes' : 'No') . '</p>';
+
+        if (is_object($response)) {
+            echo '<p><strong>Response Methods:</strong></p>';
+            echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($response))) . '</pre>';
+        }
+
+        echo '<p><strong>Raw Response:</strong></p>';
+        echo '<pre>' . htmlspecialchars(print_r($response, true)) . '</pre>';
+        echo '</div>';
+
         if ($response->isSuccess()) {
             echo '<div class="success">✅ Search successful!</div>';
             echo '<p><strong>Total Customers Found:</strong> ' . $response->getTotalCustomers() . '</p>';
@@ -239,6 +296,22 @@ try {
 
     try {
         $response = $customerModule->getRetailCustomers(1, 5);
+
+        // DEBUG: Kiểm tra kết quả trả về
+        echo '<div class="debug-info">';
+        echo '<h5>🔍 Debug API Response:</h5>';
+        echo '<p><strong>Response Type:</strong> ' . gettype($response) . '</p>';
+        echo '<p><strong>Response Class:</strong> ' . (is_object($response) ? get_class($response) : 'N/A') . '</p>';
+        echo '<p><strong>Response Null:</strong> ' . (is_null($response) ? 'Yes' : 'No') . '</p>';
+
+        if (is_object($response)) {
+            echo '<p><strong>Response Methods:</strong></p>';
+            echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($response))) . '</pre>';
+        }
+
+        echo '<p><strong>Raw Response:</strong></p>';
+        echo '<pre>' . htmlspecialchars(print_r($response, true)) . '</pre>';
+        echo '</div>';
 
         if ($response->isSuccess()) {
             echo '<div class="success">✅ Search successful!</div>';
@@ -278,6 +351,22 @@ try {
         $toDate = '2024-12-31 23:59:59';
 
         $response = $customerModule->getByDateRange($fromDate, $toDate, 1, 3);
+
+        // DEBUG: Kiểm tra kết quả trả về
+        echo '<div class="debug-info">';
+        echo '<h5>🔍 Debug API Response:</h5>';
+        echo '<p><strong>Response Type:</strong> ' . gettype($response) . '</p>';
+        echo '<p><strong>Response Class:</strong> ' . (is_object($response) ? get_class($response) : 'N/A') . '</p>';
+        echo '<p><strong>Response Null:</strong> ' . (is_null($response) ? 'Yes' : 'No') . '</p>';
+
+        if (is_object($response)) {
+            echo '<p><strong>Response Methods:</strong></p>';
+            echo '<pre>' . htmlspecialchars(implode(', ', get_class_methods($response))) . '</pre>';
+        }
+
+        echo '<p><strong>Raw Response:</strong></p>';
+        echo '<pre>' . htmlspecialchars(print_r($response, true)) . '</pre>';
+        echo '</div>';
 
         if ($response->isSuccess()) {
             echo '<div class="success">✅ Search successful!</div>';
@@ -322,7 +411,15 @@ try {
     echo '<h5>Valid Request:</h5>';
     echo '<pre>' . json_encode($validRequest, JSON_PRETTY_PRINT) . '</pre>';
 
-    if ($customerModule->validateSearchRequest($validRequest)) {
+    // DEBUG: Kiểm tra validation result
+    $validationResult = $customerModule->validateSearchRequest($validRequest);
+    echo '<div class="debug-info">';
+    echo '<h6>🔍 Debug Validation Result:</h6>';
+    echo '<p><strong>Validation Result:</strong> ' . ($validationResult ? 'true' : 'false') . '</p>';
+    echo '<p><strong>Validation Result Type:</strong> ' . gettype($validationResult) . '</p>';
+    echo '</div>';
+
+    if ($validationResult) {
         echo '<div class="success">✅ Request is valid</div>';
     } else {
         echo '<div class="error">❌ Request is invalid</div>';
@@ -341,7 +438,15 @@ try {
     echo '<h5>Invalid Request:</h5>';
     echo '<pre>' . json_encode($invalidRequest, JSON_PRETTY_PRINT) . '</pre>';
 
-    if ($customerModule->validateSearchRequest($invalidRequest)) {
+    // DEBUG: Kiểm tra validation result
+    $validationResult = $customerModule->validateSearchRequest($invalidRequest);
+    echo '<div class="debug-info">';
+    echo '<h6>🔍 Debug Validation Result:</h6>';
+    echo '<p><strong>Validation Result:</strong> ' . ($validationResult ? 'true' : 'false') . '</p>';
+    echo '<p><strong>Validation Result Type:</strong> ' . gettype($validationResult) . '</p>';
+    echo '</div>';
+
+    if ($validationResult) {
         echo '<div class="success">✅ Request is valid</div>';
     } else {
         echo '<div class="error">❌ Request is invalid</div>';

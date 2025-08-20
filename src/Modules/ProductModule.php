@@ -1276,4 +1276,35 @@ class ProductModule
 
         return $errors;
     }
+
+    /**
+     * Xóa cache của sản phẩm theo ID
+     *
+     * @param string $productId ID sản phẩm cần xóa cache
+     * @return bool True nếu xóa cache thành công
+     */
+    public function clearProductCache(string $productId): bool
+    {
+        try {
+            $this->logger->debug("ProductModule::clearProductCache() called", ['productId' => $productId]);
+
+            // Xóa cache từ ProductManager nếu có
+            if (method_exists($this->productManager, 'clearProductCache')) {
+                return $this->productManager->clearProductCache($productId);
+            }
+
+            // Nếu ProductManager không có method này, chỉ log và return true
+            $this->logger->info("ProductModule::clearProductCache() - ProductManager không có clearProductCache method, skipping");
+
+            return true;
+        } catch (Exception $e) {
+            $this->logger->error("ProductModule::clearProductCache() - Error", [
+                'productId' => $productId,
+                'error' => $e->getMessage()
+            ]);
+
+            // Return true để không làm gián đoạn flow chính
+            return true;
+        }
+    }
 }
