@@ -139,11 +139,6 @@
 
                 <!-- Additional Examples -->
                 <div class="example-item">
-                    <h3>📋 Orders (Legacy)</h3>
-                    <p>Demo legacy orders API với các tính năng cũ</p>
-                    <a href="orders.php" class="btn btn-secondary">Orders Legacy</a>
-                </div>
-                <div class="example-item">
                     <h3>⚙️ Config Example</h3>
                     <p>File cấu hình mẫu cho Nhanh.vn SDK</p>
                     <a href="config-example.json" class="btn btn-info">Config Example</a>
