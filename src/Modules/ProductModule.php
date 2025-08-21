@@ -132,6 +132,10 @@ class ProductModule
             $searchData['icpp'] = min((int) $criteria['limit'], 100); // Tối đa 100
         }
 
+        if (isset($criteria['icpp'])) {
+            $searchData['icpp'] = min((int) $criteria['icpp'], 100); // Tối đa 100
+        }
+
         if (isset($criteria['sort'])) {
             $searchData['sort'] = $criteria['sort'];
         }
