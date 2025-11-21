@@ -109,49 +109,56 @@ try {
         echo '<h3>📝 Xử lý cập nhật đơn hàng</h3>';
 
         try {
-            // Tạo OrderUpdateRequest từ form data
-            $updateRequest = new OrderUpdateRequest();
+            // Chuẩn bị dữ liệu từ form
+            $updateData = [];
 
             // Thông tin định danh đơn hàng
-            $updateRequest->set('id', $_POST['id'] ?? '');
-            $updateRequest->set('orderId', $_POST['orderId'] ?? '');
+            if (!empty($_POST['id'])) {
+                $updateData['id'] = $_POST['id'];
+            }
+            if (!empty($_POST['orderId'])) {
+                $updateData['orderId'] = $_POST['orderId'];
+            }
 
             // Thông tin cập nhật
             if (!empty($_POST['autoSend'])) {
-                $updateRequest->set('autoSend', (int)$_POST['autoSend']);
+                $updateData['autoSend'] = (int)$_POST['autoSend'];
             }
 
             if (!empty($_POST['moneyTransfer'])) {
-                $updateRequest->set('moneyTransfer', (float)$_POST['moneyTransfer']);
+                $updateData['moneyTransfer'] = (float)$_POST['moneyTransfer'];
             }
 
             if (!empty($_POST['moneyTransferAccountId'])) {
-                $updateRequest->set('moneyTransferAccountId', (int)$_POST['moneyTransferAccountId']);
+                $updateData['moneyTransferAccountId'] = (int)$_POST['moneyTransferAccountId'];
             }
 
             if (!empty($_POST['paymentCode'])) {
-                $updateRequest->set('paymentCode', $_POST['paymentCode']);
+                $updateData['paymentCode'] = $_POST['paymentCode'];
             }
 
             if (!empty($_POST['paymentGateway'])) {
-                $updateRequest->set('paymentGateway', $_POST['paymentGateway']);
+                $updateData['paymentGateway'] = $_POST['paymentGateway'];
             }
 
             if (!empty($_POST['status'])) {
-                $updateRequest->set('status', $_POST['status']);
+                $updateData['status'] = $_POST['status'];
             }
 
             if (!empty($_POST['description'])) {
-                $updateRequest->set('description', $_POST['description']);
+                $updateData['description'] = $_POST['description'];
             }
 
             if (!empty($_POST['privateDescription'])) {
-                $updateRequest->set('privateDescription', $_POST['privateDescription']);
+                $updateData['privateDescription'] = $_POST['privateDescription'];
             }
 
             if (!empty($_POST['customerShipFee'])) {
-                $updateRequest->set('customerShipFee', (float)$_POST['customerShipFee']);
+                $updateData['customerShipFee'] = (float)$_POST['customerShipFee'];
             }
+
+            // Tạo OrderUpdateRequest từ array data
+            $updateRequest = new OrderUpdateRequest($updateData);
 
             // Kiểm tra validation
             if (!$updateRequest->isValid()) {
