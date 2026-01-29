@@ -24,13 +24,28 @@ abstract class AbstractEntity implements EntityInterface
      */
     protected array $errors = [];
 
+    protected array $guarded = ['orders'];
+
     /**
      * Constructor
      */
     public function __construct(array $data = [])
     {
         $this->attributes = $data;
+        $this->fill($data);
         $this->validate();
+    }
+
+    protected function fill(array $data): void
+    {
+        foreach ($data as $key => $value) {
+            if (in_array($key, $this->guarded)) {
+                continue;
+            }
+            if (property_exists($this, $key)) {
+                $this->{$key} = $value;
+            }
+        }
     }
 
     /**
