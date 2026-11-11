@@ -10,7 +10,8 @@ use Puleeno\NhanhVn\Exceptions\ConfigurationException;
 class ClientConfig
 {
     private const DEFAULT_API_DOMAIN = 'https://pos.open.nhanh.vn';
-    private const DEFAULT_API_VERSION = '2.0';
+    private const DEFAULT_API_VERSION = '3.0';
+    private const DEFAULT_OAUTH_SERVICE = 'pos';
     private const DEFAULT_TIMEOUT = 30;
     private const DEFAULT_RETRY_ATTEMPTS = 3;
     private const DEFAULT_RATE_LIMIT = 150; // requests per 30 seconds
@@ -27,6 +28,8 @@ class ClientConfig
     private int $rateLimit;
     private bool $enableLogging;
     private string $logLevel;
+    private string $oauthService;
+    private ?string $verifyCode;
 
     public function __construct(array $config = [])
     {
@@ -44,6 +47,8 @@ class ClientConfig
         $this->rateLimit = $config['rate_limit'] ?? self::DEFAULT_RATE_LIMIT;
         $this->enableLogging = $config['enable_logging'] ?? false;
         $this->logLevel = $config['log_level'] ?? 'info';
+        $this->oauthService = $config['oauthService'] ?? $config['service'] ?? self::DEFAULT_OAUTH_SERVICE;
+        $this->verifyCode = $config['verifyCode'] ?? null;
 
         $this->validateConfig();
     }
@@ -206,21 +211,42 @@ class ClientConfig
     }
 
     /**
-     * Lấy OAuth URL cho Get Access Code
+     * Lấy OAuth URL cho Get Access Code (v3 spec: appId, service, verifyCode, returnLink)
      */
-    public function getOAuthUrl(): string
+    public function getOAuthUrl(?string $verifyCode = null, ?string $service = null): string
     {
         if ($this->returnLink === null) {
             throw new ConfigurationException('Redirect URL không được cung cấp. Không thể tạo OAuth URL.');
         }
 
+        $verifyCode = $verifyCode ?? $this->verifyCode;
+        $service = $service ?? $this->oauthService ?? self::DEFAULT_OAUTH_SERVICE;
+
         $params = [
-            'version' => $this->apiVersion,
             'appId' => $this->appId,
-            'returnLink' => $this->returnLink
+            'service' => $service ?: self::DEFAULT_OAUTH_SERVICE,
+            'returnLink' => $this->returnLink,
         ];
+        if (!empty($verifyCode)) {
+            $params['verifyCode'] = $verifyCode;
+        }
 
         return 'https://nhanh.vn/oauth?' . http_build_query($params);
+    }
+
+    public function getOauthService(): string
+    {
+        return $this->oauthService ?? self::DEFAULT_OAUTH_SERVICE;
+    }
+
+    public function getVerifyCode(): ?string
+    {
+        return $this->verifyCode;
+    }
+
+    public function setVerifyCode(?string $verifyCode): void
+    {
+        $this->verifyCode = $verifyCode;
     }
 
     /**

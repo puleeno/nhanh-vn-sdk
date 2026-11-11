@@ -60,70 +60,139 @@ class ProductModule
         $this->logger = $logger;
     }
 
-        /**
+    /**
      * Tìm kiếm sản phẩm theo các tiêu chí
      *
-     * @param array $criteria Các tiêu chí tìm kiếm
+     * @param array $criteria Các tiêu chí tìm kiếm (v3: filters/paginator hoặc key-value filter)
      * @return Collection Collection các sản phẩm tìm được
      * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
      */
     public function search(array $criteria = []): Collection
     {
-        // DEBUG: Log search criteria
         $this->logger->debug("ProductModule::search() called with criteria", $criteria);
 
         try {
-            // Chuẩn bị search criteria theo API Nhanh.vn
             $searchData = $this->prepareSearchCriteria($criteria);
+            $isV3 = $this->httpService->isV3();
+            $endpoint = $isV3 ? '/v3.0/product/list' : '/product/search';
+            $this->logger->info("ProductModule::search() calling Nhanh.vn API", ['endpoint' => $endpoint, 'payload' => $searchData]);
 
-            // Gọi API Nhanh.vn
-            $this->logger->info("ProductModule::search() calling Nhanh.vn API", $searchData);
+            $response = $this->httpService->callApi($endpoint, $searchData);
 
-            $response = $this->httpService->callApi('/product/search', $searchData);
+            $data = $response['data'] ?? null;
+            $productsData = null;
+            if ($isV3) {
+                // v3: data is array of products
+                if (is_array($data) && array_keys($data) === range(0, count($data) - 1)) {
+                    $productsData = $data;
+                } elseif (is_array($data) && isset($data['products']) && is_array($data['products'])) {
+                    $productsData = $data['products'];
+                } elseif (is_array($data)) {
+                    $productsData = $data;
+                }
+            } else {
+                if (is_array($data) && isset($data['products'])) {
+                    $productsData = $data['products'];
+                }
+            }
 
-                        // Parse response
-            if (!isset($response['data']) || !isset($response['data']['products'])) {
+            if (empty($productsData)) {
                 $this->logger->warning("ProductModule::search() - Response không có products data");
-                // Giải phóng memory
                 unset($response, $searchData);
                 return new Collection([]);
             }
 
-            $this->logger->info("ProductModule::search() - Found " . count($response['data']['products']) . " products from API");
+            $this->logger->info("ProductModule::search() - Found " . count($productsData) . " products from API");
 
-            // Sử dụng helper method để tạo entities với memory management
-            $productEntities = $this->createEntitiesFromApiResponse($response['data'], 'createProduct', 'products');
+            // Normalize to legacy shape for entity creation helper
+            $normalized = $isV3 ? ['products' => $productsData] : ($data ?? ['products' => $productsData]);
+            $productEntities = $this->createEntitiesFromApiResponse($normalized, 'createProduct', 'products');
 
             $this->logger->info("ProductModule::search() - Created " . count($productEntities) . " product entities");
-
-            // Giải phóng memory trước khi return
-            unset($response, $searchData);
-
+            unset($response, $searchData, $productsData, $normalized);
             return new Collection($productEntities);
         } catch (Exception $e) {
             $this->logger->error("ProductModule::search() error", ['error' => $e->getMessage()]);
-            // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) {
-                unset($response);
-            }
-            if (isset($searchData)) {
-                unset($searchData);
-            }
+            if (isset($response)) unset($response);
+            if (isset($searchData)) unset($searchData);
             throw $e;
         }
     }
 
     /**
      * Chuẩn bị search criteria theo format API Nhanh.vn
+     * v3: {filters, paginator, dataOptions}
      *
      * @param array $criteria Các tiêu chí tìm kiếm từ người dùng
-     * @return array Các tiêu chí đã được format theo chuẩn API Nhanh.vn
+     * @return array Payload API
      */
     private function prepareSearchCriteria(array $criteria): array
     {
+        // v3: caller can pass {filters,paginator,dataOptions}
+        if ($this->httpService->isV3() && (isset($criteria['filters']) || isset($criteria['paginator']) || isset($criteria['dataOptions']))) {
+            $payload = [];
+            if (!empty($criteria['filters']) && is_array($criteria['filters'])) $payload['filters'] = $criteria['filters'];
+            if (!empty($criteria['paginator']) && is_array($criteria['paginator'])) $payload['paginator'] = $criteria['paginator'];
+            if (!empty($criteria['dataOptions']) && is_array($criteria['dataOptions'])) $payload['dataOptions'] = $criteria['dataOptions'];
+            return $payload;
+        }
+
+        if ($this->httpService->isV3()) {
+            $filters = [];
+            $map = [
+                'name' => 'name',
+                'parentId' => 'parentId',
+                'categoryId' => 'categoryId',
+                'status' => 'status',
+                'priceFrom' => 'priceFrom',
+                'priceTo' => 'priceTo',
+                'brandId' => 'brandId',
+                'imei' => 'imei',
+                'showHot' => 'showHot',
+                'showNew' => 'showNew',
+                'showHome' => 'showHome',
+                'updatedDateTimeFrom' => 'updatedAtFrom',
+                'updatedAtFrom' => 'updatedAtFrom',
+                'updatedDateTimeTo' => 'updatedAtTo',
+                'updatedAtTo' => 'updatedAtTo',
+                'gpid' => 'gpid',
+            ];
+            foreach ($map as $from => $to) {
+                if (array_key_exists($from, $criteria) && $criteria[$from] !== null && $criteria[$from] !== '') {
+                    $filters[$to] = $criteria[$from];
+                }
+            }
+            if (isset($criteria['categoryIds']) && is_array($criteria['categoryIds'])) {
+                $filters['categoryIds'] = array_values($criteria['categoryIds']);
+            }
+            if (isset($criteria['brandIds']) && is_array($criteria['brandIds'])) {
+                $filters['brandIds'] = array_values($criteria['brandIds']);
+            }
+            if (isset($criteria['ids']) && is_array($criteria['ids'])) {
+                $filters['ids'] = array_values($criteria['ids']);
+            }
+
+            $paginator = [];
+            $size = $criteria['icpp'] ?? $criteria['limit'] ?? $criteria['size'] ?? null;
+            if ($size !== null) {
+                $paginator['size'] = max(1, min((int) $size, 100));
+            }
+            if (!empty($criteria['next'])) {
+                $paginator['next'] = $criteria['next'];
+            }
+            if (!empty($criteria['sort']) && is_array($criteria['sort'])) {
+                $paginator['sort'] = $criteria['sort'];
+            }
+
+            $payload = [];
+            if (!empty($filters)) $payload['filters'] = $filters;
+            if (!empty($paginator)) $payload['paginator'] = $paginator;
+            return $payload;
+        }
+
         $searchData = [];
 
-        // Các field cơ bản
+        // Các field cơ bản (legacy v2)
         if (isset($criteria['page'])) {
             $searchData['page'] = (int) $criteria['page'];
         }
@@ -196,313 +265,50 @@ class ProductModule
     }
 
     /**
-     * Lấy chi tiết sản phẩm theo ID
-     *
-     * @param int $productId ID sản phẩm trên Nhanh.vn
-     * @return Product|null Sản phẩm chi tiết hoặc null nếu không tìm thấ
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Lấy chi tiết sản phẩm theo ID
-     *
-     * @param int $productId ID sản phẩm trên Nhanh.vn
-     * @return Product|null Sản phẩm chi tiết hoặc null nếu không tìm thấy
-     * @throws Exception Khi có lỗi xảy ra trong quá trình lấy chi tiết
+     * Lấy chi tiết sản phẩm theo ID (v3: /v3.0/product/detail, filters.id)
      */
     public function detail(int $productId): ?Product
     {
         $this->logger->debug("ProductModule::detail() called with productId", ['productId' => $productId]);
-
         try {
-            // Gọi API Nhanh.vn để lấy chi tiết sản phẩm
-            $this->logger->info("ProductModule::detail() calling Nhanh.vn API", ['productId' => $productId]);
+            $isV3 = $this->httpService->isV3();
+            $endpoint = $isV3 ? '/v3.0/product/detail' : '/product/detail';
+            $payload = $isV3 ? ['filters' => ['id' => $productId]] : $productId;
+            $response = $this->httpService->callApi($endpoint, $payload);
 
-            $response = $this->httpService->callApi('/product/detail', $productId);
-
-            // Parse response
             if (!isset($response['data'])) {
-                $this->logger->warning("ProductModule::detail() - Response không có 'data' field", [
-                    'response_keys' => array_keys($response ?? []),
-                    'response' => $response
-                ]);
-                unset($response);
+                $this->logger->warning("ProductModule::detail() - Response không có data", ['productId' => $productId]);
                 return null;
             }
 
-            // Kiểm tra cấu trúc response
-            $this->logger->debug("ProductModule::detail() - Response structure", [
-                'data_type' => gettype($response['data']),
-                'data_content' => $response['data']
-            ]);
-
-            // API detail có thể trả về data trực tiếp hoặc trong array
-            $productData = null;
-            if (is_array($response['data'])) {
-                if (empty($response['data'])) {
-                    $this->logger->warning("ProductModule::detail() - Response data array rỗng");
-                    unset($response);
-                    return null;
-                }
-                // Nếu data là array, lấy phần tử đầu tiên một cách an toàn
-                $firstKey = array_key_first($response['data']);
-                if ($firstKey !== null) {
-                    $productData = $response['data'][$firstKey];
+            $productData = $response['data'];
+            if (is_array($productData)) {
+                // v3 returns product object in data; legacy may return map/list
+                if (isset($productData['id']) || isset($productData['name']) || isset($productData['code'])) {
+                    // object-like
+                } elseif (array_keys($productData) === range(0, count($productData) - 1)) {
+                    $productData = $productData[0] ?? null;
                 } else {
-                    $this->logger->warning("ProductModule::detail() - Không thể lấy key đầu tiên từ data array");
-                    unset($response);
-                    return null;
+                    $firstKey = array_key_first($productData);
+                    $productData = $firstKey !== null ? $productData[$firstKey] : null;
                 }
-            } else {
-                // Nếu data không phải array, có thể là object hoặc data trực tiếp
-                $productData = $response['data'];
             }
-
-            // Kiểm tra productData có hợp lệ không
             if ($productData === null) {
-                $this->logger->warning("ProductModule::detail() - Product data là null");
-                unset($response);
+                return null;
+            }
+            if (is_object($productData)) {
+                $productData = (array) $productData;
+            }
+            if (!is_array($productData)) {
+                $this->logger->warning("ProductModule::detail() - Invalid product data", ['type' => gettype($productData)]);
                 return null;
             }
 
-            // Nếu productData không phải array, cố gắng convert
-            if (!is_array($productData)) {
-                if (is_object($productData)) {
-                    $productData = (array) $productData;
-                } else {
-                    $this->logger->warning("ProductModule::detail() - Product data không phải array hoặc object", [
-                        'productData' => $productData,
-                        'productData_type' => gettype($productData)
-                    ]);
-                    unset($response);
-                    return null;
-                }
-            }
-
-            $this->logger->info("ProductModule::detail() - Found product data", [
-                'productId' => $productId,
-                'data_keys' => array_keys($productData)
-            ]);
-
-            // Tạo Product entity
             $product = $this->productManager->createProduct($productData);
-
-            $this->logger->info("ProductModule::detail() - Created product entity", ['productId' => $productId]);
-
-            // Giải phóng memory
             unset($response, $productData);
-
             return $product;
         } catch (Exception $e) {
             $this->logger->error("ProductModule::detail() error", ['error' => $e->getMessage(), 'productId' => $productId]);
-            // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) {
-                unset($response);
-            }
-            if (isset($productData)) {
-                unset($productData);
-            }
             throw $e;
         }
     }
@@ -535,25 +341,25 @@ class ProductModule
             $apiData = $productData->toApiFormat();
             $this->logger->debug("ProductModule::add() - API request data", $apiData);
 
-            // Call Nhanh.vn API
-            $response = $this->httpService->callApi('/product/add', $apiData);
+            // Call Nhanh.vn API (v3: body is array of products)
+            $endpoint = $this->httpService->isV3() ? '/v3.0/product/add' : '/product/add';
+            $payload = $this->httpService->isV3() ? [$apiData] : $apiData;
+            $response = $this->httpService->callApi($endpoint, $payload);
 
-            // Parse response
             if (!isset($response['data'])) {
                 $this->logger->warning("ProductModule::add() - Response không có data");
                 throw new Exception('API response không hợp lệ');
             }
 
-            // Create response entity
             $addResponse = $this->productManager->createProductAddResponse($response['data']);
 
             $this->logger->info("ProductModule::add() - Success", [
-                'system_id' => $productData->getId(),
-                'nhanh_id' => $addResponse->getNhanhId($productData->getId())
+                'system_id' => method_exists($productData, 'getId') ? $productData->getId() : null,
             ]);
 
-            // Clear cache for this product
-            $this->clearProductCache($productData->getId());
+            if (method_exists($productData, 'getId')) {
+                $this->clearProductCache($productData->getId());
+            }
 
             return $addResponse;
         } catch (Exception $e) {
@@ -577,8 +383,9 @@ class ProductModule
             throw new Exception('Danh sách sản phẩm không được để trống');
         }
 
-        if (count($productsData) > 300) {
-            throw new Exception('Chỉ được thêm tối đa 300 sản phẩm mỗi lần');
+        $limit = $this->httpService->isV3() ? 100 : 300;
+        if (count($productsData) > $limit) {
+            throw new Exception('Chỉ được thêm tối đa ' . $limit . ' sản phẩm mỗi lần');
         }
 
         try {
@@ -605,7 +412,8 @@ class ProductModule
             $this->logger->debug("ProductModule::addBatch() - Batch API request data", ['count' => count($batchData)]);
 
             // Call Nhanh.vn batch API
-            $response = $this->httpService->callApi('/product/add', $batchData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/product/add' : '/product/add';
+            $response = $this->httpService->callApi($endpoint, $batchData);
 
             // Parse response
             if (!isset($response['data'])) {
@@ -803,42 +611,42 @@ class ProductModule
      * @return array Mảng các danh mục sản phẩm
      * @throws Exception Khi có lỗi xảy ra trong quá trình lấy danh mục
      */
-    public function getCategories(): array
+    /**
+     * Lấy danh mục sản phẩm (v3: POST /v3.0/product/category)
+     */
+    public function getCategories(array $filters = [], array $paginator = []): array
     {
         try {
             $this->logger->info("ProductModule::getCategories() - Calling Nhanh.vn API");
+            $payload = [];
+            if (!empty($filters)) {
+                $payload['filters'] = $filters;
+            }
+            if (!empty($paginator)) {
+                $payload['paginator'] = $paginator;
+            }
 
-            // Gọi API Nhanh.vn để lấy categories
-            $response = $this->httpService->callApi('/product/category', []);
-
-            // DEBUG: Log full response để kiểm tra structure
+            $endpoint = $this->httpService->isV3() ? '/v3.0/product/category' : '/product/category';
+            $response = $this->httpService->callApi($endpoint, $payload);
             $this->logger->info("ProductModule::getCategories() - Full API Response", ['response' => $response]);
 
-            if (!isset($response['data']) || !is_array($response['data'])) {
+            $data = $response['data'] ?? null;
+            if (!is_array($data)) {
                 $this->logger->warning("ProductModule::getCategories() - Response không có categories data", [
                     'response_keys' => array_keys($response ?? []),
                     'has_data' => isset($response['data']),
                     'data_type' => gettype($response['data'] ?? null)
                 ]);
-                // Giải phóng memory
                 unset($response);
-
                 return [];
             }
 
-
-
-            $this->logger->info("ProductModule::getCategories() - Found " . count($response['data']) . " categories from API");
-
-            // Sử dụng helper method để tạo entities với memory management
+            $this->logger->info("ProductModule::getCategories() - Found " . count($data) . " categories from API");
             $categoryEntities = $this->createEntitiesFromApiResponse($response, 'createProductCategory');
-
             $this->logger->info("ProductModule::getCategories() - Created " . count($categoryEntities) . " category entities");
-
             return $categoryEntities;
         } catch (Exception $e) {
             $this->logger->error("ProductModule::getCategories() error", ['error' => $e->getMessage()]);
-            // Fallback to cached data if available
             $cachedCategories = $this->productManager->getCachedProductCategories();
             if ($cachedCategories !== null) {
                 $this->logger->info("ProductModule::getCategories() - Using cached categories");

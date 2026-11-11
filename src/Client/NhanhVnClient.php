@@ -212,32 +212,19 @@ class NhanhVnClient
     }
 
     /**
-     * Get OAuth authorization URL
+     * Get OAuth authorization URL (v3: service, verifyCode)
      */
-    public function getOAuthUrl(string $returnLink): string
+    public function getOAuthUrl(string $returnLink, ?string $verifyCode = null, ?string $service = null): string
     {
-        $params = [
-            'version' => $this->config->getApiVersion(),
-            'appId' => $this->config->getAppId(),
-            'returnLink' => $returnLink
-        ];
-
-        return 'https://nhanh.vn/oauth?' . http_build_query($params);
+        return $this->oauth->getOAuthUrl($returnLink, $verifyCode, $service);
     }
 
     /**
      * Exchange access code for access token
      */
-    public function exchangeAccessCode(string $accessCode): array
+    public function exchangeAccessCode(string $accessCode, ?string $verifyCode = null): array
     {
-        // TODO: Implement OAuth token exchange
-        // POST https://open.nhanh.vn/api/oauth/access_token
-        // Content-Type: application/x-www-form-urlencoded
-
-        return [
-            'success' => false,
-            'message' => 'Not implemented yet'
-        ];
+        return $this->oauth->exchangeAccessCode($accessCode, $verifyCode);
     }
 
     /**

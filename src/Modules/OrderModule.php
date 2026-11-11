@@ -77,7 +77,8 @@ class OrderModule
                 'orderData' => $orderData
             ]);
 
-            $response = $this->httpService->callApi('/order/add', $orderData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/order/add' : '/order/add';
+            $response = $this->httpService->callApi($endpoint, $orderData);
 
             // Parse response
             if (!isset($response['code'])) {
@@ -147,7 +148,8 @@ class OrderModule
                 'updateData' => $updateData
             ]);
 
-            $response = $this->httpService->callApi('/order/update', $updateData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/order/edit' : '/order/update';
+            $response = $this->httpService->callApi($endpoint, $updateData);
 
             // Parse response
             if (!isset($response['code'])) {
@@ -321,46 +323,88 @@ class OrderModule
             $cachedData = $this->orderManager->getCachedOrders($searchParams);
             if ($cachedData !== null) {
                 $this->logger->info("OrderModule::search() - Using cached data");
-                return $this->createEntitiesWithMemoryManagement($cachedData, 'createOrderSearchResponse');
+                $dataPayload = $cachedData['data'] ?? null;
+                if (isset($dataPayload['orders'])) {
+                    $normalizedCached = $dataPayload;
+                } elseif (is_array($dataPayload) && array_keys($dataPayload) === range(0, count($dataPayload) - 1)) {
+                    $normalizedCached = [
+                        'orders' => $dataPayload,
+                        'page' => $searchParams['page'] ?? 1,
+                        'totalRecords' => count($dataPayload),
+                        'totalPages' => 0,
+                        'next' => $cachedData['paginator']['next'] ?? null,
+                    ];
+                } else {
+                    $normalizedCached = is_array($dataPayload) ? $dataPayload : $cachedData;
+                }
+                return $this->orderManager->createOrderSearchResponse($normalizedCached);
             }
 
             // Chuẩn bị search criteria theo API Nhanh.vn qua Manager
             $searchData = $this->orderManager->prepareSearchCriteria($searchParams);
+            $isV3 = $this->httpService->isV3();
+            $endpoint = $isV3 ? '/v3.0/order/list' : '/order/index';
+
+            // v3 expects {filters,paginator,dataOptions}; allow passthrough or best-effort wrap
+            $payload = $searchData;
+            if ($isV3 && !isset($searchData['filters']) && !isset($searchData['paginator']) && !isset($searchData['dataOptions'])) {
+                $filters = $searchData;
+                $paginator = [];
+                foreach (['page','icpp','size','limit','next','sort'] as $k) {
+                    if (isset($filters[$k])) {
+                        if ($k === 'page') { unset($filters[$k]); continue; }
+                        if ($k === 'icpp' || $k === 'size' || $k === 'limit') { $paginator['size'] = (int) $filters[$k]; unset($filters[$k]); continue; }
+                        $paginator[$k] = $filters[$k]; unset($filters[$k]);
+                    }
+                }
+                $payload = [];
+                if (!empty($filters)) $payload['filters'] = $filters;
+                if (!empty($paginator)) $payload['paginator'] = $paginator;
+            }
 
             // Gọi API Nhanh.vn
-            $this->logger->info("OrderModule::search() calling Nhanh.vn API", $searchData);
+            $this->logger->info("OrderModule::search() calling Nhanh.vn API", ['endpoint' => $endpoint, 'payload' => $payload]);
 
-            $response = $this->httpService->callApi('/order/index', $searchData);
+            $response = $this->httpService->callApi($endpoint, $payload);
 
-            // Parse response
-            if (!isset($response['data']) || !isset($response['data']['orders'])) {
+            // Parse response (v2: data.orders; v3: data array + paginator)
+            $dataPayload = $response['data'] ?? null;
+            if ($dataPayload === null || ($dataPayload === [])) {
                 $this->logger->warning("OrderModule::search() - Response không có orders data");
-                // Giải phóng memory
                 unset($response, $searchData);
-
-                // Return empty response for consistency
                 return $this->orderManager->createEmptySearchResponse();
+            }
+            if (isset($dataPayload['orders'])) {
+                $normalized = $dataPayload;
+            } elseif (is_array($dataPayload) && array_keys($dataPayload) === range(0, count($dataPayload) - 1)) {
+                $normalized = [
+                    'orders' => $dataPayload,
+                    'page' => $searchParams['page'] ?? 1,
+                    'totalRecords' => count($dataPayload),
+                    'totalPages' => 0,
+                    'next' => $response['paginator']['next'] ?? null,
+                ];
+            } else {
+                $normalized = $dataPayload;
             }
 
             $this->logger->info("OrderModule::search() - Found orders from API", [
-                'totalPages' => $response['data']['totalPages'] ?? 0,
-                'orderCount' => count($response['data']['orders'] ?? [])
+                'totalPages' => $normalized['totalPages'] ?? 0,
+                'orderCount' => count($normalized['orders'] ?? [])
             ]);
 
             // Create response entity
-            $searchResponse = $this->orderManager->createOrderSearchResponse($response['data']);
+            $searchResponse = $this->orderManager->createOrderSearchResponse($normalized);
 
             $this->logger->info("OrderModule::search() - Created search response", [
                 'totalOrders' => $searchResponse->getTotalRecords(),
                 'totalPages' => $searchResponse->getTotalPages()
             ]);
 
-            // Cache kết quả
-            $this->orderManager->cacheOrders($searchParams, $response['data']);
+            // Cache raw response for reuse
+            $this->orderManager->cacheOrders($searchParams, $response);
 
-            // Giải phóng memory trước khi return
-            unset($response, $searchData);
-
+            unset($response, $searchData, $payload);
             return $searchResponse;
         } catch (Exception $e) {
             $this->logger->error("OrderModule::search() error", ['error' => $e->getMessage()]);
