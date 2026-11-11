@@ -25,11 +25,11 @@ class HttpService
     private ClientConfig $config;
     private LoggerInterface $logger;
 
-    public function __construct(ClientConfig $config, LoggerInterface $logger)
+    public function __construct(ClientConfig $config, LoggerInterface $logger, ?Client $httpClient = null)
     {
         $this->config = $config;
         $this->logger = $logger;
-        $this->httpClient = new Client([
+        $this->httpClient = $httpClient ?? new Client([
             'timeout' => $this->config->getTimeout(),
             'verify' => false, // disable SSL verification for local/dev environments
         ]);

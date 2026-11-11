@@ -16,11 +16,31 @@ class OAuthService
 {
     private ClientConfig $config;
     private LoggerInterface $logger;
+    private ?Client $httpClient;
 
-    public function __construct(ClientConfig $config, LoggerInterface $logger)
+    public function __construct(ClientConfig $config, LoggerInterface $logger, ?Client $httpClient = null)
     {
         $this->config = $config;
         $this->logger = $logger;
+        $this->httpClient = $httpClient;
+    }
+
+    protected function createHttpClient(): Client
+    {
+        if ($this->httpClient) {
+            return $this->httpClient;
+        }
+        return new Client([
+            'timeout' => $this->config->getTimeout(),
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'verify' => false,
+            'curl' => [
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+            ],
+        ]);
     }
 
     /**
@@ -46,18 +66,7 @@ class OAuthService
                 $body['verifyCode'] = $verifyCode;
             }
 
-            $client = new Client([
-                'timeout' => $this->config->getTimeout(),
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => $secretKey,
-                ],
-                'verify' => false,
-                'curl' => [
-                    CURLOPT_SSL_VERIFYPEER => false,
-                    CURLOPT_SSL_VERIFYHOST => false,
-                ],
-            ]);
+            $client = $this->createHttpClient();
 
             $this->logger->info('Exchanging access code for token (v3)', [
                 'url' => $url,
@@ -66,7 +75,13 @@ class OAuthService
                 'hasVerifyCode' => !empty($verifyCode),
             ]);
 
-            $response = $client->post($url, ['json' => $body]);
+            $response = $client->post($url, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => $secretKey,
+                ],
+                'json' => $body,
+            ]);
             $result = json_decode($response->getBody()->getContents(), true);
 
             if (!is_array($result)) {

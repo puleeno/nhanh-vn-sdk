@@ -41,7 +41,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Examples\\": "examples/src/"
+            "Examples\\": "examples/src/",
+            "Puleeno\\NhanhVn\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "stable",

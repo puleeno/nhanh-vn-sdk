@@ -60,68 +60,83 @@ class ProductModule
         $this->logger = $logger;
     }
 
-        /**
+    /**
      * Tìm kiếm sản phẩm theo các tiêu chí
      *
-     * @param array $criteria Các tiêu chí tìm kiếm
+     * @param array $criteria Các tiêu chí tìm kiếm (v3: filters/paginator hoặc key-value filter)
      * @return Collection Collection các sản phẩm tìm được
      * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
      */
     public function search(array $criteria = []): Collection
     {
-        // DEBUG: Log search criteria
         $this->logger->debug("ProductModule::search() called with criteria", $criteria);
 
         try {
-            // Chuẩn bị search criteria theo API Nhanh.vn
             $searchData = $this->prepareSearchCriteria($criteria);
+            $isV3 = $this->httpService->isV3();
+            $endpoint = $isV3 ? '/v3.0/product/list' : '/product/search';
+            $this->logger->info("ProductModule::search() calling Nhanh.vn API", ['endpoint' => $endpoint, 'payload' => $searchData]);
 
-            // Gọi API Nhanh.vn
-            $this->logger->info("ProductModule::search() calling Nhanh.vn API", $searchData);
-
-            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/product/list' : '/product/search';
             $response = $this->httpService->callApi($endpoint, $searchData);
 
-                        // Parse response
-            if (!isset($response['data']) || !isset($response['data']['products'])) {
+            $data = $response['data'] ?? null;
+            $productsData = null;
+            if ($isV3) {
+                // v3: data is array of products
+                if (is_array($data) && array_keys($data) === range(0, count($data) - 1)) {
+                    $productsData = $data;
+                } elseif (is_array($data) && isset($data['products']) && is_array($data['products'])) {
+                    $productsData = $data['products'];
+                } elseif (is_array($data)) {
+                    $productsData = $data;
+                }
+            } else {
+                if (is_array($data) && isset($data['products'])) {
+                    $productsData = $data['products'];
+                }
+            }
+
+            if (empty($productsData)) {
                 $this->logger->warning("ProductModule::search() - Response không có products data");
-                // Giải phóng memory
                 unset($response, $searchData);
                 return new Collection([]);
             }
 
-            $this->logger->info("ProductModule::search() - Found " . count($response['data']['products']) . " products from API");
+            $this->logger->info("ProductModule::search() - Found " . count($productsData) . " products from API");
 
-            // Sử dụng helper method để tạo entities với memory management
-            $productEntities = $this->createEntitiesFromApiResponse($response['data'], 'createProduct', 'products');
+            // Normalize to legacy shape for entity creation helper
+            $normalized = $isV3 ? ['products' => $productsData] : ($data ?? ['products' => $productsData]);
+            $productEntities = $this->createEntitiesFromApiResponse($normalized, 'createProduct', 'products');
 
             $this->logger->info("ProductModule::search() - Created " . count($productEntities) . " product entities");
-
-            // Giải phóng memory trước khi return
-            unset($response, $searchData);
-
+            unset($response, $searchData, $productsData, $normalized);
             return new Collection($productEntities);
         } catch (Exception $e) {
             $this->logger->error("ProductModule::search() error", ['error' => $e->getMessage()]);
-            // Giải phóng memory trong trường hợp lỗi
-            if (isset($response)) {
-                unset($response);
-            }
-            if (isset($searchData)) {
-                unset($searchData);
-            }
+            if (isset($response)) unset($response);
+            if (isset($searchData)) unset($searchData);
             throw $e;
         }
     }
 
     /**
      * Chuẩn bị search criteria theo format API Nhanh.vn
+     * v3: {filters, paginator, dataOptions}
      *
      * @param array $criteria Các tiêu chí tìm kiếm từ người dùng
-     * @return array Các tiêu chí đã được format theo chuẩn API Nhanh.vn
+     * @return array Payload API
      */
     private function prepareSearchCriteria(array $criteria): array
     {
+        // v3: caller can pass {filters,paginator,dataOptions}
+        if ($this->httpService->isV3() && (isset($criteria['filters']) || isset($criteria['paginator']) || isset($criteria['dataOptions']))) {
+            $payload = [];
+            if (!empty($criteria['filters']) && is_array($criteria['filters'])) $payload['filters'] = $criteria['filters'];
+            if (!empty($criteria['paginator']) && is_array($criteria['paginator'])) $payload['paginator'] = $criteria['paginator'];
+            if (!empty($criteria['dataOptions']) && is_array($criteria['dataOptions'])) $payload['dataOptions'] = $criteria['dataOptions'];
+            return $payload;
+        }
+
         $searchData = [];
 
         // Các field cơ bản
