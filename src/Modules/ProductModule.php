@@ -79,7 +79,8 @@ class ProductModule
             // Gọi API Nhanh.vn
             $this->logger->info("ProductModule::search() calling Nhanh.vn API", $searchData);
 
-            $response = $this->httpService->callApi('/product/search', $searchData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/product/list' : '/product/search';
+            $response = $this->httpService->callApi($endpoint, $searchData);
 
                         // Parse response
             if (!isset($response['data']) || !isset($response['data']['products'])) {
@@ -419,7 +420,9 @@ class ProductModule
             // Gọi API Nhanh.vn để lấy chi tiết sản phẩm
             $this->logger->info("ProductModule::detail() calling Nhanh.vn API", ['productId' => $productId]);
 
-            $response = $this->httpService->callApi('/product/detail', $productId);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/product/detail' : '/product/detail';
+            $detailPayload = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? ['filters' => ['id' => $productId]] : $productId;
+            $response = $this->httpService->callApi($endpoint, $detailPayload);
 
             // Parse response
             if (!isset($response['data'])) {
@@ -536,7 +539,8 @@ class ProductModule
             $this->logger->debug("ProductModule::add() - API request data", $apiData);
 
             // Call Nhanh.vn API
-            $response = $this->httpService->callApi('/product/add', $apiData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/product/add' : '/product/add';
+            $response = $this->httpService->callApi($endpoint, $apiData);
 
             // Parse response
             if (!isset($response['data'])) {
@@ -605,7 +609,8 @@ class ProductModule
             $this->logger->debug("ProductModule::addBatch() - Batch API request data", ['count' => count($batchData)]);
 
             // Call Nhanh.vn batch API
-            $response = $this->httpService->callApi('/product/add', $batchData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/product/add' : '/product/add';
+            $response = $this->httpService->callApi($endpoint, $batchData);
 
             // Parse response
             if (!isset($response['data'])) {

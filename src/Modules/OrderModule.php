@@ -77,7 +77,8 @@ class OrderModule
                 'orderData' => $orderData
             ]);
 
-            $response = $this->httpService->callApi('/order/add', $orderData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/order/add' : '/order/add';
+            $response = $this->httpService->callApi($endpoint, $orderData);
 
             // Parse response
             if (!isset($response['code'])) {
@@ -147,7 +148,8 @@ class OrderModule
                 'updateData' => $updateData
             ]);
 
-            $response = $this->httpService->callApi('/order/update', $updateData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/order/edit' : '/order/update';
+            $response = $this->httpService->callApi($endpoint, $updateData);
 
             // Parse response
             if (!isset($response['code'])) {
@@ -330,25 +332,37 @@ class OrderModule
             // Gọi API Nhanh.vn
             $this->logger->info("OrderModule::search() calling Nhanh.vn API", $searchData);
 
-            $response = $this->httpService->callApi('/order/index', $searchData);
+            $endpoint = strpos($this->httpService->getApiVersionSafe(), '3') === 0 ? '/v3.0/order/list' : '/order/index';
+            $response = $this->httpService->callApi($endpoint, $searchData);
 
-            // Parse response
-            if (!isset($response['data']) || !isset($response['data']['orders'])) {
+            // Parse response (v2: data.orders; v3: data array + paginator)
+            $dataPayload = $response['data'] ?? null;
+            if ($dataPayload === null || ($dataPayload === [])) {
                 $this->logger->warning("OrderModule::search() - Response không có orders data");
-                // Giải phóng memory
                 unset($response, $searchData);
-
-                // Return empty response for consistency
                 return $this->orderManager->createEmptySearchResponse();
+            }
+            if (isset($dataPayload['orders'])) {
+                $normalized = $dataPayload;
+            } elseif (is_array($dataPayload) && array_keys($dataPayload) === range(0, count($dataPayload) - 1)) {
+                $normalized = [
+                    'orders' => $dataPayload,
+                    'page' => $searchParams['page'] ?? 1,
+                    'totalRecords' => count($dataPayload),
+                    'totalPages' => 0,
+                    'next' => $response['paginator']['next'] ?? null,
+                ];
+            } else {
+                $normalized = $dataPayload;
             }
 
             $this->logger->info("OrderModule::search() - Found orders from API", [
-                'totalPages' => $response['data']['totalPages'] ?? 0,
-                'orderCount' => count($response['data']['orders'] ?? [])
+                'totalPages' => $normalized['totalPages'] ?? 0,
+                'orderCount' => count($normalized['orders'] ?? [])
             ]);
 
             // Create response entity
-            $searchResponse = $this->orderManager->createOrderSearchResponse($response['data']);
+            $searchResponse = $this->orderManager->createOrderSearchResponse($normalized);
 
             $this->logger->info("OrderModule::search() - Created search response", [
                 'totalOrders' => $searchResponse->getTotalRecords(),

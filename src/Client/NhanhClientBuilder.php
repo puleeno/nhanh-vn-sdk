@@ -61,7 +61,7 @@ class NhanhClientBuilder
     private string $accessToken = '';
     private ?string $secretKey = null;
     private ?string $redirectUrl = null;
-    private string $apiVersion = '2.0';
+    private string $apiVersion = '3.0';
     private string $apiDomain = 'https://pos.open.nhanh.vn';
     private int $timeout = 30;
     private int $retryAttempts = 3;
@@ -75,6 +75,8 @@ class NhanhClientBuilder
     private string $environment = 'production';
     private bool $useOAuth = false;
     private bool $validateSSL = true;
+    private string $oauthService = 'pos';
+    private ?string $verifyCode = null;
 
     /**
      * Constructor private - sử dụng static methods để tạo instance
@@ -319,6 +321,18 @@ class NhanhClientBuilder
         return $this;
     }
 
+    public function withOauthService(string $service): self
+    {
+        $this->oauthService = $service;
+        return $this;
+    }
+
+    public function withVerifyCode(?string $verifyCode): self
+    {
+        $this->verifyCode = $verifyCode;
+        return $this;
+    }
+
     // ==================== CONVENIENCE METHODS ====================
 
     /**
@@ -379,6 +393,15 @@ class NhanhClientBuilder
         }
         if (isset($config['validateSSL'])) {
             $this->validateSSL = $config['validateSSL'];
+        }
+        if (isset($config['oauthService'])) {
+            $this->oauthService = $config['oauthService'];
+        }
+        if (isset($config['service'])) {
+            $this->oauthService = $config['service'];
+        }
+        if (isset($config['verifyCode'])) {
+            $this->verifyCode = $config['verifyCode'];
         }
 
         return $this;
@@ -477,7 +500,9 @@ class NhanhClientBuilder
             'retry_attempts' => $this->retryAttempts,
             'rate_limit' => $this->rateLimit,
             'enable_logging' => $this->enableLogging,
-            'log_level' => strtolower($this->logLevel) // Convert to lowercase for ClientConfig
+            'log_level' => strtolower($this->logLevel), // Convert to lowercase for ClientConfig
+            'oauthService' => $this->oauthService,
+            'verifyCode' => $this->verifyCode,
         ];
 
         if ($this->useOAuth) {

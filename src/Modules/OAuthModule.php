@@ -20,18 +20,18 @@ class OAuthModule
     }
 
     /**
-     * Exchange access code cho access token
+     * Exchange access code cho access token (v3 hỗ trợ verifyCode)
      */
-    public function exchangeAccessCode(string $accessCode): array
+    public function exchangeAccessCode(string $accessCode, ?string $verifyCode = null): array
     {
-        return $this->oauthService->exchangeAccessCode($accessCode);
+        return $this->oauthService->exchangeAccessCode($accessCode, $verifyCode);
     }
 
     /**
-     * Lấy OAuth URL
+     * Lấy OAuth URL (v3: service, verifyCode)
      */
-    public function getOAuthUrl(string $returnLink): string
+    public function getOAuthUrl(string $returnLink, ?string $verifyCode = null, ?string $service = null): string
     {
-        return $this->oauthService->getOAuthUrl($returnLink);
+        return $this->oauthService->getOAuthUrl($returnLink, $verifyCode, $service);
     }
 }

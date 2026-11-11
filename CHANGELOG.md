@@ -5,6 +5,18 @@ Tất cả các thay đổi quan trọng trong dự án này sẽ được ghi l
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 và dự án này tuân thủ [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-11-11
+
+### Added
+- Hỗ trợ Nhanh.vn API v3 (spec mới): OAuth authorize với `service`, `verifyCode`, `appId`, `returnLink`.
+- Đổi `accessCode` lấy `accessToken` v3: `POST /v3.0/app/getaccesstoken?appId=...` header `Authorization` (secretKey), body `{accessCode, verifyCode}`; giữ tương thích v2.
+- `HttpService`: gọi API v3 qua `POST /v3.0/...` (JSON body), `appId`/`businessId` trên query string, `Authorization: <accessToken>` header; giữ legacy v2 multipart `/api/...`.
+
+### Changed
+- `ClientConfig`/`NhanhClientBuilder` mặc định `apiVersion=3.0`, bổ sung `oauthService`, `verifyCode`.
+- `OrderModule`/`ProductModule`: map endpoint v3 (`/v3.0/order/list|add|edit`, `/v3.0/product/list|add|detail`) và chuẩn hóa response v3.
+- `OAuthService`/`OAuthModule`/`NhanhVnClient`: `getOAuthUrl(returnLink, verifyCode, service)` và `exchangeAccessCode(accessCode, verifyCode)`.
+
 ## [0.4.0] - 2024-12-19
 
 ### 🚀 Added

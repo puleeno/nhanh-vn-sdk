@@ -1,8 +1,8 @@
 {
     "name": "puleeno/nhanh-vn-sdk",
-    "description": "PHP SDK chính thức cho Nhanh.vn API - Giải pháp tích hợp hoàn chỉnh với kiến trúc SOLID, cache thông minh và memory management tối ưu",
+    "description": "PHP SDK cho Nhanh.vn API v3 - hỗ trợ OAuth (service/verifyCode), gọi API JSON theo spec v3 (POS/Vpage/WebApp) và tương thích legacy v2",
     "type": "library",
-    "version": "0.4.3",
+    "version": "1.0.0",
     "license": "MIT",
     "keywords": [
         "nhanh-vn",
