@@ -5,179 +5,155 @@ namespace Puleeno\NhanhVn\Managers;
 use Puleeno\NhanhVn\Services\CustomerService;
 use Puleeno\NhanhVn\Entities\Customer\CustomerSearchResponse;
 use Puleeno\NhanhVn\Entities\Customer\CustomerAddResponse;
+use Puleeno\NhanhVn\Repositories\CustomerRepository;
 
 /**
  * Customer Manager
  *
  * Orchestrates customer-related operations between different layers
- *
- * @package Puleeno\NhanhVn\Managers
  */
 class CustomerManager
 {
-    /**
-     * @var CustomerService
-     */
-    private CustomerService $customerService;
+    /** @var CustomerService */
+    private $customerService;
+
+    /** @var CustomerRepository|null */
+    private $customerRepository;
 
     /**
-     * Constructor
-     *
      * @param CustomerService $customerService
+     * @param CustomerRepository|null $customerRepository
      */
-    public function __construct(CustomerService $customerService)
+    public function __construct($customerService, $customerRepository = null)
     {
         $this->customerService = $customerService;
+        $this->customerRepository = $customerRepository;
     }
 
-    /**
-     * Search customers
-     *
-     * @param array $searchParams
-     * @return CustomerSearchResponse
-     */
+    private function repo(): ?CustomerRepository
+    {
+        if ($this->customerRepository instanceof CustomerRepository) {
+            return $this->customerRepository;
+        }
+        // best-effort: some DI setups may inject repository differently
+        if (method_exists($this->customerService, 'getRepository')) {
+            $r = $this->customerService->getRepository();
+            if ($r instanceof CustomerRepository) return $r;
+        }
+        return null;
+    }
+
     public function searchCustomers(array $searchParams): CustomerSearchResponse
     {
         return $this->customerService->searchCustomers($searchParams);
     }
 
-    /**
-     * Search customer by ID
-     *
-     * @param int $customerId
-     * @return CustomerSearchResponse
-     */
     public function searchCustomerById(int $customerId): CustomerSearchResponse
     {
         return $this->customerService->searchCustomerById($customerId);
     }
 
-    /**
-     * Search customer by mobile
-     *
-     * @param string $mobile
-     * @return CustomerSearchResponse
-     */
     public function searchCustomerByMobile(string $mobile): CustomerSearchResponse
     {
         return $this->customerService->searchCustomerByMobile($mobile);
     }
 
-    /**
-     * Get customers by type
-     *
-     * @param int $type
-     * @param int $page
-     * @param int $icpp
-     * @return CustomerSearchResponse
-     */
     public function getCustomersByType(int $type, int $page = 1, int $icpp = 10): CustomerSearchResponse
     {
         return $this->customerService->getCustomersByType($type, $page, $icpp);
     }
 
-    /**
-     * Get customers by date range
-     *
-     * @param string $fromDate
-     * @param string $toDate
-     * @param int $page
-     * @param int $icpp
-     * @return CustomerSearchResponse
-     */
     public function getCustomersByDateRange(string $fromDate, string $toDate, int $page = 1, int $icpp = 10): CustomerSearchResponse
     {
         return $this->customerService->getCustomersByDateRange($fromDate, $toDate, $page, $icpp);
     }
 
-    /**
-     * Get all customers with pagination
-     *
-     * @param int $page
-     * @param int $icpp
-     * @return CustomerSearchResponse
-     */
     public function getAllCustomers(int $page = 1, int $icpp = 10): CustomerSearchResponse
     {
         return $this->customerService->getAllCustomers($page, $icpp);
     }
 
-    /**
-     * Validate search request
-     *
-     * @param array $searchParams
-     * @return bool
-     */
     public function validateSearchRequest(array $searchParams): bool
     {
         return $this->customerService->validateSearchRequest($searchParams);
     }
 
-    /**
-     * Create empty search response
-     *
-     * @return CustomerSearchResponse
-     */
+    public function getSearchRequestErrors(array $searchParams): array
+    {
+        if (method_exists($this->customerService, 'getSearchRequestErrors')) {
+            return $this->customerService->getSearchRequestErrors($searchParams);
+        }
+        $ok = $this->validateSearchRequest($searchParams);
+        return $ok ? [] : ['general' => 'Invalid search request'];
+    }
+
     public function createEmptySearchResponse(): CustomerSearchResponse
     {
-        return CustomerSearchResponse::createSuccessResponse([
-            'totalPages' => 0,
-            'customers' => []
+        // v3-compatible empty shape
+        return new CustomerSearchResponse([
+            'code' => 1,
+            'data' => [],
+            'paginator' => ['next' => null],
         ]);
     }
 
-    /**
-     * Create customer search response from API response
-     *
-     * @param array $apiResponse
-     * @return CustomerSearchResponse
-     */
     public function createCustomerSearchResponse(array $apiResponse): CustomerSearchResponse
     {
-        return CustomerSearchResponse::createFromApiResponse($apiResponse);
+        // Accept raw v3 {code,data,paginator}, legacy {code,data{customers,totalPages}}, or normalized {customers,...}
+        if (class_exists(CustomerSearchResponse::class) && method_exists(CustomerSearchResponse::class, 'createFromApiResponse')) {
+            return CustomerSearchResponse::createFromApiResponse($apiResponse);
+        }
+        return new CustomerSearchResponse($apiResponse);
     }
 
-    /**
-     * Thêm một khách hàng mới
-     *
-     * @param array $customerData Dữ liệu khách hàng
-     * @return CustomerAddResponse Response từ API
-     */
     public function addCustomer(array $customerData): CustomerAddResponse
     {
         return $this->customerService->addCustomer($customerData);
     }
 
-    /**
-     * Thêm nhiều khách hàng cùng lúc
-     *
-     * @param array $customersData Mảng dữ liệu khách hàng
-     * @return CustomerAddResponse Response từ API
-     */
     public function addCustomers(array $customersData): CustomerAddResponse
     {
         return $this->customerService->addCustomers($customersData);
     }
 
-    /**
-     * Validate add customer request
-     *
-     * @param array $customerData
-     * @return bool
-     */
+    public function createCustomerAddResponse(array $apiResponse): CustomerAddResponse
+    {
+        $repo = $this->repo();
+        if ($repo && method_exists($repo, 'createCustomerAddResponse')) {
+            return $repo->createCustomerAddResponse($apiResponse);
+        }
+        if (method_exists(CustomerAddResponse::class, 'createFromApiResponse')) {
+            return CustomerAddResponse::createFromApiResponse($apiResponse);
+        }
+        return new CustomerAddResponse($apiResponse);
+    }
+
     public function validateAddRequest(array $customerData): bool
     {
         return $this->customerService->validateAddRequest($customerData);
     }
 
-    /**
-     * Validate batch add customers request
-     *
-     * @param array $customersData
-     * @return bool
-     */
+    public function getAddRequestErrors(array $customerData): array
+    {
+        if (method_exists($this->customerService, 'getAddRequestErrors')) {
+            return $this->customerService->getAddRequestErrors($customerData);
+        }
+        $ok = $this->validateAddRequest($customerData);
+        return $ok ? [] : ['general' => 'Invalid add request'];
+    }
+
     public function validateBatchAddRequest(array $customersData): bool
     {
-        return $this->customerService->validateBatchAddRequest($customersData);
+        if (method_exists($this->customerService, 'validateBatchAddRequest')) {
+            return $this->customerService->validateBatchAddRequest($customersData);
+        }
+        return true;
     }
+
+    // Cache API used by CustomerModule (v3 modules call API directly; keep no-op compatibility)
+    public function getCachedCustomers(array $searchParams): ?array { return null; }
+    public function cacheCustomers(array $searchParams, array $data, int $ttl = 3600): bool { return false; }
+    public function getCustomerCacheStatus(): array { return ['available' => false]; }
+    public function clearAllCustomerCache(): bool { return true; }
+    public function isCustomerCacheAvailable(): bool { return false; }
 }

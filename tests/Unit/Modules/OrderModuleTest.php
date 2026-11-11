@@ -30,23 +30,17 @@ class OrderModuleTest extends TestCase
         return $req;
     }
 
-    private function addResponse(bool $success = true)
+    private function httpV3(): HttpService
     {
-        $resp = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['isSuccess','getCode','getMessage','getNhanhOrderId','getNhanhOrderCode'])
-            ->getMock();
-        $resp->method('isSuccess')->willReturn($success);
-        $resp->method('getCode')->willReturn($success ? 1 : 0);
-        $resp->method('getMessage')->willReturn($success ? 'ok' : 'fail');
-        $resp->method('getNhanhOrderId')->willReturn(123);
-        $resp->method('getNhanhOrderCode')->willReturn('ORD123');
-        return $resp;
+        $http = $this->createMock(HttpService::class);
+        $http->method('getApiVersionSafe')->willReturn('3.0');
+        $http->method('isV3')->willReturn(true);
+        return $http;
     }
 
     public function testAddCallsV3Endpoint(): void
     {
-        $http = $this->createMock(HttpService::class);
-        $http->method('getApiVersionSafe')->willReturn('3.0');
+        $http = $this->httpV3();
         $http->expects($this->once())
             ->method('callApi')
             ->with('/v3.0/order/add', $this->callback(function ($p) {
@@ -56,7 +50,6 @@ class OrderModuleTest extends TestCase
 
         $manager = $this->getMockBuilder(\stdClass::class)->getMock();
         $module = new OrderModule($manager, $http, $this->logger());
-        // Inject a real OrderAddResponse-like expectation is complex; just assert no exception and call reaches API
         try {
             $module->add($this->addRequest());
             $this->addToAssertionCount(1);
@@ -64,15 +57,13 @@ class OrderModuleTest extends TestCase
             // Response entity construction depends on implementation; API call was asserted above
             $this->addToAssertionCount(1);
         } catch (\Exception $e) {
-            // may fail due to response entity class differences in this env
             $this->assertNotSame('', $e->getMessage());
         }
     }
 
     public function testSearchCallsV3EndpointAndNormalizesArrayData(): void
     {
-        $http = $this->createMock(HttpService::class);
-        $http->method('getApiVersionSafe')->willReturn('3.0');
+        $http = $this->httpV3();
         $http->expects($this->once())
             ->method('callApi')
             ->with('/v3.0/order/list', $this->anything())
@@ -99,17 +90,45 @@ class OrderModuleTest extends TestCase
                     && ($normalized['next']['id'] ?? null) === 99;
             }))
             ->willReturn($searchResp);
-        $manager->method('cacheOrders')->willReturn(true);
+        $manager->expects($this->once())->method('cacheOrders');
 
         $module = new OrderModule($manager, $http, $this->logger());
         $result = $module->search(['page' => 1]);
         $this->assertSame($searchResp, $result);
     }
 
+    public function testSearchWrapsLegacyCriteriaIntoV3FiltersPaginator(): void
+    {
+        $http = $this->httpV3();
+        $http->expects($this->once())
+            ->method('callApi')
+            ->with('/v3.0/order/list', $this->callback(function ($payload) {
+                // legacy keys wrapped: statuses/icpp become filters/paginator
+                return isset($payload['filters']['statuses'])
+                    && ($payload['paginator']['size'] ?? null) === 20
+                    && !isset($payload['filters']['page'])
+                    && !isset($payload['filters']['icpp']);
+            }))
+            ->willReturn(['code' => 1, 'data' => [['info' => ['id' => 2]]], 'paginator' => []]);
+
+        $manager = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['getCachedOrders','prepareSearchCriteria','createEmptySearchResponse','createOrderSearchResponse','cacheOrders'])
+            ->getMock();
+        $manager->method('getCachedOrders')->willReturn(null);
+        // legacy prepared shape (no filters/paginator keys)
+        $manager->method('prepareSearchCriteria')->willReturn(['statuses' => ['New'], 'page' => 1, 'icpp' => 20]);
+        $searchResp = $this->getMockBuilder(\stdClass::class)->addMethods(['getTotalRecords','getTotalPages'])->getMock();
+        $searchResp->method('getTotalRecords')->willReturn(1);
+        $searchResp->method('getTotalPages')->willReturn(1);
+        $manager->method('createOrderSearchResponse')->willReturn($searchResp);
+
+        $module = new OrderModule($manager, $http, $this->logger());
+        $module->search(['statuses' => ['New']]);
+    }
+
     public function testSearchReturnsEmptyOnNullData(): void
     {
-        $http = $this->createMock(HttpService::class);
-        $http->method('getApiVersionSafe')->willReturn('3.0');
+        $http = $this->httpV3();
         $http->method('callApi')->willReturn(['code' => 1, 'data' => null]);
 
         $manager = $this->getMockBuilder(\stdClass::class)
@@ -124,5 +143,28 @@ class OrderModuleTest extends TestCase
         $module = new OrderModule($manager, $http, $this->logger());
         $result = $module->search([]);
         $this->assertSame($empty, $result);
+    }
+
+    public function testSearchUsesCachedV3Data(): void
+    {
+        $http = $this->httpV3();
+        $http->expects($this->never())->method('callApi');
+
+        $cached = ['code' => 1, 'paginator' => ['next' => ['id' => 5]], 'data' => [['info' => ['id' => 7]]]];
+        $manager = $this->getMockBuilder(\stdClass::class)
+            ->addMethods(['getCachedOrders','prepareSearchCriteria','createEmptySearchResponse','createOrderSearchResponse','cacheOrders'])
+            ->getMock();
+        $manager->expects($this->once())->method('getCachedOrders')->willReturn($cached);
+        $searchResp = new \stdClass();
+        $manager->expects($this->once())
+            ->method('createOrderSearchResponse')
+            ->with($this->callback(function ($normalized) {
+                return ($normalized['orders'][0]['info']['id'] ?? null) === 7
+                    && ($normalized['next']['id'] ?? null) === 5;
+            }))
+            ->willReturn($searchResp);
+
+        $module = new OrderModule($manager, $http, $this->logger());
+        $this->assertSame($searchResp, $module->search([]));
     }
 }
