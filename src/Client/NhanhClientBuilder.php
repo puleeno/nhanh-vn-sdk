@@ -123,7 +123,7 @@ class NhanhClientBuilder
         $businessId = $_ENV['NHANH_BUSINESS_ID'] ?? $_SERVER['NHANH_BUSINESS_ID'] ?? '';
         $accessToken = $_ENV['NHANH_ACCESS_TOKEN'] ?? $_SERVER['NHANH_ACCESS_TOKEN'] ?? '';
         $secretKey = $_ENV['NHANH_SECRET_KEY'] ?? $_SERVER['NHANH_SECRET_KEY'] ?? null;
-        $apiVersion = $_ENV['NHANH_API_VERSION'] ?? $_SERVER['NHANH_API_VERSION'] ?? '2.0';
+        $apiVersion = $_ENV['NHANH_API_VERSION'] ?? $_SERVER['NHANH_API_VERSION'] ?? '3.0';
         $environment = $_ENV['NHANH_ENVIRONMENT'] ?? $_SERVER['NHANH_ENVIRONMENT'] ?? 'production';
         $timeout = (int)($_ENV['NHANH_TIMEOUT'] ?? $_SERVER['NHANH_TIMEOUT'] ?? 30);
         $logLevel = $_ENV['NHANH_LOG_LEVEL'] ?? $_SERVER['NHANH_LOG_LEVEL'] ?? 'INFO';

@@ -7,7 +7,6 @@ namespace Puleeno\NhanhVn\Modules;
 use Puleeno\NhanhVn\Entities\Shipping\Location;
 use Puleeno\NhanhVn\Entities\Shipping\LocationSearchRequest;
 use Puleeno\NhanhVn\Entities\Shipping\LocationSearchResponse;
-use Puleeno\NhanhVn\Entities\Shipping\ShippingCarrier;
 use Puleeno\NhanhVn\Entities\Shipping\ShippingCarrierResponse;
 use Puleeno\NhanhVn\Entities\Shipping\ShippingFeeRequest;
 use Puleeno\NhanhVn\Entities\Shipping\ShippingFeeResponse;
@@ -19,687 +18,247 @@ use Puleeno\NhanhVn\Contracts\LoggerInterface;
 use Exception;
 
 /**
- * Shipping Module - Module chính để tương tác với shipping và location APIs
+ * Shipping Module (v3).
  *
- * Module này cung cấp interface công khai để truy cập các chức năng shipping
- * bao gồm: tìm kiếm địa điểm (thành phố, quận huyện, phường xã)
- *
- * @package NhanhVn\Sdk\Modules
- * @author Nhanh.vn SDK Team
+ * - POST /v3.0/shipping/location  body: {filters:{locationVersion,type,parentId}}
+ * - POST /v3.0/shipping/carrier   body: {}
+ * - POST /v3.0/shipping/fee       body: {filters:{...}} (type 1: Nhanh, type 2: self-connect)
  */
 class ShippingModule
 {
-    /** @var ShippingManager Manager xử lý business logic shipping */
     protected ShippingManager $manager;
-
-    /** @var HttpService Service xử lý HTTP requests */
     protected HttpService $httpService;
-
-    /** @var LoggerInterface Logger để ghi log */
     protected LoggerInterface $logger;
 
-    /**
-     * Constructor
-     *
-     * @param ShippingManager $manager Manager xử lý business logic shipping
-     * @param HttpService $httpService Service xử lý HTTP requests
-     * @param LoggerInterface $logger Logger để ghi log
-     */
-    public function __construct(
-        ShippingManager $manager,
-        HttpService $httpService,
-        LoggerInterface $logger
-    ) {
+    public function __construct(ShippingManager $manager, HttpService $httpService, LoggerInterface $logger)
+    {
         $this->manager = $manager;
         $this->httpService = $httpService;
         $this->logger = $logger;
     }
 
     /**
-     * Tìm kiếm địa điểm theo criteria
-     *
-     * @param array $criteria Criteria tìm kiếm (type, parentId)
-     * @return LocationSearchResponse Response chứa danh sách địa điểm
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
+     * Tìm kiếm địa điểm (v3: /v3.0/shipping/location).
+     * @param array $criteria ['type'=>CITY|DISTRICT|WARD,'parentId'=>int,'locationVersion'=>'v1'|'v2'] or v3 {filters:...}
      */
     public function search(array $criteria): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::search() called", [
-            'criteria' => $criteria
-        ]);
-
+        $this->logger->debug("ShippingModule::search() called", ['criteria' => $criteria]);
         try {
-            $response = $this->manager->searchLocations($criteria);
-
-            $this->logger->debug("ShippingModule::search() completed", [
-                'totalLocations' => $response->getCount(),
-                'isSuccess' => $response->isSuccess()
-            ]);
-
-            return $response;
+            $endpoint = $this->httpService->isV3() ? '/v3.0/shipping/location' : '/shipping/location';
+            $payload = $this->buildLocationPayload($criteria);
+            $response = $this->httpService->callApi($endpoint, $payload);
+            // Normalize to legacy LocationSearchResponse expectations
+            $data = $response['data'] ?? [];
+            $normalized = [
+                'code' => $response['code'] ?? 1,
+                'data' => is_array($data) ? $data : [],
+            ];
+            return $this->manager->createLocationSearchResponse($normalized);
         } catch (Exception $e) {
-            $this->logger->error("ShippingModule::search() error", [
-                'error' => $e->getMessage(),
-                'criteria' => $criteria
-            ]);
+            $this->logger->error("ShippingModule::search() error", ['error' => $e->getMessage(), 'criteria' => $criteria]);
             throw $e;
         }
     }
 
-    /**
-     * Tìm kiếm địa điểm từ LocationSearchRequest entity
-     *
-     * @param LocationSearchRequest $request Request entity chứa criteria tìm kiếm
-     * @return LocationSearchResponse Response chứa danh sách địa điểm
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
-     */
+    private function buildLocationPayload(array $criteria): array
+    {
+        if (isset($criteria['filters']) && is_array($criteria['filters'])) {
+            return $criteria;
+        }
+        $filters = [];
+        $filters['locationVersion'] = $criteria['locationVersion'] ?? 'v1';
+        $type = strtoupper((string) ($criteria['type'] ?? 'CITY'));
+        $filters['type'] = $type;
+        $parentId = $criteria['parentId'] ?? null;
+        if ($parentId !== null && $parentId !== '') {
+            $filters['parentId'] = (int) $parentId;
+        }
+        return ['filters' => $filters];
+    }
+
     public function searchFromRequest(LocationSearchRequest $request): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::searchFromRequest() called", [
-            'type' => $request->getType(),
-            'parentId' => $request->getParentId()
-        ]);
-
-        try {
-            $criteria = $request->toArray();
-            $response = $this->search($criteria);
-
-            $this->logger->debug("ShippingModule::searchFromRequest() completed", [
-                'totalLocations' => $response->getCount(),
-                'isSuccess' => $response->isSuccess()
-            ]);
-
-            return $response;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::searchFromRequest() error", [
-                'error' => $e->getMessage(),
-                'type' => $request->getType(),
-                'parentId' => $request->getParentId()
-            ]);
-            throw $e;
-        }
+        return $this->search($request->toArray());
     }
 
-    /**
-     * Tìm kiếm thành phố
-     *
-     * @return LocationSearchResponse Response chứa danh sách thành phố
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
-     */
-    public function searchCities(): LocationSearchResponse
+    public function searchCities(string $locationVersion = 'v1'): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::searchCities() called");
-
-        try {
-            $response = $this->manager->searchCities();
-
-            $this->logger->debug("ShippingModule::searchCities() completed", [
-                'totalCities' => $response->getCount(),
-                'isSuccess' => $response->isSuccess()
-            ]);
-
-            return $response;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::searchCities() error", [
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
-        }
+        return $this->search(['type' => 'CITY', 'locationVersion' => $locationVersion]);
     }
 
-    /**
-     * Tìm kiếm quận huyện theo thành phố
-     *
-     * @param int $cityId ID của thành phố
-     * @return LocationSearchResponse Response chứa danh sách quận huyện
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
-     */
-    public function searchDistricts(int $cityId): LocationSearchResponse
+    public function searchDistricts(int $cityId, string $locationVersion = 'v1'): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::searchDistricts() called", [
-            'cityId' => $cityId
-        ]);
-
-        try {
-            $response = $this->manager->searchDistricts($cityId);
-
-            $this->logger->debug("ShippingModule::searchDistricts() completed", [
-                'totalDistricts' => $response->getCount(),
-                'isSuccess' => $response->isSuccess()
-            ]);
-
-            return $response;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::searchDistricts() error", [
-                'error' => $e->getMessage(),
-                'cityId' => $cityId
-            ]);
-            throw $e;
-        }
+        return $this->search(['type' => 'DISTRICT', 'parentId' => $cityId, 'locationVersion' => $locationVersion]);
     }
 
-    /**
-     * Tìm kiếm phường xã theo quận huyện
-     *
-     * @param int $districtId ID của quận huyện
-     * @return LocationSearchResponse Response chứa danh sách phường xã
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
-     */
-    public function searchWards(int $districtId): LocationSearchResponse
+    public function searchWards(int $parentId, string $locationVersion = 'v1'): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::searchWards() called", [
-            'districtId' => $districtId
-        ]);
-
-        try {
-            $response = $this->manager->searchWards($districtId);
-
-            $this->logger->debug("ShippingModule::searchWards() completed", [
-                'totalWards' => $response->getCount(),
-                'isSuccess' => $response->isSuccess()
-            ]);
-
-            return $response;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::searchWards() error", [
-                'error' => $e->getMessage(),
-                'districtId' => $districtId
-            ]);
-            throw $e;
-        }
+        // v1: parentId = districtId, v2: parentId = cityId
+        return $this->search(['type' => 'WARD', 'parentId' => $parentId, 'locationVersion' => $locationVersion]);
     }
 
-    /**
-     * Tìm kiếm địa điểm theo tên (tìm kiếm gần đúng)
-     *
-     * @param string $name Tên địa điểm cần tìm
-     * @param string $type Loại địa điểm (CITY, DISTRICT, WARD)
-     * @param int|null $parentId ID của địa điểm cha (nếu có)
-     * @return LocationSearchResponse Response chứa danh sách địa điểm tìm được
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
-     */
     public function searchByName(string $name, string $type = 'CITY', ?int $parentId = null): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::searchByName() called", [
-            'name' => $name,
-            'type' => $type,
-            'parentId' => $parentId
-        ]);
-
-        try {
-            $criteria = ['type' => $type];
-            if ($parentId !== null) {
-                $criteria['parentId'] = $parentId;
-            }
-
-            $response = $this->search($criteria);
-
-            if ($response->isSuccess() && !$response->isEmpty()) {
-                // Lọc theo tên
-                $filteredLocations = $response->filterByName($name);
-                $filteredResponse = LocationSearchResponse::createSuccess($filteredLocations);
-
-                $this->logger->debug("ShippingModule::searchByName() completed with filtering", [
-                    'originalCount' => $response->getCount(),
-                    'filteredCount' => count($filteredLocations),
-                    'searchName' => $name
-                ]);
-
-                return $filteredResponse;
-            }
-
-            $this->logger->debug("ShippingModule::searchByName() completed", [
-                'totalLocations' => $response->getCount(),
-                'isSuccess' => $response->isSuccess()
-            ]);
-
-            return $response;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::searchByName() error", [
-                'error' => $e->getMessage(),
-                'name' => $name,
-                'type' => $type,
-                'parentId' => $parentId
-            ]);
-            throw $e;
+        $criteria = ['type' => $type];
+        if ($parentId !== null) $criteria['parentId'] = $parentId;
+        $response = $this->search($criteria);
+        if ($response->isSuccess() && !$response->isEmpty() && method_exists($response, 'filterByName')) {
+            $filtered = $response->filterByName($name);
+            return LocationSearchResponse::createSuccess($filtered);
         }
+        return $response;
     }
 
-    /**
-     * Tìm kiếm địa điểm theo ID
-     *
-     * @param int $id ID của địa điểm
-     * @param string $type Loại địa điểm (CITY, DISTRICT, WARD)
-     * @return Location|null Địa điểm tìm được hoặc null nếu không tìm thấy
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tìm kiếm
-     */
     public function findById(int $id, string $type = 'CITY'): ?Location
     {
-        $this->logger->debug("ShippingModule::findById() called", [
-            'id' => $id,
-            'type' => $type
-        ]);
-
-        try {
-            $criteria = ['type' => $type];
-
-            // Nếu là DISTRICT hoặc WARD, cần tìm tất cả rồi filter theo ID
-            if ($type === 'DISTRICT' || $type === 'WARD') {
-                // Tìm tất cả địa điểm cùng loại
-                $response = $this->search($criteria);
-
-                if ($response->isSuccess()) {
-                    $location = $response->getLocationById($id);
-
-                    $this->logger->debug("ShippingModule::findById() completed", [
-                        'found' => $location !== null,
-                        'type' => $type
-                    ]);
-
-                    return $location;
-                }
-            } else {
-                // Với CITY, có thể tìm trực tiếp
-                $response = $this->search($criteria);
-
-                if ($response->isSuccess()) {
-                    $location = $response->getLocationById($id);
-
-                    $this->logger->debug("ShippingModule::findById() completed", [
-                        'found' => $location !== null,
-                        'type' => $type
-                    ]);
-
-                    return $location;
-                }
-            }
-
-            $this->logger->debug("ShippingModule::findById() - Location not found", [
-                'id' => $id,
-                'type' => $type
-            ]);
-
-            return null;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::findById() error", [
-                'error' => $e->getMessage(),
-                'id' => $id,
-                'type' => $type
-            ]);
-            throw $e;
+        $response = $this->search(['type' => $type]);
+        if ($response->isSuccess() && method_exists($response, 'getLocationById')) {
+            return $response->getLocationById($id);
         }
+        return null;
     }
 
-    /**
-     * Validate dữ liệu tìm kiếm địa điểm
-     *
-     * @param array $data Dữ liệu cần validate
-     * @return bool True nếu hợp lệ, false nếu không hợp lệ
-     * @throws Exception Khi có lỗi xảy ra trong quá trình validate
-     */
     public function validateSearchData(array $data): bool
     {
-        $this->logger->debug("ShippingModule::validateSearchData() called", [
-            'data' => $data
-        ]);
-
-        try {
-            $isValid = $this->manager->validateLocationSearchData($data);
-
-            $this->logger->debug("ShippingModule::validateSearchData() result", [
-                'isValid' => $isValid
-            ]);
-
-            return $isValid;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::validateSearchData() error", [
-                'error' => $e->getMessage(),
-                'data' => $data
-            ]);
-            throw $e;
-        }
+        return $this->manager->validateLocationSearchData($data);
     }
 
-    /**
-     * Lấy danh sách lỗi validation cho tìm kiếm địa điểm
-     *
-     * @param array $data Dữ liệu cần validate
-     * @return array Danh sách lỗi validation
-     * @throws Exception Khi có lỗi xảy ra trong quá trình validate
-     */
     public function getValidationErrors(array $data): array
     {
-        $this->logger->debug("ShippingModule::getValidationErrors() called", [
-            'data' => $data
-        ]);
-
-        try {
-            $errors = $this->manager->getLocationSearchValidationErrors($data);
-
-            $this->logger->debug("ShippingModule::getValidationErrors() result", [
-                'errorCount' => count($errors)
-            ]);
-
-            return $errors;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::getValidationErrors() error", [
-                'error' => $e->getMessage(),
-                'data' => $data
-            ]);
-            throw $e;
-        }
+        return $this->manager->getLocationSearchValidationErrors($data);
     }
 
-    /**
-     * Tạo LocationSearchRequest từ dữ liệu array
-     *
-     * @param array $data Dữ liệu để tạo request
-     * @return LocationSearchRequest Request được tạo
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tạo request
-     */
     public function createSearchRequest(array $data): LocationSearchRequest
     {
-        $this->logger->debug("ShippingModule::createSearchRequest() called", [
-            'data' => $data
-        ]);
-
-        try {
-            $request = $this->manager->createLocationSearchRequest($data);
-
-            $this->logger->debug("ShippingModule::createSearchRequest() completed", [
-                'type' => $request->getType(),
-                'parentId' => $request->getParentId()
-            ]);
-
-            return $request;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::createSearchRequest() error", [
-                'error' => $e->getMessage(),
-                'data' => $data
-            ]);
-            throw $e;
-        }
+        return $this->manager->createLocationSearchRequest($data);
     }
 
-    /**
-     * Tạo response rỗng cho tìm kiếm địa điểm
-     *
-     * @return LocationSearchResponse Response rỗng
-     */
     public function createEmptyResponse(): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::createEmptyResponse() called");
-
         return $this->manager->createEmptyLocationSearchResponse();
     }
 
-    /**
-     * Tạo response lỗi cho tìm kiếm địa điểm
-     *
-     * @param array $messages Danh sách thông báo lỗi
-     * @return LocationSearchResponse Response lỗi
-     */
     public function createErrorResponse(array $messages): LocationSearchResponse
     {
-        $this->logger->debug("ShippingModule::createErrorResponse() called", [
-            'messages' => $messages
-        ]);
-
         return $this->manager->createErrorLocationSearchResponse($messages);
     }
 
     /**
-     * Lấy danh sách hãng vận chuyển từ Nhanh.vn API
-     *
-     * @param bool $forceRefresh Bắt buộc refresh từ API, bỏ qua cache
-     * @return ShippingCarrierResponse Response chứa danh sách hãng vận chuyển
-     * @throws Exception Khi có lỗi xảy ra trong quá trình lấy dữ liệu
+     * Lấy danh sách hãng vận chuyển (v3: /v3.0/shipping/carrier).
      */
     public function getCarriers(bool $forceRefresh = false): ShippingCarrierResponse
     {
-        $this->logger->debug("ShippingModule::getCarriers() called", [
-            'forceRefresh' => $forceRefresh
-        ]);
-
+        $this->logger->debug("ShippingModule::getCarriers() called", ['forceRefresh' => $forceRefresh]);
         try {
-            // Gọi API để lấy danh sách hãng vận chuyển
-            $response = $this->httpService->callApi('/shipping/carrier', [
-                'force_refresh' => $forceRefresh ? 1 : 0
-            ]);
-
-            $this->logger->info("ShippingModule::getCarriers() API call completed", [
-                'responseSize' => is_array($response) ? count($response) : 'unknown'
-            ]);
-
-            // Tạo response entity từ dữ liệu API
+            $endpoint = $this->httpService->isV3() ? '/v3.0/shipping/carrier' : '/shipping/carrier';
+            $response = $this->httpService->callApi($endpoint, []);
             return new ShippingCarrierResponse($response);
         } catch (Exception $e) {
-            $this->logger->error("ShippingModule::getCarriers() error", [
-                'error' => $e->getMessage(),
-                'forceRefresh' => $forceRefresh
-            ]);
+            $this->logger->error("ShippingModule::getCarriers() error", ['error' => $e->getMessage()]);
             throw $e;
         }
     }
 
-    /**
-     * Lấy danh sách hãng vận chuyển với quản lý memory
-     *
-     * @param bool $forceRefresh Bắt buộc refresh từ API, bỏ qua cache
-     * @return ShippingCarrierResponse Response chứa danh sách hãng vận chuyển
-     * @throws Exception Khi có lỗi xảy ra trong quá trình lấy dữ liệu
-     */
     public function getCarriersWithMemoryManagement(bool $forceRefresh = false): ShippingCarrierResponse
     {
-        $this->logger->debug("ShippingModule::getCarriersWithMemoryManagement() called", [
-            'forceRefresh' => $forceRefresh
-        ]);
-
-        try {
-            $response = $this->getCarriers($forceRefresh);
-
-            // Cleanup memory
-            $this->createEntitiesWithMemoryManagement($response);
-
-            return $response;
-        } catch (Exception $e) {
-            $this->logger->error("ShippingModule::getCarriersWithMemoryManagement() error", [
-                'error' => $e->getMessage(),
-                'forceRefresh' => $forceRefresh
-            ]);
-            throw $e;
-        }
+        return $this->getCarriers($forceRefresh);
     }
 
     /**
-     * Tính phí vận chuyển qua cổng Nhanh.vn
-     *
-     * @param ShippingFeeRequest $request Request tính phí vận chuyển
-     * @return ShippingFeeResponse Response chứa danh sách phí vận chuyển
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tính phí
+     * Tính phí vận chuyển (v3: /v3.0/shipping/fee, body {filters:{...}}).
      */
     public function calculateFee(ShippingFeeRequest $request): ShippingFeeResponse
     {
-        $this->logger->debug("ShippingModule::calculateFee() called", [
-            'fromCity' => $request->getFromCityName(),
-            'toCity' => $request->getToCityName(),
-            'weight' => $request->getShippingWeight(),
-            'codMoney' => $request->getCodMoney()
-        ]);
-
+        $this->logger->debug("ShippingModule::calculateFee() called");
         try {
-            // Validate request
-            if (!$request->isValid()) {
-                throw new Exception('Request validation failed: ' . implode(', ', array_flatten($request->getErrors())));
+            if (method_exists($request, 'isValid') && !$request->isValid()) {
+                $errors = method_exists($request, 'getErrors') ? $request->getErrors() : [];
+                throw new Exception('Request validation failed: ' . json_encode($errors));
             }
-
-            // Chuẩn bị data cho API call
-            $data = [
-                'fromCityName' => $request->getFromCityName(),
-                'fromDistrictName' => $request->getFromDistrictName(),
-                'toCityName' => $request->getToCityName(),
-                'toDistrictName' => $request->getToDistrictName(),
-                'codMoney' => $request->getCodMoney()
-            ];
-
-            // Thêm weight hoặc productIds
-            if ($request->hasShippingWeight()) {
-                $data['shippingWeight'] = $request->getShippingWeight();
-            } elseif ($request->hasProductIds()) {
-                $data['productIds'] = $request->getProductIds();
-            }
-
-            // Thêm carrier IDs nếu có
-            if ($request->getCarrierIds()) {
-                $data['carrierIds'] = $request->getCarrierIds();
-            }
-
-            // Thêm dimensions nếu có
-            if ($request->hasDimensions()) {
-                $data['length'] = $request->getLength();
-                $data['width'] = $request->getWidth();
-                $data['height'] = $request->getHeight();
-            }
-
-            // Gọi API
-            $response = $this->httpService->callApi('/shipping/fee', $data);
-
-            $this->logger->info("ShippingModule::calculateFee() API call completed", [
-                'responseSize' => is_array($response) ? count($response) : 'unknown'
-            ]);
-
-            // Tạo response entity từ dữ liệu API
+            $filters = $this->buildFeeFiltersFromRequest($request, 1);
+            $endpoint = $this->httpService->isV3() ? '/v3.0/shipping/fee' : '/shipping/fee';
+            $response = $this->httpService->callApi($endpoint, ['filters' => $filters]);
             return new ShippingFeeResponse($response);
         } catch (Exception $e) {
-            $this->logger->error("ShippingModule::calculateFee() error", [
-                'error' => $e->getMessage(),
-                'request' => $request->toArray()
-            ]);
+            $this->logger->error("ShippingModule::calculateFee() error", ['error' => $e->getMessage()]);
             throw $e;
         }
     }
 
-    /**
-     * Tính phí vận chuyển từ array data (convenience method)
-     *
-     * @param array $data Dữ liệu tính phí vận chuyển
-     * @return ShippingFeeResponse Response chứa danh sách phí vận chuyển
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tính phí
-     */
     public function calculateFeeFromArray(array $data): ShippingFeeResponse
     {
+        // v3-native payload passthrough
+        if (isset($data['filters']) && $this->httpService->isV3()) {
+            $response = $this->httpService->callApi('/v3.0/shipping/fee', $data);
+            return new ShippingFeeResponse($response);
+        }
         $request = new ShippingFeeRequest($data);
         return $this->calculateFee($request);
     }
 
     /**
-     * Tính phí vận chuyển tự kết nối
-     *
-     * @param ShippingFeeSelfConnectRequest $request Request tính phí vận chuyển tự kết nối
-     * @return ShippingFeeSelfConnectResponse Response chứa danh sách phí vận chuyển
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tính phí
+     * Tính phí vận chuyển tài khoản riêng (v3: /v3.0/shipping/fee with type=2).
      */
     public function calculateFeeSelfConnect(ShippingFeeSelfConnectRequest $request): ShippingFeeSelfConnectResponse
     {
-        $this->logger->debug("ShippingModule::calculateFeeSelfConnect() called", [
-            'carrierId' => $request->getCarrierId(),
-            'fromCity' => $request->getFromCityName(),
-            'toCity' => $request->getToCityName(),
-            'weight' => $request->getShippingWeight(),
-            'codMoney' => $request->getCodMoney()
-        ]);
-
+        $this->logger->debug("ShippingModule::calculateFeeSelfConnect() called");
         try {
-            // Validate request
-            if (!$request->isValid()) {
-                throw new Exception('Request validation failed: ' . implode(', ', array_flatten($request->getErrors())));
+            if (method_exists($request, 'isValid') && !$request->isValid()) {
+                $errors = method_exists($request, 'getErrors') ? $request->getErrors() : [];
+                throw new Exception('Request validation failed: ' . json_encode($errors));
             }
-
-            // Chuẩn bị data cho API call
-            $data = [
-                'carrierId' => $request->getCarrierId(),
-                'fromCityName' => $request->getFromCityName(),
-                'fromDistrictName' => $request->getFromDistrictName(),
-                'toCityName' => $request->getToCityName(),
-                'toDistrictName' => $request->getToDistrictName(),
-                'codMoney' => $request->getCodMoney()
-            ];
-
-            // Thêm optional fields
-            if ($request->getFromMobile()) {
-                $data['fromMobile'] = $request->getFromMobile();
-            }
-
-            if ($request->getFromWardName()) {
-                $data['fromWardName'] = $request->getFromWardName();
-            }
-
-            if ($request->getFromAddress()) {
-                $data['fromAddress'] = $request->getFromAddress();
-            }
-
-            if ($request->getToWardName()) {
-                $data['toWardName'] = $request->getToWardName();
-            }
-
-            if ($request->getToAddress()) {
-                $data['toAddress'] = $request->getToAddress();
-            }
-
-            // Thêm weight hoặc productIds
-            if ($request->hasShippingWeight()) {
-                $data['shippingWeight'] = $request->getShippingWeight();
-            } elseif ($request->hasProductIds()) {
-                $data['productIds'] = $request->getProductIds();
-            }
-
-            // Gọi API
-            $response = $this->httpService->callApi('/shipping/feeselfconnect', $data);
-
-            $this->logger->info("ShippingModule::calculateFeeSelfConnect() API call completed", [
-                'responseSize' => is_array($response) ? count($response) : 'unknown'
-            ]);
-
-            // Tạo response entity từ dữ liệu API
+            $filters = $this->buildSelfConnectFeeFilters($request);
+            $endpoint = $this->httpService->isV3() ? '/v3.0/shipping/fee' : '/shipping/feeselfconnect';
+            $payload = $this->httpService->isV3() ? ['filters' => $filters] : $filters;
+            $response = $this->httpService->callApi($endpoint, $payload);
             return new ShippingFeeSelfConnectResponse($response);
         } catch (Exception $e) {
-            $this->logger->error("ShippingModule::calculateFeeSelfConnect() error", [
-                'error' => $e->getMessage(),
-                'request' => $request->toArray()
-            ]);
+            $this->logger->error("ShippingModule::calculateFeeSelfConnect() error", ['error' => $e->getMessage()]);
             throw $e;
         }
     }
 
-    /**
-     * Tính phí vận chuyển tự kết nối từ array data (convenience method)
-     *
-     * @param array $data Dữ liệu tính phí vận chuyển tự kết nối
-     * @return ShippingFeeSelfConnectResponse Response chứa danh sách phí vận chuyển
-     * @throws Exception Khi có lỗi xảy ra trong quá trình tính phí
-     */
     public function calculateFeeSelfConnectFromArray(array $data): ShippingFeeSelfConnectResponse
     {
+        if (isset($data['filters']) && $this->httpService->isV3()) {
+            $filters = $data['filters'];
+            if (!isset($filters['type'])) $filters['type'] = 2;
+            $response = $this->httpService->callApi('/v3.0/shipping/fee', ['filters' => $filters]);
+            return new ShippingFeeSelfConnectResponse($response);
+        }
         $request = new ShippingFeeSelfConnectRequest($data);
         return $this->calculateFeeSelfConnect($request);
     }
 
-    /**
-     * Helper method để tạo entities với quản lý memory
-     *
-     * @param ShippingCarrierResponse $response Response cần xử lý
-     */
-    private function createEntitiesWithMemoryManagement(ShippingCarrierResponse $response): void
+    private function buildFeeFiltersFromRequest(ShippingFeeRequest $request, int $type): array
     {
-        if ($response->hasCarriers()) {
-            $carriers = $response->getCarriers();
-            foreach ($carriers as $carrier) {
-                if ($carrier instanceof ShippingCarrier) {
-                    // Cleanup memory sau khi xử lý
-                    unset($carrier);
-                }
-            }
-            unset($carriers);
+        $arr = method_exists($request, 'toArray') ? $request->toArray() : [];
+        // best-effort mapping legacy fields to v3 filters
+        $filters = ['type' => $type];
+        foreach (['depotId','shippingWeight','price','totalCod','carrier','shippingFrom','shippingTo'] as $k) {
+            if (isset($arr[$k])) $filters[$k] = $arr[$k];
         }
+        // legacy name mappings
+        if (!isset($filters['shippingWeight']) && isset($arr['weight'])) $filters['shippingWeight'] = (int) $arr['weight'];
+        if (!isset($filters['totalCod']) && isset($arr['codMoney'])) $filters['totalCod'] = (int) $arr['codMoney'];
+        return $filters;
+    }
+
+    private function buildSelfConnectFeeFilters(ShippingFeeSelfConnectRequest $request): array
+    {
+        $arr = method_exists($request, 'toArray') ? $request->toArray() : [];
+        $filters = ['type' => 2];
+        foreach (['depotId','shippingWeight','price','totalCod','shippingFrom','shippingTo'] as $k) {
+            if (isset($arr[$k])) $filters[$k] = $arr[$k];
+        }
+        if (!isset($filters['shippingWeight']) && isset($arr['weight'])) $filters['shippingWeight'] = (int) $arr['weight'];
+        if (!isset($filters['totalCod']) && isset($arr['codMoney'])) $filters['totalCod'] = (int) $arr['codMoney'];
+        // carrier info for self-connect
+        $carrier = $arr['carrier'] ?? [];
+        if (!is_array($carrier)) $carrier = [];
+        if (isset($arr['carrierId']) && !isset($carrier['id'])) $carrier['id'] = (int) $arr['carrierId'];
+        if (!empty($carrier)) $filters['carrier'] = $carrier;
+        return $filters;
     }
 }

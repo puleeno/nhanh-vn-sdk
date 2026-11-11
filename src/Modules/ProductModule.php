@@ -808,42 +808,42 @@ class ProductModule
      * @return array Mảng các danh mục sản phẩm
      * @throws Exception Khi có lỗi xảy ra trong quá trình lấy danh mục
      */
-    public function getCategories(): array
+    /**
+     * Lấy danh mục sản phẩm (v3: POST /v3.0/product/category)
+     */
+    public function getCategories(array $filters = [], array $paginator = []): array
     {
         try {
             $this->logger->info("ProductModule::getCategories() - Calling Nhanh.vn API");
+            $payload = [];
+            if (!empty($filters)) {
+                $payload['filters'] = $filters;
+            }
+            if (!empty($paginator)) {
+                $payload['paginator'] = $paginator;
+            }
 
-            // Gọi API Nhanh.vn để lấy categories
-            $response = $this->httpService->callApi('/product/category', []);
-
-            // DEBUG: Log full response để kiểm tra structure
+            $endpoint = $this->httpService->isV3() ? '/v3.0/product/category' : '/product/category';
+            $response = $this->httpService->callApi($endpoint, $payload);
             $this->logger->info("ProductModule::getCategories() - Full API Response", ['response' => $response]);
 
-            if (!isset($response['data']) || !is_array($response['data'])) {
+            $data = $response['data'] ?? null;
+            if (!is_array($data)) {
                 $this->logger->warning("ProductModule::getCategories() - Response không có categories data", [
                     'response_keys' => array_keys($response ?? []),
                     'has_data' => isset($response['data']),
                     'data_type' => gettype($response['data'] ?? null)
                 ]);
-                // Giải phóng memory
                 unset($response);
-
                 return [];
             }
 
-
-
-            $this->logger->info("ProductModule::getCategories() - Found " . count($response['data']) . " categories from API");
-
-            // Sử dụng helper method để tạo entities với memory management
+            $this->logger->info("ProductModule::getCategories() - Found " . count($data) . " categories from API");
             $categoryEntities = $this->createEntitiesFromApiResponse($response, 'createProductCategory');
-
             $this->logger->info("ProductModule::getCategories() - Created " . count($categoryEntities) . " category entities");
-
             return $categoryEntities;
         } catch (Exception $e) {
             $this->logger->error("ProductModule::getCategories() error", ['error' => $e->getMessage()]);
-            // Fallback to cached data if available
             $cachedCategories = $this->productManager->getCachedProductCategories();
             if ($cachedCategories !== null) {
                 $this->logger->info("ProductModule::getCategories() - Using cached categories");
