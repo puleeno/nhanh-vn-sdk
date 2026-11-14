@@ -24,7 +24,7 @@ abstract class AbstractEntity implements EntityInterface
      */
     protected array $errors = [];
 
-    protected array $guarded = ['orders'];
+    protected array $guarded = ['orders', 'attributes', 'errors'];
 
     /**
      * Constructor

@@ -664,6 +664,9 @@ class ProductModule
     public function getBrands(): array
     {
         $cachedBrands = $this->productManager->getCachedProductBrands();
+        if (!is_array($cachedBrands)) {
+            return [];
+        }
         return $this->createEntitiesWithMemoryManagement($cachedBrands, 'createProductBrands');
     }
 
